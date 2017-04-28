@@ -95,7 +95,7 @@ CREATE TABLE DATASOURCE
     DATASOURCE_NAME     VARCHAR2(64)    NOT NULL
                                         CONSTRAINT DATASOURCE_NAME_UNIQUE 
                                         UNIQUE,
-    DATASOURCE_ACRONYM  VARCHAR2(8)     NOT NULL
+    DATASOURCE_ACRONYM  VARCHAR2(64)    NOT NULL
                                         CONSTRAINT DATASOURCE_ACRONYM_UNIQUE 
                                         UNIQUE,
     DATASOURCE_URI      VARCHAR2(1024)  NULL,
@@ -240,9 +240,10 @@ CREATE TABLE RELATIONSHIP_TYPE (
     RELATIONSHIP_TYPE_ID NUMBER(12)     NOT NULL
                                         CONSTRAINT RELATIONSHIP_TYPE_PK
                                         PRIMARY KEY,
-    RELATIONSHIP_TYPE   VARCHAR2(32)    NOT NULL
+    RELATIONSHIP_TYPE   VARCHAR2(64)    NOT NULL
                                         CONSTRAINT RELATIONSHIP_TYPE_UNIQUE 
                                         UNIQUE,
+    NAME                VARCHAR2(256)   NOT NULL,
     DEFINTION           VARCHAR2(256)   NOT NULL,
     IS_CYCLIC           NUMBER(1)       NOT NULL
                                         CONSTRAINT RELSHIP_TYPE_CYCLIC_CK
@@ -299,7 +300,7 @@ CREATE TABLE ONTOLOGY
                                         CHECK(IS_INTERNAL IN (0,1)),
     SOURCE_NAMESPACE    VARCHAR2(256)   NULL,
     SOURCE_URI          VARCHAR2(1024)  NULL,
-    SOURCE_RELEASE      VARCHAR2(32)    NULL,
+    SOURCE_RELEASE      VARCHAR2(256)   NULL,
     SOURCE_DATE         DATE            NULL,
     SOURCE_FORMAT       VARCHAR2(32)    NULL,
     REFERENCE_ID_PREFIX VARCHAR2(16)    NOT NULL
@@ -371,9 +372,9 @@ CREATE TABLE TERM (
                                         REFERENCES ONTOLOGY,
     TERM_NAME           VARCHAR2(256)   NOT NULL,
     REFERENCE_ID        VARCHAR2(32)    NOT NULL,
-    DEFINITION          VARCHAR2(1024)  NULL,
+    DEFINITION          VARCHAR2(4000)  NULL,
     DEFINITION_URL      VARCHAR2(1024)  NULL,
-    COMMENTS            VARCHAR2(1024)  NULL,
+    COMMENTS            VARCHAR2(4000)  NULL,
     IS_ROOT             NUMBER(1)       DEFAULT 0 NOT NULL
                                         CONSTRAINT TERM_IS_ROOT_CK
                                         CHECK(IS_ROOT IN (0,1)),
@@ -439,7 +440,19 @@ CREATE TABLE TERM_XREF
     CREATED_BY          NUMBER(12)      NOT NULL
                                         CONSTRAINT TERM_XREF_CREATED_BY_FK
                                         REFERENCES CURATOR,
-    MODIFIED_DATE       DATE            NULL,
+    CREATED_VERSION_ID  NUMBER(12)      NULL
+                                        CONSTRAINT TERM_XREF_CREATED_VERSION_FK
+                                        REFERENCES VERSION,
+    APPROVED_VERSION_ID NUMBER(12)      NULL
+                                        CONSTRAINT TERM_XREF_APPROVED_VERSION_FK
+                                        REFERENCES VERSION,
+    OBSOLETE_VERSION_ID NUMBER(12)      NULL
+                                        CONSTRAINT TERM_XREF_OBSOLETE_VERSION_FK
+                                        REFERENCES VERSION,
+    REPLACED_BY         NUMBER(12)      NULL
+                                        CONSTRAINT TERM_XREF_REPLACED_BY_FK
+                                        REFERENCES TERM_XREF,
+	MODIFIED_DATE       DATE            NULL,
     MODIFIED_BY         NUMBER(12)      NULL
                                         CONSTRAINT TERM_XREF_MODIFIED_BY_FK
                                         REFERENCES CURATOR

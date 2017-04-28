@@ -71,7 +71,7 @@ public class RelatedTermsView extends OntoBrowserView implements ViewTermHandler
 	private static class RelationshipColumn extends TextColumn<Relationship> {
 		@Override
 		public String getValue(Relationship relationship) {
-			return relationship.getType().getRelationship();
+			return relationship.getType().getName(); //getRelationship();
 		}
 	};
 	

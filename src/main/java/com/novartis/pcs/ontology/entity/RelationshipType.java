@@ -55,6 +55,11 @@ public class RelationshipType extends VersionedEntity implements ReplaceableEnti
 	private String relationship;
 	
 	@NotNull
+	@Column(name = "NAME", nullable = false)
+	private String relationshipTypeName;
+	
+	
+	@NotNull
 	@Column(name = "DEFINTION", nullable = false)
 	private String defintion;
 	
@@ -88,11 +93,12 @@ public class RelationshipType extends VersionedEntity implements ReplaceableEnti
 	protected RelationshipType() {
 	}
 
-	public RelationshipType(String relationship, String defintion,
+	public RelationshipType(String relationship, String defintion, String name,
 			Curator creator, Version version) {
     	super(creator, version);
 		setRelationship(relationship);
 		setDefintion(defintion);
+		setName(name);
 	}
 
 	public String getRelationship() {
@@ -111,6 +117,16 @@ public class RelationshipType extends VersionedEntity implements ReplaceableEnti
 		this.defintion = defintion;
 	}
 
+	public String getName() 
+	{
+		return this.relationshipTypeName;
+	}
+	
+	public void setName(String name) 
+	{
+		this.relationshipTypeName = name;
+	}
+	
 	public boolean isCyclic() {
 		return cyclic;
 	}

@@ -121,7 +121,7 @@ public class OBOParseContext implements OBOParserHandler {
     public RelationshipType getRelationshipType(String relationship) {
     	RelationshipType relationshipType = relationshipTypes.get(relationship.toLowerCase());
     	if(relationshipType == null) {
-			relationshipType = new RelationshipType(relationship, relationship, curator, version);
+    		relationshipType = new RelationshipType(relationship, relationship, relationship, curator, version);
 			relationshipType.setStatus(Status.APPROVED);
 			relationshipType.setApprovedVersion(version);
 			relationshipTypes.put(relationship.toLowerCase(), relationshipType);
@@ -485,6 +485,7 @@ public class OBOParseContext implements OBOParserHandler {
     	addTagHandler(typeDefTagHandlers, new TransitiveOverTagHandler(this));
     	addTagHandler(typeDefTagHandlers, new IsObsoleteTagHandler(this));
     	addTagHandler(typeDefTagHandlers, new ReplacedByTagHandler(this));
+    	addTagHandler(typeDefTagHandlers, new TypeDefNameTagHandler(this));
     	
     	unsupportedTags.add(OBOVocabulary.ID.getName());
     }

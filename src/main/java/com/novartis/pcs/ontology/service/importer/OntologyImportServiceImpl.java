@@ -17,6 +17,7 @@ limitations under the License.
 */
 package com.novartis.pcs.ontology.service.importer;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -114,10 +115,10 @@ public class OntologyImportServiceImpl extends OntologyService implements Ontolo
 				
 				if(refIdPrefix == null) {
 					refIdPrefix = refId.substring(0,colon);
-				} else if(!refIdPrefix.equals(refId.substring(0,colon))) {
+				} /*else if(!refIdPrefix.equals(refId.substring(0,colon))) {
 					throw new InvalidEntityException(term, 
 							"Invalid term reference id prefix: " + refId);
-				}
+				}*/
 				
 				try {
 					int value = Integer.parseInt(refId.substring(colon+1));
@@ -179,6 +180,9 @@ public class OntologyImportServiceImpl extends OntologyService implements Ontolo
 		} catch (ParseException e) {
 			logger.warning("Parse exception occuring during OBO file import: " + e.getMessage());
 			throw new InvalidFormatException(e.getMessage());
+		} catch (IOException e1) {
+			
+			logger.warning("IO exception: " + e1.getMessage());
 		}   	
     }
     

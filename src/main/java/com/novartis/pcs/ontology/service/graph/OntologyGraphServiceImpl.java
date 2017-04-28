@@ -127,7 +127,7 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 			if(StatusChecker.isValid(relationship) 
 					&& StatusChecker.isValid(relationship.getTerm())
 					&& StatusChecker.isValid(relationship.getRelatedTerm())) {
-				String type = relationship.getType().getRelationship();
+				String type = relationship.getType().getName();
 				String srcId = escape(relationship.getRelatedTerm().getReferenceId());
 				String destId = escape(relationship.getTerm().getReferenceId());
 				String color = relationship.getType().getEdgeColour();

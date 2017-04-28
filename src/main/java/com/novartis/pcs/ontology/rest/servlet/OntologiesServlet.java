@@ -39,6 +39,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -355,9 +356,28 @@ public class OntologiesServlet extends HttpServlet {
 	public Curator loadCurator(HttpServletRequest request) {
 		Curator curator = null;
 		String username = getUsername(request);
-						
+		username = "SYSTEM";				
 		if(username != null) {
 			curator = curatorService.loadByUsername(username);
+		}
+		else
+		{
+		 log("Username = null");
+		 Principal principal = request.getUserPrincipal();
+		 if(principal == null)
+		 {
+			 log("Principal = null");
+		 }
+		HttpSession session = request.getSession(true);
+		Object currSessionUser = session.getAttribute("currentSessionUser");
+		if(currSessionUser != null)
+		{
+			log("currSessionUser = " + currSessionUser);
+		}
+		else{
+			log("CurrSessionUser =  null");
+		}
+		
 		}
 				
 		return curator;

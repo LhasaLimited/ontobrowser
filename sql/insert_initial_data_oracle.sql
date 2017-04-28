@@ -33,6 +33,7 @@ VALUES (
 INSERT INTO RELATIONSHIP_TYPE (
   RELATIONSHIP_TYPE_ID,
   RELATIONSHIP_TYPE,
+  NAME,
   DEFINTION,
   IS_CYCLIC,
   IS_SYMMETRIC,
@@ -45,6 +46,7 @@ INSERT INTO RELATIONSHIP_TYPE (
 ) VALUES (
   PRIMARY_KEY_SEQ.nextval,
   'is_a',
+  'is a',
   'Subclassing relationship between one term and another',
   0,
   0,
@@ -69,6 +71,7 @@ INSERT INTO RELATIONSHIP_TYPE (
 ) VALUES (
   PRIMARY_KEY_SEQ.nextval,
   'union_of',
+  'union of',
   'Represents the union of several other terms',
   0,
   0,
@@ -92,6 +95,7 @@ INSERT INTO RELATIONSHIP_TYPE (
 ) VALUES (
   PRIMARY_KEY_SEQ.nextval,
   'disjoint_from',
+  'disjoint from',
   'Terms have no instances or subclasses in common',
   0,
   1,
@@ -116,6 +120,7 @@ INSERT INTO RELATIONSHIP_TYPE (
 ) VALUES (
   PRIMARY_KEY_SEQ.nextval,
   'part_of',
+  'part of',
   'Subpart relationship between one term and another',
   0,
   0,
@@ -141,6 +146,7 @@ INSERT INTO RELATIONSHIP_TYPE (
 ) VALUES (
   PRIMARY_KEY_SEQ.nextval,
   'develops_from',
+  'develops from',
   'Anatomical structures change through development',
   0,
   0,
