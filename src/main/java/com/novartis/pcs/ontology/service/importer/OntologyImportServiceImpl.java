@@ -22,11 +22,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
@@ -77,6 +79,9 @@ public class OntologyImportServiceImpl extends OntologyService implements Ontolo
     	// Lock ontology while we are importing/updating
     	// also need to lock ontology because we potentially
     	// update the current term reference id value
+    	
+    	logger.log(Level.INFO, "ontologyName = " + ontologyName);//jv
+    	String isClass = is.getClass().getName();
     	Ontology ontology = ontologyDAO.loadByName(ontologyName, true);
     	Collection<Term> terms = Collections.emptyList();
     	Collection<RelationshipType> relationshipTypes = relationshipTypeDAO.loadAll();
@@ -90,15 +95,39 @@ public class OntologyImportServiceImpl extends OntologyService implements Ontolo
     	} else {
     		terms = termDAO.loadAll(ontology);
     	}
+    	
+    	logger.log(Level.INFO, "ontology.getName() = " + ontology.getName() + ", isClass = " + isClass);//jv
     	    	
     	try {
     		// According to spec OBO files are UTF-8 encoded
 			Reader reader = new InputStreamReader(is, "UTF-8");
+			
+			/*char[] dummy = new char[51];
+			for(int i = 0; i < 50; i++)
+			{
+				dummy[i] = (char)reader.read();
+				for(int i = 0; i < 50; i++)
+				{
+					s += String.format("[%d, %c {%d}]", i, dummy[i], Character.codePointAt(String.valueOf(dummy[i]), 0));
+				}
+				logger.log(Level.INFO, "First 50 characters:" + s);//jv
+			}
+			CharBuffer charBuffer = CharBuffer.allocate(50);
+			int i2 = reader.read(charBuffer);
+			charBuffer.flip();
+			logger.log(Level.INFO, "First " + i2 + " characters: " + charBuffer.toString());//jv*/
+			
 			OBOParser parser = new OBOParser(reader);
 			OBOParseContext context = new OBOParseContext(ontology, terms, 
 					relationshipTypes, datasources, curator, version);
 			parser.setHandler(context);
+
+	    	logger.log(Level.INFO, "parser.setHandler()");//jv
+	    	
 			parser.parse();
+			
+			logger.log(Level.INFO, "parser.parse()");//jv
+			
 			terms = context.getTerms();
 			
 			String refIdPrefix = null;
@@ -107,6 +136,9 @@ public class OntologyImportServiceImpl extends OntologyService implements Ontolo
 			for(Term term : terms) {
 				String refId = term.getReferenceId();
 				int colon = refId.indexOf(':');
+				
+				logger.log(Level.INFO, "Term = " + term.getReferenceId());
+				
 				
 				if(colon == -1) {
 					throw new InvalidEntityException(term, 
@@ -126,6 +158,11 @@ public class OntologyImportServiceImpl extends OntologyService implements Ontolo
 				} catch(Exception e) {
 					throw new InvalidEntityException(term, 
 							"Invalid term reference id: " + refId, e);
+				}
+				
+				if(term.getName() == null)
+				{
+					logger.warning("Term.getName() is null: " + term.getReferenceId());
 				}
 				
 				if(!names.add(term.getName().toLowerCase())) {
