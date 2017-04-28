@@ -340,19 +340,24 @@ public class OntologiesServlet extends HttpServlet {
 		}
 	}
 	
-	private String getUsername(HttpServletRequest request) {
-		String username = request.getRemoteUser();
-		
-		if(username == null) {
-			Principal principal = request.getUserPrincipal();
-			if(principal != null) {
-				username = principal.getName();
-			}
-		}
-		
-		return username;
-	}
-	
+    private String getUsername(HttpServletRequest request) {
+        String username = request.getRemoteUser();
+        
+        if(username == null) {
+               Principal principal = request.getUserPrincipal();
+               if(principal != null) {
+                     username = principal.getName();
+               }
+        }
+        
+        // Temp workaround to the apache --> wildfly bridge
+        if (username == null) {
+               username = request.getHeader("REMOTE_USER");
+        }
+        
+        return username;
+    }
+
 	public Curator loadCurator(HttpServletRequest request) {
 		Curator curator = null;
 		String username = getUsername(request);

@@ -86,6 +86,9 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 	private String getUsername() {
 		HttpServletRequest request = getThreadLocalRequest();
 		String username = request.getRemoteUser();
+		// Temp workaround to the apache --> wildfly bridge
+		if(username == null)
+			username = request.getHeader("REMOTE_USER");
 		
 		if(username == null) {
 			Principal principal = request.getUserPrincipal();
