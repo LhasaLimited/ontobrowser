@@ -1,0 +1,15 @@
+When importing the bioassay ontology (bao.obo):-
+
+1.  Use the bao.obo file in this project.  It has had to be hand curated to get it to import properly.
+2.  The import typically takes longer than the 5 minutes that is the default JBoss transaction timeout.  You must increase the transaction timeout as shown in the standalone.xml file:-
+
+<subsystem xmlns="urn:jboss:domain:transactions:3.0">
+            <core-environment>
+                <process-id>
+                    <uuid/>
+                </process-id>
+            </core-environment>
+            <recovery-environment socket-binding="txn-recovery-environment" status-socket-binding="txn-status-manager"/>
+            <-- override default timeout !-->
+            <coordinator-environment default-timeout="1800"/>
+</subsystem> 
