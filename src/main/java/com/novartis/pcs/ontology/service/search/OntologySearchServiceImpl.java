@@ -55,7 +55,7 @@ import org.apache.lucene.document.Field.TermVector;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.queryParser.MultiFieldQueryParser;
 import org.apache.lucene.queryParser.TokenMgrError;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -309,19 +309,16 @@ public class OntologySearchServiceImpl implements
 		try {
 			List<HTMLSearchResult> results = new ArrayList<HTMLSearchResult>();
 			analyzer = new TermNameAnalyzer(false);
-			
-			QueryParser parser = new QueryParser(Version.LUCENE_30, FIELD_TERM, analyzer);
-			Query query = parser.parse(pattern);
+				
+			Query query = MultiFieldQueryParser.parse(Version.LUCENE_30, new String[]{pattern, pattern}, new String[]{FIELD_TERM, FIELD_ID}, analyzer);//parser.parse(pattern);
 			
 			logger.log(Level.FINE, "Query: " + query);
 			
 			// For highlighting words in query results
-			QueryScorer scorer = new QueryScorer(query, reader, FIELD_TERM);
 			SimpleHTMLFormatter htmlFormatter = new SimpleHTMLFormatter();
 			SimpleHTMLEncoder htmlEncoder = new SimpleHTMLEncoder();
-			Highlighter highlighter = new Highlighter(htmlFormatter, htmlEncoder, scorer);
+			Highlighter highlighter = new Highlighter(htmlFormatter, htmlEncoder, null);
 			highlighter.setMaxDocCharsToAnalyze(MAX_CHARS);		
-			scorer.setExpandMultiTermQuery(true);
 			
 			// Perform search
 			ScoreDoc[] hits = searcher.search(query, numberOfDocuments).scoreDocs;
@@ -338,12 +335,34 @@ public class OntologySearchServiceImpl implements
 				
 				if(!isSynonym || includeSynonyms) {
 					Analyzer highlighterAnalyzer = new TermNameAnalyzer(true);
+					
+					//do FIELD_TERM first
+					QueryScorer scorer = new QueryScorer(query, reader, FIELD_TERM);
+					highlighter.setFragmentScorer(scorer);
+					scorer.setExpandMultiTermQuery(true);
 					TokenStream tokenStream = TokenSources.getTokenStream(reader, id, FIELD_TERM, highlighterAnalyzer);
 					TextFragment[] frag = highlighter.getBestTextFragments(tokenStream, term, true, 1);
-					if(frag.length > 0 && frag[0] != null && frag[0].getScore() > 0) {
-						results.add(new HTMLSearchResult(ontology, referenceId, term, 
-								frag[0].toString(), frag[0].getScore(), isSynonym));
-				    }
+					boolean addTerm = false;
+					String html = term;
+					float score = hits[i].score;
+					if(frag.length > 0 && frag[0] != null)
+					{
+						float sc = frag[0].getScore();
+						if(sc >= 0) 
+						{
+							html = frag[0].toString();
+							score = sc;
+							addTerm = true;
+					    }
+					}
+					//then add if the hit score is okay from the FIELD_ID search
+					addTerm |= (score > 0);
+					
+					if(addTerm)
+					{
+						results.add(new HTMLSearchResult(ontology, referenceId, term, html, score, isSynonym));
+					}
+					
 					highlighterAnalyzer.close();
 				}
 			}
@@ -400,10 +419,8 @@ public class OntologySearchServiceImpl implements
 		Field idField = new Field(FIELD_ID, 
 	    		term.getReferenceId(), 
 	    		Field.Store.YES, 
-	    		Field.Index.NOT_ANALYZED,
-	    		TermVector.NO);
-		idField.setOmitNorms(true);
-		idField.setOmitTermFreqAndPositions(true);
+	    		Field.Index.ANALYZED,
+	    		TermVector.WITH_POSITIONS_OFFSETS);
 		doc.add(idField);
 		
 		Field nameField = new Field(FIELD_TERM, 
