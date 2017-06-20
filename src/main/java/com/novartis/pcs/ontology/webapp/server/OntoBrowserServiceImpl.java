@@ -82,7 +82,7 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 	
 	@EJB
 	private OntologyGraphServiceLocal graphService;
-		
+			
 	private String getUsername() {
 		HttpServletRequest request = getThreadLocalRequest();
 		String username = request.getRemoteUser();
