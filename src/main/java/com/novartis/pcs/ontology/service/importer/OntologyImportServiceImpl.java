@@ -34,9 +34,6 @@ import javax.ejb.Local;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
 
-import org.coode.owlapi.obo.parser.OBOParser;
-import org.coode.owlapi.obo.parser.ParseException;
-
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.DuplicateEntityException;
@@ -49,9 +46,9 @@ import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
 import com.novartis.pcs.ontology.service.OntologyService;
-import com.novartis.pcs.ontology.service.parser.InvalidFormatException;
 import com.novartis.pcs.ontology.service.parser.obo.OBOParseContext;
 import com.novartis.pcs.ontology.service.search.OntologySearchServiceLocal;
+import org.coode.owlapi.obo12.parser.ParserAdapter;
 
 /**
  * Session Bean implementation class OntologyImportServiceImpl

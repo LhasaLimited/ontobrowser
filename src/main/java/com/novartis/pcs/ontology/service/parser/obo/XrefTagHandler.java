@@ -18,7 +18,7 @@ limitations under the License.
 package com.novartis.pcs.ontology.service.parser.obo;
 
 import org.apache.commons.lang.mutable.MutableInt;
-import org.coode.owlapi.obo.parser.OBOVocabulary;
+import org.coode.owlapi.obo12.parser.OBOVocabulary;
 
 import com.novartis.pcs.ontology.entity.CrossReference;
 import com.novartis.pcs.ontology.entity.util.UrlParser;

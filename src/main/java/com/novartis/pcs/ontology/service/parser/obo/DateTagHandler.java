@@ -22,7 +22,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.coode.owlapi.obo.parser.OBOVocabulary;
+import org.coode.owlapi.obo12.parser.OBOVocabulary;
 
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.service.parser.InvalidFormatException;

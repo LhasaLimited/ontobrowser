@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.coode.owlapi.obo.parser.OBOParserHandler;
-import org.coode.owlapi.obo.parser.OBOVocabulary;
+import org.coode.owlapi.obo12.parser.OBOParserHandler;
+import org.coode.owlapi.obo12.parser.OBOVocabulary;
 
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.Datasource;
