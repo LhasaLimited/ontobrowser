@@ -91,11 +91,10 @@ public class OntologyImportServiceImpl extends OntologyService implements Ontolo
     	try {
     		// According to spec OBO files are UTF-8 encoded
 			Reader reader = new InputStreamReader(is, "UTF-8");
-			OBOParser parser = new OBOParser(reader);
+			ParserAdapter parserAdapter = new ParserAdapter();
 			OBOParseContext context = new OBOParseContext(ontology, terms, 
 					relationshipTypes, datasources, curator, version);
-			parser.setHandler(context);
-			parser.parse();
+			parserAdapter.parse(reader, context);
 			terms = context.getTerms();
 			
 			String refIdPrefix = null;
@@ -173,12 +172,8 @@ public class OntologyImportServiceImpl extends OntologyService implements Ontolo
 				searchService.update(term);
 			}
 		} catch (UnsupportedEncodingException e) {
-			// Never happen because UTF-8 is built-in to JVM
-		} catch (ParseException e) {
-			logger.warning("Parse exception occuring during OBO file import: " + e.getMessage());
-			throw new InvalidFormatException(e.getMessage());
-		} catch (IOException e1) {
-			
+			// Never happen because UTF-8 is built-in to JVM		
+    	} catch (IOException e1) {			
 			logger.warning("IO exception: " + e1.getMessage());
 		}   	
     }
