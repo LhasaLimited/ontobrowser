@@ -8,6 +8,8 @@
   <stylesheet src="../gwt-override.css"/>
   <entry-point class='com.novartis.pcs.ontology.webapp.client.OntoBrowser'/>
 
+  <set-configuration-property name="CssResource.enableGss" value="true" />
+  <set-configuration-property name="CssResource.conversionMode" value="strict" />
   <!-- Specify the paths for translatable code                    -->
   <source path='client'/>
   <source path='shared'/>
