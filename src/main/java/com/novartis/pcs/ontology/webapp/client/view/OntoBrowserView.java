@@ -18,10 +18,10 @@ limitations under the License.
 package com.novartis.pcs.ontology.webapp.client.view;
 
 import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.user.client.ui.ResizeComposite;
+import com.google.gwt.user.client.ui.Composite;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 
-public class OntoBrowserView extends ResizeComposite {
+public class OntoBrowserView extends Composite {
 	protected final EventBus eventBus;
 	protected final OntoBrowserServiceAsync service;
 	
