@@ -36,6 +36,19 @@
       <version>${gwt.version}</version>
       <scope>provided</scope>
     </dependency>
+      <dependency>
+        <groupId>com.google.gwt</groupId>
+        <artifactId>gwt-dev</artifactId>
+        <version>${gwt.version}</version>
+        <scope>provided</scope>
+      </dependency>
+    <!-- Used with Super Dev Mode -->
+    <dependency>
+    <groupId>com.google.gwt</groupId>
+      <artifactId>gwt-codeserver</artifactId>
+      <version>${gwt.version}</version>
+      <scope>provided</scope>
+  	</dependency>
     <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
