@@ -305,7 +305,6 @@ public class OntologyCuratorServiceImpl extends OntologyService implements Ontol
 		return synonym;
 	}
 	
-	@SuppressWarnings("incomplete-switch")
 	@Override
 	@Interceptors({OntologySearchServiceListener.class})
 	public Term obsoleteTerm(long termId, long replacementTermId, String comments, 
@@ -393,48 +392,7 @@ public class OntologyCuratorServiceImpl extends OntologyService implements Ontol
 		obsoleting.setComments(
 					comments != null && comments.trim().length() > 0 ? comments.trim() : null);
 		
-		Collection<Synonym> synonyms = new ArrayList<Synonym>(term.getSynonyms());
-		for(Synonym synonym : synonyms) {
-			switch(synonym.getStatus()) {
-			case PENDING:
-				term.getSynonyms().remove(synonym);
-				synonymDAO.delete(synonym);
-				break;
-			case APPROVED:
-				synonym.setStatus(Status.OBSOLETE);
-				synonym.setObsoleteVersion(version);
-				break;
-			}
-		}
-		
-		Collection<Relationship> relationships = new ArrayList<Relationship>(term.getRelationships());
-		for(Relationship relationship : relationships) {
-			switch(relationship.getStatus()) {
-			case PENDING:
-				term.getRelationships().remove(relationship);
-				relationshipDAO.delete(relationship);
-				break;
-			case APPROVED:
-				relationship.setStatus(Status.OBSOLETE);
-				relationship.setObsoleteVersion(version);
-				break;
-			}
-		}
-		
-		Collection<Relationship> descendents = relationshipDAO.loadByRelatedTermId(termId);
-		for (Relationship relationship : descendents) {
-			switch(relationship.getStatus()) {
-			case PENDING:
-				Term childTerm = relationship.getTerm();
-				childTerm.getRelationships().remove(relationship);
-				relationshipDAO.delete(relationship);
-				break;
-			case APPROVED:
-				relationship.setStatus(Status.OBSOLETE);
-				relationship.setObsoleteVersion(version);
-				break;
-			}
-		}
+		removePendingDependents(term, version);
 		
 		return term;
 	}

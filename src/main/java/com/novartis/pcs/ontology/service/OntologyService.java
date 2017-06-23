@@ -35,7 +35,11 @@ import com.novartis.pcs.ontology.dao.TermDAOLocal;
 import com.novartis.pcs.ontology.dao.VersionDAOLocal;
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
+import com.novartis.pcs.ontology.entity.Relationship;
+import com.novartis.pcs.ontology.entity.Synonym;
+import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.Version;
+import com.novartis.pcs.ontology.entity.VersionedEntity;
 
 public class OntologyService {
 	@EJB 
@@ -89,5 +93,52 @@ public class OntologyService {
 		} 
 		 
 		return version;
+	}
+
+	@SuppressWarnings("incomplete-switch")
+	protected void removePendingDependents(Term term, Version version)
+			throws InvalidEntityException {
+		Collection<Synonym> synonyms = new ArrayList<Synonym>(term.getSynonyms());
+		for(Synonym synonym : synonyms) {
+			switch(synonym.getStatus()) {
+			case PENDING:
+				term.getSynonyms().remove(synonym);
+				synonymDAO.delete(synonym);
+				break;
+			case APPROVED:
+				synonym.setStatus(VersionedEntity.Status.OBSOLETE);
+				synonym.setObsoleteVersion(version);
+				break;
+			}
+		}
+
+		Collection<Relationship> relationships = new ArrayList<Relationship>(term.getRelationships());
+		for(Relationship relationship : relationships) {
+			switch(relationship.getStatus()) {
+			case PENDING:
+				term.getRelationships().remove(relationship);
+				relationshipDAO.delete(relationship);
+				break;
+			case APPROVED:
+				relationship.setStatus(VersionedEntity.Status.OBSOLETE);
+				relationship.setObsoleteVersion(version);
+				break;
+			}
+		}
+
+		Collection<Relationship> descendents = relationshipDAO.loadByRelatedTermId(term.getId());
+		for (Relationship relationship : descendents) {
+			switch(relationship.getStatus()) {
+			case PENDING:
+				Term childTerm = relationship.getTerm();
+				childTerm.getRelationships().remove(relationship);
+				relationshipDAO.delete(relationship);
+				break;
+			case APPROVED:
+				relationship.setStatus(VersionedEntity.Status.OBSOLETE);
+				relationship.setObsoleteVersion(version);
+				break;
+			}
+		}
 	}
 }

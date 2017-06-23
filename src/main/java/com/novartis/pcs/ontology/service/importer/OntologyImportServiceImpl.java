@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -34,6 +33,8 @@ import javax.ejb.Local;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
 
+import org.coode.owlapi.obo12.parser.ParserAdapter;
+
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.DuplicateEntityException;
@@ -41,14 +42,12 @@ import com.novartis.pcs.ontology.entity.InvalidEntityException;
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.RelationshipType;
-import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
 import com.novartis.pcs.ontology.service.OntologyService;
 import com.novartis.pcs.ontology.service.parser.obo.OBOParseContext;
 import com.novartis.pcs.ontology.service.search.OntologySearchServiceLocal;
-import org.coode.owlapi.obo12.parser.ParserAdapter;
 
 /**
  * Session Bean implementation class OntologyImportServiceImpl
@@ -177,51 +176,5 @@ public class OntologyImportServiceImpl extends OntologyService implements Ontolo
 			logger.warning("IO exception: " + e1.getMessage());
 		}   	
     }
-    
-    @SuppressWarnings("incomplete-switch")
-	private void removePendingDependents(Term term, Version version) 
-    		throws InvalidEntityException {
-    	Collection<Synonym> synonyms = new ArrayList<Synonym>(term.getSynonyms());
-		for(Synonym synonym : synonyms) {
-			switch(synonym.getStatus()) {
-			case PENDING:
-				term.getSynonyms().remove(synonym);
-				synonymDAO.delete(synonym);
-				break;
-			case APPROVED:
-				synonym.setStatus(Status.OBSOLETE);
-				synonym.setObsoleteVersion(version);
-				break;
-			}
-		}
-		
-		Collection<Relationship> relationships = new ArrayList<Relationship>(term.getRelationships());
-		for(Relationship relationship : relationships) {
-			switch(relationship.getStatus()) {
-			case PENDING:
-				term.getRelationships().remove(relationship);
-				relationshipDAO.delete(relationship);
-				break;
-			case APPROVED:
-				relationship.setStatus(Status.OBSOLETE);
-				relationship.setObsoleteVersion(version);
-				break;
-			}
-		}
-		
-		Collection<Relationship> descendents = relationshipDAO.loadByRelatedTermId(term.getId());
-		for (Relationship relationship : descendents) {
-			switch(relationship.getStatus()) {
-			case PENDING:
-				Term childTerm = relationship.getTerm();
-				childTerm.getRelationships().remove(relationship);
-				relationshipDAO.delete(relationship);
-				break;
-			case APPROVED:
-				relationship.setStatus(Status.OBSOLETE);
-				relationship.setObsoleteVersion(version);
-				break;
-			}
-		}
-    }
+
 }
