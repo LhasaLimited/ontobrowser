@@ -25,6 +25,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.logging.Logger;
 
+import javax.ejb.Local;
+import javax.ejb.Remote;
 import javax.ejb.Stateless;
 
 import com.novartis.pcs.ontology.service.parser.ParseContext;
@@ -42,6 +44,8 @@ import com.novartis.pcs.ontology.service.parser.obo.OBOParseContext;
  * Session Bean implementation class OntologyImportServiceImpl
  */
 @Stateless(name = "oboImportService")
+@Local(OntologyImportServiceLocal.class)
+@Remote(OntologyImportServiceRemote.class)
 public class OntologyImportServiceImpl extends OntologyImportServiceBase
 {
 	Logger logger = Logger.getLogger(getClass().getName());

@@ -26,8 +26,6 @@ import com.novartis.pcs.ontology.service.OntologyService;
 import com.novartis.pcs.ontology.service.parser.ParseContext;
 import com.novartis.pcs.ontology.service.search.OntologySearchServiceLocal;
 
-@Local(OntologyImportServiceLocal.class)
-@Remote(OntologyImportServiceRemote.class)
 public abstract class OntologyImportServiceBase extends OntologyService implements OntologyImportServiceRemote, OntologyImportServiceLocal {
 
     private Logger logger = Logger.getLogger(getClass().getName());
