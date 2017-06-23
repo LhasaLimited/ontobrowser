@@ -1,6 +1,6 @@
 package com.novartis.pcs.ontology.service.parser.obo;
 
-import org.coode.owlapi.obo.parser.OBOVocabulary;
+import org.coode.owlapi.obo12.parser.OBOVocabulary;
 
 import com.novartis.pcs.ontology.entity.RelationshipType;
 
