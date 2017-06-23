@@ -28,11 +28,13 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -87,10 +89,12 @@ import com.novartis.pcs.ontology.service.parser.InvalidFormatException;
 public class OntologiesServlet extends HttpServlet {
 	private static final String MEDIA_TYPE_JSON = "application/json";
 	private static final String MEDIA_TYPE_OBO = "application/obo";
+	private static final String MEDIA_TYPE_OWL_XML = "application/owl+xml";
 	private static final Map<String,OntologyFormat> mediaTypes;
-	
+	private static final String CHARSET_UTF_8 = ";charset=utf-8";
+
 	static {
-        mediaTypes = new LinkedHashMap<String,OntologyFormat>();
+		mediaTypes = new LinkedHashMap<>();
         // a registered media type does not exist for OBO
         mediaTypes.put("text/xml", RDFXML);
         mediaTypes.put("application/xml", RDFXML);
@@ -119,7 +123,9 @@ public class OntologiesServlet extends HttpServlet {
 	@EJB
 	protected TermDAOLocal termDAO;
 	
-	private ObjectMapper mapper = new ObjectMapper();
+	private final Map<OntologyFormat, OntologyImportServiceLocal> importServices = new EnumMap<>(OntologyFormat.class);
+
+	private final ObjectMapper mapper = new ObjectMapper();
 	
 	@Override
 	public void init() throws ServletException {
@@ -131,6 +137,12 @@ public class OntologiesServlet extends HttpServlet {
     	mapper.addMixInAnnotations(Synonym.class, SynonymMixInAnnotations.class);
     	mapper.addMixInAnnotations(Relationship.class, RelationshipMixInAnnotations.class);
     	mapper.addMixInAnnotations(CrossReference.class, CrossReferenceMixInAnnotations.class);
+	}
+
+	@PostConstruct
+	public void initialize()
+	{
+		importServices.put(OBO, importService);
 	}
 
 	@Override
@@ -153,7 +165,8 @@ public class OntologiesServlet extends HttpServlet {
 		} else {
 			mediaType = getExpectedMediaType(request, 
 					Collections.singletonList(MEDIA_TYPE_JSON));
-			if(mediaType.equals(MEDIA_TYPE_JSON)) {
+			if (MEDIA_TYPE_JSON.equals(mediaType))
+			{
 				serializeAll(response);
 			} else {
 				response.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
@@ -179,16 +192,13 @@ public class OntologiesServlet extends HttpServlet {
 	@Override
 	protected void doPut(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		String mediaType = StringUtils.trimToNull(request.getContentType());
-		String encoding = StringUtils.trimToNull(request.getCharacterEncoding());	
+		String encoding = StringUtils.trimToNull(request.getCharacterEncoding());
 		String pathInfo = StringUtils.trimToNull(request.getPathInfo());
 		Curator curator = loadCurator(request);
 		
-		if(mediaType != null && mediaType.indexOf(';') > 0) {
-			mediaType = mediaType.substring(0, mediaType.indexOf(';'));
-		}
+		String mediaType = parseMediaType(request.getContentType());
 		
-		if(!StringUtils.equalsIgnoreCase(mediaType,MEDIA_TYPE_OBO)
+		if (!(StringUtils.equalsIgnoreCase(mediaType, MEDIA_TYPE_OBO) || StringUtils.equalsIgnoreCase(mediaType, MEDIA_TYPE_OWL_XML))
 				|| !StringUtils.equalsIgnoreCase(encoding,"utf-8")) {
 			log("Failed to import ontology: invalid media type or encoding " 
 					+ mediaType + ";charset=" + encoding);
@@ -202,10 +212,10 @@ public class OntologiesServlet extends HttpServlet {
 		} else {
 			try {
 				String ontologyName = pathInfo.substring(1);
-				importService.importOntology(ontologyName, request.getInputStream(), curator);
-				response.setStatus(HttpServletResponse.SC_OK);
-				response.setHeader("Access-Control-Allow-Origin", "*");
-				response.setHeader("Cache-Control", "public, max-age=0");
+
+				OntologyImportServiceLocal ontologyImportService = importServices.get(mediaTypes.get(mediaType));
+				ontologyImportService.importOntology(ontologyName, request.getInputStream(), curator);
+				setCommonResponseHeaders(response);
 			} catch(DuplicateEntityException e) {
 				log("Failed to import ontology: duplicate term", e);
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -222,7 +232,7 @@ public class OntologiesServlet extends HttpServlet {
 		}
 		response.setContentLength(0);
 	}
-	
+
 	@Override
 	protected void doOptions(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -235,7 +245,7 @@ public class OntologiesServlet extends HttpServlet {
 			response.setHeader("Access-Control-Allow-Origin", "*");
 			response.setHeader("Access-Control-Allow-Methods", "GET,PUT");
 			response.setIntHeader("Access-Control-Max-Age", 60*60*24);
-			response.setContentType(mediaType + ";charset=utf-8");
+			response.setContentType(mediaType + CHARSET_UTF_8);
 			response.setContentLength(0);
 		} else {
 			response.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
@@ -266,19 +276,17 @@ public class OntologiesServlet extends HttpServlet {
 	private void serializeAll(HttpServletResponse response) {
 		try {
 			List<Ontology> all = ontologyDAO.loadByStatus(EnumSet.of(Status.APPROVED));
-			List<Ontology> ontologies = new ArrayList<Ontology>();
+			List<Ontology> ontologies = new ArrayList<>();
 			
 			for(Ontology ontology : all) {
 				if(!ontology.isCodelist()) {
 					ontologies.add(ontology);
 				}
 			}
-			
-			response.setStatus(HttpServletResponse.SC_OK);
-			response.setHeader("Access-Control-Allow-Origin", "*");
-			response.setContentType(MEDIA_TYPE_JSON + ";charset=utf-8");
-			response.setHeader("Cache-Control", "public, max-age=0");
-			
+
+			setCommonResponseHeaders(response);
+			response.setContentType(MEDIA_TYPE_JSON + CHARSET_UTF_8);
+
 			// As per jackson javadocs - Encoding will be UTF-8
 			mapper.writeValue(response.getOutputStream(), ontologies);
 			
@@ -288,7 +296,14 @@ public class OntologiesServlet extends HttpServlet {
 			response.setContentLength(0);
 		}
 	}
-	
+
+	private void setCommonResponseHeaders(final HttpServletResponse response)
+	{
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setHeader("Cache-Control", "public, max-age=0");
+	}
+
 	private void serialize(String ontologyName, HttpServletResponse response) {
 		try {
 			Ontology ontology = ontologyDAO.loadByName(ontologyName);
@@ -298,12 +313,10 @@ public class OntologiesServlet extends HttpServlet {
 			} else {
 				Collection<Term> terms = termDAO.loadAll(ontology);
 				OntologyDelegate delegate = new OntologyDelegate(ontology, terms);
-								
-				response.setStatus(HttpServletResponse.SC_OK);
-				response.setHeader("Access-Control-Allow-Origin", "*");
-				response.setContentType(MEDIA_TYPE_JSON + ";charset=utf-8");
-				response.setHeader("Cache-Control", "public, max-age=0");
-				
+
+				setCommonResponseHeaders(response);
+				response.setContentType(MEDIA_TYPE_JSON + CHARSET_UTF_8);
+
 				// As per jackson javadocs - Encoding will be UTF-8
 				mapper.writeValue(response.getOutputStream(), delegate);
 			}
@@ -318,15 +331,15 @@ public class OntologiesServlet extends HttpServlet {
 			HttpServletResponse response) {
 		OntologyFormat format = mediaTypes.get(mediaType);
 		if(format != null) {
-			try {				
-				response.setStatus(HttpServletResponse.SC_OK);
-				response.setHeader("Access-Control-Allow-Origin", "*");
-				response.setContentType(mediaType + ";charset=utf-8");
-				response.setHeader("Cache-Control", "public, max-age=0");
-				
+			try
+			{
+				setCommonResponseHeaders(response);
+				response.setContentType(mediaType + CHARSET_UTF_8);
+
 				exportService.exportOntology(ontologyName, response.getOutputStream(), format,
 						includeNonPublicXrefs);
 			} catch(OntologyNotFoundException e) {
+				log("Failed to export ontology", e);
 				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 				response.setContentLength(0);
 			} catch(Exception e) {
@@ -339,7 +352,18 @@ public class OntologiesServlet extends HttpServlet {
 			response.setContentLength(0);
 		}
 	}
-	
+
+	private String parseMediaType(String contentType)
+	{
+		String mediaType = StringUtils.trimToEmpty(contentType);
+		int indexOfSemiColon = mediaType.indexOf(';');
+		if (indexOfSemiColon > 0)
+		{
+			mediaType = mediaType.substring(0, indexOfSemiColon);
+		}
+		return mediaType;
+	}
+
     private String getUsername(HttpServletRequest request) {
         String username = request.getRemoteUser();
         

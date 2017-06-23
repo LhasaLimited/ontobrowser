@@ -39,8 +39,10 @@ import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.entity.VersionedEntity;
 import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
 import com.novartis.pcs.ontology.service.parser.InvalidFormatException;
+import com.novartis.pcs.ontology.service.parser.ParseContext;
 
-public class OBOParseContext implements OBOParserHandler {    
+public class OBOParseContext implements OBOParserHandler, ParseContext
+{
     private static final Logger logger = 
     	Logger.getLogger(OBOParseContext.class.getName());
         
@@ -107,8 +109,7 @@ public class OBOParseContext implements OBOParserHandler {
         Term term = terms.get(referenceId.toUpperCase());
         if(term == null) {
 			term = new Term(ontology, null, referenceId, curator, version);
-			term.setStatus(Status.APPROVED);
-			term.setApprovedVersion(version);
+			initVersion(term);
 			terms.put(referenceId.toUpperCase(), term);
 		}
 		return term;
@@ -122,14 +123,14 @@ public class OBOParseContext implements OBOParserHandler {
     	RelationshipType relationshipType = relationshipTypes.get(relationship.toLowerCase());
     	if(relationshipType == null) {
     		relationshipType = new RelationshipType(relationship, relationship, relationship, curator, version);
-			relationshipType.setStatus(Status.APPROVED);
-			relationshipType.setApprovedVersion(version);
+			initVersion(relationshipType);
 			relationshipTypes.put(relationship.toLowerCase(), relationshipType);
 		}
 		return relationshipType;  	
     }
-    
-    public Collection<RelationshipType> getRelationshipTypes() {
+
+	public Collection<RelationshipType> getRelationshipTypes()
+	{
     	return relationshipTypes.values();  	
     }
     
@@ -286,8 +287,7 @@ public class OBOParseContext implements OBOParserHandler {
     	
     	if(synonymObj == null) {
     		synonymObj = new Synonym(term, synonym, type, curator, version);
-    		synonymObj.setStatus(Status.APPROVED);
-    		synonymObj.setApprovedVersion(version);
+			initVersion(synonymObj);
     	} else if(synonymObj.getStatus() != Status.APPROVED) {
 			String msg = "Existing synonym for term (" 
 				+ term.getReferenceId() 
@@ -324,9 +324,8 @@ public class OBOParseContext implements OBOParserHandler {
 			} catch(IllegalArgumentException e) {
 				throw new InvalidFormatException("Invalid OBO synonym xref URL: " + url);
 			}
-    		    		
-    		synonymObj.setStatus(Status.APPROVED);
-    		synonymObj.setApprovedVersion(version);
+
+			initVersion(synonymObj);
     	} else if(synonymObj.getStatus() != Status.APPROVED) {
 			String msg = "Existing synonym for term (" 
 				+ term.getReferenceId() 
@@ -362,8 +361,7 @@ public class OBOParseContext implements OBOParserHandler {
     		synonymObj = new Synonym(term, synonym, type, curator, version);
     		synonymObj.setDatasource(datasource);
     		synonymObj.setReferenceId(refId);
-    		synonymObj.setStatus(Status.APPROVED);
-    		synonymObj.setApprovedVersion(version);
+			initVersion(synonymObj);
     	} else if(synonymObj.getStatus() != Status.APPROVED) {
 			String msg = "Existing synonym for term (" 
 				+ term.getReferenceId() 
@@ -394,8 +392,7 @@ public class OBOParseContext implements OBOParserHandler {
 		if(relationship == null) {
 			relationship = new Relationship(term, relatedTerm, relType, curator, version);
 			relationship.setIntersection(intersection);
-			relationship.setStatus(Status.APPROVED);
-			relationship.setApprovedVersion(version);
+			initVersion(relationship);
 		} else if(!relationship.getStatus().equals(Status.APPROVED)) {
 			String msg = "Existing relationship " 
 				+ term.getReferenceId() 
@@ -456,7 +453,13 @@ public class OBOParseContext implements OBOParserHandler {
         }
         return sb.toString().trim();
     }
-    
+
+	private void initVersion(VersionedEntity versionedEntity)
+	{
+		versionedEntity.setStatus(Status.APPROVED);
+		versionedEntity.setApprovedVersion(version);
+	}
+
     private void setupTagHandlers() {
     	addTagHandler(headerTagHandlers, new FormatVersionTagHandler(this));
     	addTagHandler(headerTagHandlers, new DataVersionTagHandler(this));
