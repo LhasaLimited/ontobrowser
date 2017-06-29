@@ -36,6 +36,7 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -110,10 +111,13 @@ public class OntologiesServlet extends HttpServlet {
 			
 	@EJB
 	private OntologyExportServiceLocal exportService;
-	
-	@EJB
+
+	@EJB(beanName = "oboImportService")
 	private OntologyImportServiceLocal importService;
-	
+
+	@EJB(beanName = "owlImportService")
+	private OntologyImportServiceLocal owlImportService;
+
 	@EJB
 	private OntologyCuratorServiceLocal curatorService;
 	
@@ -142,6 +146,7 @@ public class OntologiesServlet extends HttpServlet {
 	@PostConstruct
 	public void initialize()
 	{
+		importServices.put(OWLXML, owlImportService);
 		importServices.put(OBO, importService);
 	}
 

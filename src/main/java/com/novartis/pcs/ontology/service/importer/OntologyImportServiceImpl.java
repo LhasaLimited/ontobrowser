@@ -34,6 +34,7 @@ import org.coode.owlapi.obo12.parser.ParserAdapter;
 
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.Datasource;
+import com.novartis.pcs.ontology.entity.InvalidEntityException;
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Term;
@@ -81,4 +82,38 @@ public class OntologyImportServiceImpl extends OntologyImportServiceBase
 		}
 		return context;
 	}
+
+    @Override
+    protected void findRefId(Ontology ontology, Collection<Term> terms) throws InvalidEntityException {
+        String refIdPrefix = null;
+        int refIdValue = 0;
+        
+        for(Term term: terms){
+            String refId = term.getReferenceId();
+            int colon = refId.indexOf(':');
+            
+            if(colon == -1) {
+                throw new InvalidEntityException(term, 
+                        "No reference id prefix defined for term: " + refId);
+            }
+            
+            if(refIdPrefix == null) {
+                refIdPrefix = refId.substring(0,colon);
+            } /*else if(!refIdPrefix.equals(refId.substring(0,colon))) {
+                throw new InvalidEntityException(term, 
+                        "Invalid term reference id prefix: " + refId);
+            }*/
+            
+            try {
+                int value = Integer.parseInt(refId.substring(colon+1));
+                refIdValue = Math.max(refIdValue, value);
+            } catch(Exception e) {
+                throw new InvalidEntityException(term, 
+                        "Invalid term reference id: " + refId, e);
+            }
+        }
+        
+        ontology.setReferenceIdPrefix(refIdPrefix);
+        ontology.setReferenceIdValue(refIdValue);
+    }
 }
