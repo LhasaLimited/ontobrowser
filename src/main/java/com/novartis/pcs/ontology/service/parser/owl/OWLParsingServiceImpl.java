@@ -1,6 +1,8 @@
 package com.novartis.pcs.ontology.service.parser.owl;
 
+import java.beans.Beans;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,6 +21,9 @@ import java.util.stream.Collectors;
 import javax.ejb.Local;
 import javax.ejb.Stateless;
 
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.beanutils.BeanUtilsBean;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
@@ -100,7 +106,9 @@ import org.semanticweb.owlapi.util.OWLObjectWalker;
 import org.semanticweb.owlapi.util.OWLOntologyWalker;
 import org.semanticweb.owlapi.util.StructureWalker;
 
+import com.fasterxml.jackson.databind.util.BeanUtil;
 import com.google.common.base.Optional;
+import com.novartis.pcs.ontology.entity.AbstractEntity;
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.Ontology;
@@ -141,7 +149,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		private List<Relationship> relationships = new ArrayList<>();
 		private Map<String, RelationshipType> relationshipTypes = new HashMap<>();
 		private Map<String, String> danglingLabels = new HashMap<>();
-
+		private Map<String, String> danglingDefinitons = new HashMap<>();
 		private Map<Term, Map<Term, RelationshipType>> relationshipMap = new HashMap<>();
 		// current state
 		private Deque<ParserState> state = new LinkedList<>();
@@ -171,7 +179,8 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			state.pop();
 
 			// dangling
-			danglingLabels.forEach(this::matchLabel);
+			danglingLabels.forEach((k, v) -> matchLabel(k, v, "name"));
+			danglingDefinitons.forEach((k, v) -> matchLabel(k, v, "definition"));
 
 			Term thing = terms.get("Thing");
 			terms.forEach((termName, term) -> {
@@ -333,33 +342,57 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			state.push(ParserState.ANNOTATION_ASSERTION);
 			logger.log(Level.INFO, "OWLAnnotationAssertionAxiom" + ":" + axiom.toString());
 			super.visit(axiom);
-			if (isRDFSLabel(axiom.getProperty())) {
-				if (axiom.getSubject() instanceof IRI) {
-					IRI subjectIRI = (IRI) axiom.getSubject();
-					Optional<String> fragmentOpt = subjectIRI.getRemainder();
-					if (fragmentOpt.isPresent()) {
-						String label = toString(axiom.getAnnotation());
-						String fragment = fragmentOpt.get();
-						boolean matched = matchLabel(fragment, label);
-						if (!matched) {
-							danglingLabels.put(fragment, label);
-						}
-					}
+			state.pop();
+
+			String referenceId = null;
+			if (axiom.getSubject() instanceof IRI) {
+				IRI subjectIRI = (IRI) axiom.getSubject();
+				Optional<String> fragmentOpt = subjectIRI.getRemainder();
+				if (fragmentOpt.isPresent()) {
+					referenceId = fragmentOpt.get();
 				}
 			}
-			state.pop();
+
+			if (referenceId == null) {
+				return;
+			}
+
+			if (isRDFSLabel(axiom.getProperty())) {
+				String label = toString(axiom.getAnnotation());
+				boolean matched = matchLabel(referenceId, label, "name");
+				if (!matched) {
+					danglingLabels.put(referenceId, label);
+				}
+			}
+
+			if (isIAODefinition(axiom.getProperty())) {
+				String definition = toString(axiom.getAnnotation());
+				boolean matched = matchLabel(referenceId, definition, "definition");
+				if (!matched)
+					danglingDefinitons.put(referenceId, definition);
+			}
 		}
 
-		private boolean matchLabel(String fragment, String label) {
-			boolean matched = false;
+		private boolean isIAODefinition(OWLAnnotationProperty property) {
+			String string = property.getIRI().toString();
+			return string.equals("http://purl.obolibrary.org/obo/IAO_0000115");
+		}
+
+		private boolean matchLabel(String fragment, String label, String propertyName) {
+			AbstractEntity entity = null;
 			if (terms.containsKey(fragment)) {
-				Term term = terms.get(fragment);
-				term.setName(label);
-				matched = true;
+				entity = terms.get(fragment);
 			} else if (relationshipTypes.containsKey(fragment)) {
-				RelationshipType relationshipType = relationshipTypes.get(fragment);
-				relationshipType.setName(label);
-				matched = true;
+				entity = relationshipTypes.get(fragment);
+			}
+			boolean matched = entity != null;
+
+			if (matched) {
+				try {
+					BeanUtils.setProperty(entity, propertyName, label);
+				} catch (IllegalAccessException | InvocationTargetException e) {
+					logger.log(Level.SEVERE, "Cannot set [property={},entity={}]", new Object[] { propertyName, entity.getId() });
+				}
 			}
 			return matched;
 		}
