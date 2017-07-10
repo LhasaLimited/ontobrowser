@@ -173,8 +173,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		}
 
 		@Override
-		public void visit(OWLOntology owlOntology) {
-			logger.log(Level.FINE, "OWLOntology" + ":" + owlOntology.toString());
+		public void visit(OWLOntology owlOntology) { logger.log(Level.FINE, "OWLOntology" + ":" + owlOntology.toString());
 			IRI documentIRI = owlOntologyManager.getOntologyDocumentIRI(owlOntology);
 			ontology.setSourceUri(documentIRI.toString());
 			state.push(ParserState.ONTOLOGY);
@@ -188,8 +187,8 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			Term thing = getTerm("Thing");
 			terms.forEach((termName, term) -> {
 				if (term.getRelationships().isEmpty() && !term.equals(thing)) {
-					Relationship relationship = new Relationship(term, thing, relationshipTypes.get("is_a"), curator, version);
-					initVersion(relationship);
+					// added to term in constructor
+					initVersion(new Relationship(term, thing, relationshipTypes.get("is_a"), curator, version));
 				}
 			});
 		}
@@ -200,28 +199,28 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			OWLAnnotationProperty owlAnnotationProperty = owlAnnotation.getProperty();
 			ParserState currentState = state.peek();
 			if (ParserState.ONTOLOGY.equals(currentState)) {
-				if (isRDFSComment(owlAnnotationProperty)) {
-
+				if (owlAnnotationProperty.isComment()) {
 					String description = appendNonEmpty(ontology.getDescription(), getString(owlAnnotation));
 					ontology.setDescription(StringUtils.abbreviate(description, 1024));
 				}
 			} else if (ParserState.CLASS.equals(currentState)) {
-				if (isRDFSLabel(owlAnnotationProperty)) {
-					termStack.peek().setName(getString(owlAnnotation));
-				} else if (isRDFSComment(owlAnnotationProperty)) {
-					termStack.peek().setComments(getString(owlAnnotation));
+				Term term = termStack.peek();
+				if (owlAnnotationProperty.isLabel()) {
+					term.setName(getString(owlAnnotation));
+				} else if (owlAnnotationProperty.isComment()) {
+					term.setComments(getString(owlAnnotation));
 				} else if (Obo2OWLVocabulary.IRI_OIO_hasDbXref.getIRI().equals(owlAnnotationProperty.getIRI())) {
-					if (owlAnnotation instanceof OWLLiteral) {
+					if (owlAnnotation.getValue() instanceof OWLLiteral) {
 						String[] splitted = getString(owlAnnotation).split(":");
 						Datasource datasource = getDatasource(splitted[ACRONYM_INDEX]);
-						CrossReference xref = new CrossReference(termStack.peek(), datasource, splitted[REFID_INDEX], curator);
-						termStack.peek().getCrossReferences().add(xref);
+						CrossReference xref = new CrossReference(term, datasource, splitted[REFID_INDEX], curator);
+						term.getCrossReferences().add(xref);
 					}
 				} else if (Obo2OWLVocabulary.IRI_IAO_0000115.getIRI().equals(owlAnnotationProperty.getIRI())) {
-					termStack.peek().setDefinition(getString(owlAnnotation));
+					term.setDefinition(getString(owlAnnotation));
 				}
 			} else if (ParserState.OBJECT_PROPERTY.equals(currentState)) {
-				if (isRDFSComment(owlAnnotationProperty)) {
+				if (owlAnnotationProperty.isComment()) {
 					relationshipType.setRelationship(getString(owlAnnotation));
 				}
 			}
@@ -229,10 +228,6 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 
 		private boolean isRDFSLabel(OWLAnnotationProperty owlAnnotationProperty) {
 			return df.getRDFSLabel().equals(owlAnnotationProperty);
-		}
-
-		private boolean isRDFSComment(OWLAnnotationProperty owlAnnotationProperty) {
-			return df.getRDFSComment().equals(owlAnnotationProperty);
 		}
 
 		private String appendNonEmpty(String existing, String appended) {
