@@ -32,6 +32,8 @@ import javax.ejb.Remote;
 import javax.ejb.Stateless;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.NoResultException;
+import javax.persistence.PersistenceUnitUtil;
+import javax.persistence.PersistenceUtil;
 import javax.persistence.Query;
 
 import com.novartis.pcs.ontology.entity.Ontology;
@@ -155,6 +157,7 @@ public class TermDAO extends VersionedEntityDAO<Term>
 			term.getCrossReferences().size();
 			term.getRelationships().size();
 			term.getSynonyms().size();
+			term.getAnnotations().size();
 		}
 		return super.loadLazyAssociations(term);
 	}

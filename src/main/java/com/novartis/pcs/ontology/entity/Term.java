@@ -135,7 +135,13 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 			cascade={CascadeType.PERSIST, CascadeType.REMOVE})
 	@Cache(usage=CacheConcurrencyStrategy.TRANSACTIONAL)
 	private Set<CrossReference> crossReferences = new HashSet<CrossReference>(0);
-		
+
+	@Valid
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "term",
+			cascade={CascadeType.PERSIST, CascadeType.REMOVE})
+	@Cache(usage=CacheConcurrencyStrategy.TRANSACTIONAL)
+	private Set<Annotation> annotations = new HashSet<>(0);
+
 	@Valid
 	@ManyToOne(cascade={CascadeType.PERSIST})
 	@JoinColumn(name = "REPLACED_BY")
@@ -239,7 +245,15 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 	public void setSynonyms(Set<Synonym> synonyms) {
 		this.synonyms = synonyms;
 	}
-		
+
+	public Set<Annotation> getAnnotations() {
+		return annotations;
+	}
+
+	public void setAnnotations(final Set<Annotation> annotations) {
+		this.annotations = annotations;
+	}
+
 	@Override
 	public Term getReplacedBy() {
 		return replacedBy;

@@ -604,3 +604,95 @@ CREATE TABLE CURATOR_ACTION
                                         CONSTRAINT CURATOR_ACTION_TERM_SYNON_FK
                                         REFERENCES TERM_SYNONYM
 );
+
+-- DROP TABLE ANNOTATION_TYPE;
+CREATE TABLE ANNOTATION_TYPE (
+    ANNOTATION_TYPE_ID NUMBER(12)     NOT NULL
+                                        CONSTRAINT ANNT_TYPE_PK
+                                        PRIMARY KEY,
+    ANNOTATION_TYPE   VARCHAR2(128)    NOT NULL
+                                        CONSTRAINT ANNT_TYPE_UNIQUE 
+                                        UNIQUE,
+
+    PREFIXED_XML_TYPE   VARCHAR2(64)   NOT NULL,
+
+    STATUS              VARCHAR2(8)     DEFAULT 'PENDING' NOT NULL
+                                        CONSTRAINT ANNT_TYPE_STATUS_CK
+                                        CHECK(STATUS IN (
+                                            'PENDING',
+                                            'APPROVED',
+                                            'REJECTED',
+                                            'OBSOLETE')),
+    CREATED_DATE        DATE            DEFAULT SYSDATE NOT NULL,
+    CREATED_BY          NUMBER(12)      NOT NULL
+                                        CONSTRAINT ANNT_TYPE_CREATED_BY_FK
+                                        REFERENCES CURATOR,
+    CREATED_VERSION_ID  NUMBER(12)      NOT NULL
+                                        CONSTRAINT ANNT_TYPE_CREATED_VERSION_FK
+                                        REFERENCES VERSION,
+    APPROVED_VERSION_ID NUMBER(12)      NULL
+                                        CONSTRAINT ANNT_TYPE_APPROVED_VERSION_FK
+                                        REFERENCES VERSION,
+    OBSOLETE_VERSION_ID NUMBER(12)      NULL
+                                        CONSTRAINT ANNT_TYPE_OBSOLETE_VERSION_FK
+                                        REFERENCES VERSION,
+    REPLACED_BY         NUMBER(12)      NULL
+                                        CONSTRAINT ANNT_TYPE_REPLACED_BY_FK
+                                        REFERENCES ANNOTATION_TYPE
+);
+
+-- ALTER TABLE CURATOR_ACTION DROP COLUMN ANNOTATION_TYPE_ID;
+ALTER TABLE CURATOR_ACTION ADD ANNOTATION_TYPE_ID NUMBER(12) NULL
+                                        CONSTRAINT CURATOR_ACTION_ATTN_TYPE_FK 
+                                        REFERENCES ANNOTATION_TYPE;
+
+CREATE TABLE ANNOTATION (
+    ANNOTATION_ID NUMBER(12)     NOT NULL
+                                        CONSTRAINT ANNT_PK
+                                        PRIMARY KEY,
+    ANNOTATION_TYPE_ID NUMBER(12) NOT NULL
+                                        CONSTRAINT ANNT_TYPE_FK
+                                        REFERENCES ANNOTATION_TYPE,
+                                        
+    ANNOTATION        VARCHAR2(1024)   NOT NULL,
+
+    STATUS              VARCHAR2(8)     DEFAULT 'PENDING' NOT NULL
+                                        CONSTRAINT ANNT_STATUS_CK
+                                        CHECK(STATUS IN (
+                                            'PENDING',
+                                            'APPROVED',
+                                            'REJECTED',
+                                            'OBSOLETE')),
+    CREATED_DATE        DATE            DEFAULT SYSDATE NOT NULL,
+    CREATED_BY          NUMBER(12)      NOT NULL
+                                        CONSTRAINT ANNT_CREATED_BY_FK
+                                        REFERENCES CURATOR,
+    CREATED_VERSION_ID  NUMBER(12)      NOT NULL
+                                        CONSTRAINT ANNT_CREATED_VERSION_FK
+                                        REFERENCES VERSION,
+    APPROVED_VERSION_ID NUMBER(12)      NULL
+                                        CONSTRAINT ANNT_APPROVED_VERSION_FK
+                                        REFERENCES VERSION,
+    OBSOLETE_VERSION_ID NUMBER(12)      NULL
+                                        CONSTRAINT ANNT_OBSOLETE_VERSION_FK
+                                        REFERENCES VERSION,
+    REPLACED_BY         NUMBER(12)      NULL
+                                        CONSTRAINT ANNT_REPLACED_BY_FK
+                                        REFERENCES ANNOTATION
+);
+
+ALTER TABLE CURATOR_ACTION ADD ANNOTATION_ID NUMBER(12) NULL
+                                        CONSTRAINT CURATOR_ACTION_ATTN_FK
+                                        REFERENCES ANNOTATION;
+
+-- ALTER TABLE CURATOR_APPROVAL_WEIGHT DROP CONSTRAINT APPROVAL_WEIGHT_TABLE_CK;
+
+ALTER TABLE CURATOR_APPROVAL_WEIGHT 
+ADD CONSTRAINT APPROVAL_WEIGHT_TABLE_CK CHECK(TABLE_NAME IN (
+                                            'RELATIONSHIP_TYPE',
+                                            'ONTOLOGY',
+                                            'TERM',
+                                            'TERM_RELATIONSHIP',
+                                            'TERM_SYNONYM',
+                                            'ANNOTATION_TYPE',
+                                            'ANNOTATION'));
