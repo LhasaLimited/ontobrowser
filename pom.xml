@@ -21,6 +21,8 @@
     <failOnMissingWebXml>false</failOnMissingWebXml>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <arquillian-core-version>1.1.9.Final</arquillian-core-version>
+    <arquillian-wildfly-container-version>8.2.1.Final</arquillian-wildfly-container-version>
   </properties>
 
   <dependencies>
@@ -70,7 +72,7 @@
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.4</version>
-    </dependency>	
+    </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
@@ -98,17 +100,97 @@
     </dependency>
     <dependency>
 	    <groupId>net.sourceforge.owlapi</groupId>
-	    <artifactId>owlapi-distribution</artifactId>
-	    <version>3.5.6</version>
+        <artifactId>owlapi-parsers</artifactId>
+        <version>3.5.6</version>
+    </dependency>
+      <dependency>
+          <groupId>net.sourceforge.owlapi</groupId>
+          <artifactId>owlapi-oboformat</artifactId>
+          <version>3.5.6</version>
+      </dependency>
+      <dependency>
+          <groupId>net.sourceforge.owlapi</groupId>
+          <artifactId>owlapi-apibinding</artifactId>
+          <version>3.5.6</version>
     </dependency>
     <dependency>
     	<groupId>commons-beanutils</groupId>
     	<artifactId>commons-beanutils</artifactId>
     	<version>1.9.3</version>
     </dependency>
+
+      <dependency>
+          <groupId>org.jboss.arquillian.junit</groupId>
+          <artifactId>arquillian-junit-container</artifactId>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.wildfly</groupId>
+          <artifactId>wildfly-arquillian-container-managed</artifactId>
+          <version>${arquillian-wildfly-container-version}</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+          <version>1.4.01</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>4.11</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>com.oracle</groupId>
+          <artifactId>ojdbc7</artifactId>
+          <version>12.1.0.2</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.codejargon</groupId>
+          <artifactId>fluentjdbc</artifactId>
+          <version>1.6</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.jboss.arquillian.extension</groupId>
+          <artifactId>arquillian-persistence-dbunit</artifactId>
+          <version>1.0.0.Alpha7</version>
+          <scope>test</scope>
+          <exclusions>
+              <exclusion>
+                  <groupId>org.apache.poi</groupId>
+                  <artifactId>poi</artifactId>
+              </exclusion>
+          </exclusions>
+      </dependency>
+      <dependency>
+          <groupId>org.jboss.shrinkwrap.resolver</groupId>
+          <artifactId>shrinkwrap-resolver-spi-maven</artifactId>
+          <scope>test</scope>
+      </dependency>
+
+      <dependency>
+          <groupId>org.jboss.shrinkwrap.resolver</groupId>
+          <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+      </dependency>
   </dependencies>
 
-  <build>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.jboss.arquillian</groupId>
+                <artifactId>arquillian-bom</artifactId>
+                <version>${arquillian-core-version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
   	<finalName>${project.artifactId}</finalName>
     <!-- Output classes directly into the webapp, so that IDEs and "mvn process-classes" update them in DevMode -->
     <outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes</outputDirectory>
@@ -138,5 +220,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>

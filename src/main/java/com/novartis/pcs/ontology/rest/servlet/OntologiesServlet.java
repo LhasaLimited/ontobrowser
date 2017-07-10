@@ -89,7 +89,7 @@ import com.novartis.pcs.ontology.service.parser.InvalidFormatException;
 @SuppressWarnings("serial")
 public class OntologiesServlet extends HttpServlet {
 	private static final String MEDIA_TYPE_JSON = "application/json";
-	private static final String MEDIA_TYPE_OBO = "application/obo";
+	public static final String MEDIA_TYPE_OBO = "application/obo";
 	private static final String MEDIA_TYPE_OWL_XML = "application/owl+xml";
 	private static final Map<String,OntologyFormat> mediaTypes;
 	private static final String CHARSET_UTF_8 = ";charset=utf-8";
