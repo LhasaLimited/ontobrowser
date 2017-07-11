@@ -7,7 +7,7 @@
 	<container qualifier="jboss" default="true">
 		<configuration>
 			<property name="jbossHome">C:\software\wildfly\wildfly-8.2.1.Final</property>
- 			<!--<property name="javaVmArguments">-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y</property>-->
+ 			<property name="javaVmArguments">-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n</property>
  		</configuration>
 
 	</container>

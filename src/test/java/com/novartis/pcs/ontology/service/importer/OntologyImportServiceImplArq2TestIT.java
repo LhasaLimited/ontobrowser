@@ -9,6 +9,7 @@ import com.novartis.pcs.ontology.entity.DuplicateEntityException;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
+import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
 import junit.framework.AssertionFailedError;
 import org.coode.owlapi.obo12.parser.OBOVocabulary;
@@ -19,14 +20,18 @@ import org.jboss.arquillian.transaction.api.annotation.Transactional;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import javax.ejb.EJB;
 import java.io.File;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -51,6 +56,7 @@ public class OntologyImportServiceImplArq2TestIT {
 
 	@EJB
 	private TermDAOLocal termDAO;
+	private Ontology ontology;
 
 	@Deployment(name = "ontobrowser")
 	public static WebArchive create() {
@@ -63,24 +69,22 @@ public class OntologyImportServiceImplArq2TestIT {
 				.addAsResource("test-reference/test-reference.owl");
 	}
 
-	@Test
-	public void shouldImportOntology() throws DuplicateEntityException, InvalidEntityException {
+	@Before
+	public void loadOntology() throws DuplicateEntityException, InvalidEntityException {
 		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/test-reference/test-reference.owl");
 		importService.importOntology("OntobrowserTest", ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
 
-		Ontology ontology = ontologyDAOLocal.loadByName("OntobrowserTest");
+		ontology = ontologyDAOLocal.loadByName("OntobrowserTest");
 		assertThat(ontology, notNullValue());
+	}
+
+	@Test
+	public void shouldImportOntology() throws DuplicateEntityException, InvalidEntityException {
 		assertThat(ontology.getDescription(), is("Ontology comment 2 Ontology comment"));
 	}
 
 	@Test
 	public void shouldImportTermWithDefinition() throws DuplicateEntityException, InvalidEntityException {
-		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/test-reference/test-reference.owl");
-		importService.importOntology("OntobrowserTest", ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
-
-		Ontology ontology = ontologyDAOLocal.loadByName("OntobrowserTest");
-		assertThat(ontology, notNullValue());
-
 		Term term = termDAO.loadByName(ROOT_NAME, ontology, true);
 		assertThat(term, notNullValue());
 		assertThat(term.getReferenceId(), is(ROOT_IRI));
@@ -90,12 +94,6 @@ public class OntologyImportServiceImplArq2TestIT {
 
 	@Test
 	public void shouldImportCrossReference() throws DuplicateEntityException, InvalidEntityException {
-		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/test-reference/test-reference.owl");
-		importService.importOntology("OntobrowserTest", ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
-
-		Ontology ontology = ontologyDAOLocal.loadByName("OntobrowserTest");
-		assertThat(ontology, notNullValue());
-
 		Term term = termDAO.loadByName(ROOT_NAME, ontology, true);
 		assertThat(term, notNullValue());
 
@@ -111,12 +109,6 @@ public class OntologyImportServiceImplArq2TestIT {
 
 	@Test
 	public void shouldImportSubclass() throws DuplicateEntityException, InvalidEntityException {
-		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/test-reference/test-reference.owl");
-		importService.importOntology("OntobrowserTest", ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
-
-		Ontology ontology = ontologyDAOLocal.loadByName("OntobrowserTest");
-		assertThat(ontology, notNullValue());
-
 		Term term = termDAO.loadByName("assay kit", ontology, true);
 		assertThat(term.getReferenceId(), is("OB_00003"));
 		Optional<Relationship> found = term.getRelationships().stream().filter(relationship -> OBOVocabulary.IS_A.getName().equals(relationship.getType()
@@ -126,4 +118,13 @@ public class OntologyImportServiceImplArq2TestIT {
 		assertThat(relatedTerm.getReferenceId(), is(ROOT_IRI));
 	}
 
+	@Test
+	public void shouldImportSynonyms() {
+		Term term = termDAO.loadByName("assay kit", ontology, true);
+		Map<Synonym.Type, Synonym> synonymMap = term.getSynonyms().stream().collect(Collectors.toMap(Synonym::getType, Function.identity()));
+		assertThat(synonymMap.get(Synonym.Type.BROAD).getSynonym(), is("assay_kit_broad"));
+		assertThat(synonymMap.get(Synonym.Type.EXACT).getSynonym(), is("assay_kit"));
+		assertThat(synonymMap.get(Synonym.Type.NARROW).getSynonym(), is("assay_kit_narrow"));
+		assertThat(synonymMap.get(Synonym.Type.RELATED).getSynonym(), is("assay_kit_related"));
+	}
 }
