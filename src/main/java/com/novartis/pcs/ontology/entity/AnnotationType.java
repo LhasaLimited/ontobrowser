@@ -6,48 +6,48 @@
  */
 package com.novartis.pcs.ontology.entity;
 
+import java.util.Objects;
+
 import javax.persistence.AssociationOverride;
 import javax.persistence.AttributeOverride;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import java.util.Objects;
+import javax.validation.Valid;
 
 /**
  * @author Artur Polit
  * @since 10/07/2017
  */
 @Entity
-@Table
+@Table(name = "ANNOTATION_TYPE")
 @AttributeOverride(name = "id",
 		column = @Column(name = "ANNOTATION_TYPE_ID", unique = true, nullable = false))
 @AssociationOverride(name = "curatorActions", joinColumns = @JoinColumn(name = "ANNOTATION_TYPE_ID"))
 public class AnnotationType extends VersionedEntity implements ReplaceableEntity<AnnotationType> {
 
+	public AnnotationType(final String prefixedXmlType, final Curator creator, final Version version) {
+		super(creator, version);
+		this.prefixedXmlType = prefixedXmlType;
+		this.annotationType = prefixedXmlType;
+	}
+
+	protected AnnotationType() {
+	}
+
+	@Valid
+	@ManyToOne(cascade = { CascadeType.PERSIST })
+	@JoinColumn(name = "REPLACED_BY")
 	private AnnotationType replacedBy;
 
-	private String annotation;
+	@Column(name = "ANNOTATION_TYPE")
+	private String annotationType;
 
-	private Ontology sourceOntology;
-
+	@Column(name = "PREFIXED_XML_TYPE")
 	private String prefixedXmlType;
-
-	public String getAnnotation() {
-		return annotation;
-	}
-
-	public void setAnnotation(final String annotation) {
-		this.annotation = annotation;
-	}
-
-	public Ontology getSourceOntology() {
-		return sourceOntology;
-	}
-
-	public void setSourceOntology(final Ontology sourceOntology) {
-		this.sourceOntology = sourceOntology;
-	}
 
 	public String getPrefixedXmlType() {
 		return prefixedXmlType;
@@ -73,14 +73,14 @@ public class AnnotationType extends VersionedEntity implements ReplaceableEntity
 		if (o == null || getClass() != o.getClass()) return false;
 		if (!super.equals(o)) return false;
 		final AnnotationType that = (AnnotationType) o;
-		return Objects.equals(annotation, that.annotation) &&
-				Objects.equals(sourceOntology, that.sourceOntology) &&
+		return Objects.equals(annotationType, that.annotationType)
+				&&
 				Objects.equals(prefixedXmlType, that.prefixedXmlType);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(super.hashCode(), annotation, sourceOntology, prefixedXmlType);
+		return Objects.hash(super.hashCode(), annotationType, prefixedXmlType);
 	}
 }
 /* ---------------------------------------------------------------------*

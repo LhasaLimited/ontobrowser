@@ -653,8 +653,12 @@ CREATE TABLE ANNOTATION (
     ANNOTATION_TYPE_ID NUMBER(12) NOT NULL
                                         CONSTRAINT ANNT_TYPE_FK
                                         REFERENCES ANNOTATION_TYPE,
+      
+    TERM_ID            NUMBER(12)       NULL
+                                        CONSTRAINT ANNT_TERM_FK
+                                        REFERENCES TERM,
                                         
-    ANNOTATION        VARCHAR2(1024)   NOT NULL,
+    ANNOTATION        VARCHAR2(4000)   NOT NULL,
 
     STATUS              VARCHAR2(8)     DEFAULT 'PENDING' NOT NULL
                                         CONSTRAINT ANNT_STATUS_CK

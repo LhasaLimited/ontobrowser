@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import javax.persistence.AssociationOverride;
 import javax.persistence.AttributeOverride;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -23,11 +24,22 @@ import javax.validation.constraints.NotNull;
  * @since 10/07/2017
  */
 @Entity
-@Table
+@Table(name = "ANNOTATION")
 @AttributeOverride(name = "id",
 		column = @Column(name = "ANNOTATION_ID", unique = true, nullable = false))
 @AssociationOverride(name = "curatorActions", joinColumns = @JoinColumn(name = "ANNOTATION_ID"))
 public class Annotation extends VersionedEntity implements ReplaceableEntity<Annotation> {
+
+	public Annotation(final String annotation, final AnnotationType annotationType, final Term term, final Curator creator, final Version version) {
+		super(creator, version);
+		this.annotation = annotation;
+		this.annotationType = annotationType;
+		this.term = term;
+		term.getAnnotations().add(this);
+	}
+
+	protected Annotation() {
+	}
 
 	private String annotation;
 
@@ -43,6 +55,9 @@ public class Annotation extends VersionedEntity implements ReplaceableEntity<Ann
 	@JoinColumn(name = "TERM_ID", nullable = false)
 	private Term term;
 
+	@Valid
+	@ManyToOne(cascade={CascadeType.PERSIST})
+	@JoinColumn(name = "REPLACED_BY")
 	private Annotation replacedBy;
 
 	public String getAnnotation() {
