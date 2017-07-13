@@ -3,6 +3,7 @@ package com.novartis.pcs.ontology.service.importer;
 import com.novartis.pcs.ontology.dao.CuratorDAOLocal;
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
 import com.novartis.pcs.ontology.dao.TermDAOLocal;
+import com.novartis.pcs.ontology.entity.Annotation;
 import com.novartis.pcs.ontology.entity.CrossReference;
 import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.DuplicateEntityException;
@@ -126,5 +127,14 @@ public class OntologyImportServiceImplArq2TestIT {
 		assertThat(synonymMap.get(Synonym.Type.EXACT).getSynonym(), is("assay_kit"));
 		assertThat(synonymMap.get(Synonym.Type.NARROW).getSynonym(), is("assay_kit_narrow"));
 		assertThat(synonymMap.get(Synonym.Type.RELATED).getSynonym(), is("assay_kit_related"));
+	}
+
+	@Test
+	public void shouldImportAnnotation(){
+		Term term = termDAO.loadByName("assay kit", ontology, true);
+		Optional<Annotation> first = term.getAnnotations().stream().findFirst();
+		Annotation annotation = first.orElseThrow(AssertionFailedError::new);
+		assertThat(annotation.getAnnotation(), is("See the wikipedia"));
+		assertThat(annotation.getAnnotationType().getPrefixedXmlType(), is("seeAlso"));
 	}
 }

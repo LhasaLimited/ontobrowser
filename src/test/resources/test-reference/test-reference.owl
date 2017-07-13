@@ -30,10 +30,10 @@
         <Class IRI="#OB_00015"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#OB_00003"/>
+        <Class IRI="#OB_00014"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#OB_00014"/>
+        <Class IRI="#OB_00003"/>
     </Declaration>
     <Declaration>
         <Class IRI="#OB_00002"/>
@@ -166,6 +166,11 @@
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <IRI>#OB_00003</IRI>
         <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">assay kit</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:seeAlso"/>
+        <IRI>#OB_00003</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">See the wikipedia</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>

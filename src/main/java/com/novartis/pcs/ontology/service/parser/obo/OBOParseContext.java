@@ -18,6 +18,7 @@ limitations under the License.
 package com.novartis.pcs.ontology.service.parser.obo;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import com.novartis.pcs.ontology.entity.AnnotationType;
 import org.coode.owlapi.obo12.parser.OBOParserHandler;
 import org.coode.owlapi.obo12.parser.OBOVocabulary;
 
@@ -133,8 +135,13 @@ public class OBOParseContext implements OBOParserHandler, ParseContext
 	{
     	return relationshipTypes.values();  	
     }
-    
-    public Datasource getDatasource(String acronym) {
+
+	@Override
+	public Collection<AnnotationType> getAnnotationTypes() {
+		return Collections.emptyList();
+	}
+
+	public Datasource getDatasource(String acronym) {
     	Datasource datasource = datasources.get(acronym.toUpperCase());
     	if(datasource == null) {
 			datasource = new Datasource(acronym, acronym, curator);

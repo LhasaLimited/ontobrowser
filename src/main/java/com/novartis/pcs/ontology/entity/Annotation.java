@@ -23,6 +23,10 @@ import javax.validation.constraints.NotNull;
  * @author Artur Polit
  * @since 10/07/2017
  */
+/**
+ * @author Artur
+ *
+ */
 @Entity
 @Table(name = "ANNOTATION")
 @AttributeOverride(name = "id",
@@ -110,6 +114,13 @@ public class Annotation extends VersionedEntity implements ReplaceableEntity<Ann
 	public int hashCode() {
 		return Objects.hash(super.hashCode(), annotation, annotationType, term, replacedBy);
 	}
+
+	@Override
+	public String toString() {
+		return "Annotation [annotation=" + annotation + ", annotationType=" + annotationType + "]";
+	}
+	
+	
 }
 /* ---------------------------------------------------------------------*
  * This software is the confidential and proprietary

@@ -111,6 +111,8 @@ import org.semanticweb.owlapi.util.StructureWalker;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.novartis.pcs.ontology.entity.AbstractEntity;
+import com.novartis.pcs.ontology.entity.Annotation;
+import com.novartis.pcs.ontology.entity.AnnotationType;
 import com.novartis.pcs.ontology.entity.CrossReference;
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.Datasource;
@@ -132,7 +134,6 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 	enum ParserState {
 		ROOT, ONTOLOGY, TERM, OBJECT_PROPERTY, RELATIONSHIP, ANNOTATION
 	}
-
 
 	private class MyOWLOntologyWalker extends OWLOntologyWalker {
 		MyOWLOntologyWalker(OWLOntology owlOntology) {
@@ -161,7 +162,8 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		private List<Relationship> relationships = new ArrayList<>();
 		private Map<String, RelationshipType> relationshipTypes = new HashMap<>();
 		private Map<String, Datasource> datasources = new HashMap<>();
-		private Map<Term, Map<Term, RelationshipType>> relationshipMap = new HashMap<>();
+		private Map<String, AnnotationType> annotationTypes;
+		private Map<Long, Map<Long, Set<String>>> relationshipMap = new HashMap<>();
 		private Map<Term, Set<Pair<Term, Synonym.Type>>> synonymsMap = new HashMap<>();
 
 		private Map<IRI, List<OWLAnnotation>> annotationsBySubject = new HashMap<>();
@@ -174,15 +176,20 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		private Relationship relationship;
 		private IRI iri;
 
-		public ParsingStructureWalker(OWLObjectWalker<OWLOntology> owlObjectWalker, OWLOntologyManager owlOntologyManager,
-				Collection<RelationshipType> relationshipTypes, Curator curator, Version version, Ontology ontology, final Collection<Datasource> datasources) {
+		public ParsingStructureWalker(OWLObjectWalker<OWLOntology> owlObjectWalker,
+				OWLOntologyManager owlOntologyManager, Collection<RelationshipType> relationshipTypes, Curator curator,
+				Version version, Ontology ontology, final Collection<Datasource> datasources,
+				final Collection<AnnotationType> annotationTypes) {
 			super(owlObjectWalker);
 			this.owlOntologyManager = owlOntologyManager;
 			this.curator = curator;
 			this.version = version;
 			this.ontology = ontology;
-			this.relationshipTypes = relationshipTypes.stream().collect(Collectors.toMap(RelationshipType::getRelationship, identity()));
+			this.relationshipTypes = relationshipTypes.stream()
+					.collect(Collectors.toMap(RelationshipType::getRelationship, identity()));
 			this.datasources = datasources.stream().collect(Collectors.toMap(Datasource::getAcronym, identity()));
+			this.annotationTypes = annotationTypes.stream()
+					.collect(Collectors.toMap(AnnotationType::getPrefixedXmlType, identity()));
 
 		}
 
@@ -195,7 +202,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			Set<OWLClass> owlClasses = owlOntology.getClassesInSignature();
 			for (OWLClass owlClass : owlClasses) {
 				Optional<String> remainder = owlClass.getIRI().getRemainder();
-				if(remainder.isPresent()) {
+				if (remainder.isPresent()) {
 					String referenceId = remainder.get();
 					getTerm(referenceId);
 				}
@@ -203,6 +210,16 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			Set<OWLAnnotationProperty> annotationProps = owlOntology.getAnnotationPropertiesInSignature();
 			for (OWLAnnotationProperty annotationProp : annotationProps) {
 				visitProperty(annotationProp.getIRI().getRemainder().orNull());
+			}
+
+			Set<OWLObjectProperty> objectProperties = owlOntology.getObjectPropertiesInSignature();
+			for (OWLObjectProperty objectProperty : objectProperties) {
+				visitProperty(objectProperty.getIRI().getRemainder().orNull());
+			}
+
+			Set<OWLDataProperty> dataProperties = owlOntology.getDataPropertiesInSignature();
+			for (OWLDataProperty owlDataProperty : dataProperties) {
+				visitProperty(owlDataProperty.getIRI().getRemainder().orNull());
 			}
 
 			state.push(ParserState.ONTOLOGY);
@@ -213,7 +230,22 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			terms.forEach((termName, term) -> {
 				if (term.getRelationships().isEmpty() && !term.equals(thing)) {
 					// added to term in constructor
-					initVersion(new Relationship(term, thing, relationshipTypes.get("is_a"), curator, version));
+					approve(new Relationship(term, thing, relationshipTypes.get("is_a"), curator, version));
+				}
+			});
+
+			terms.forEach((termName, term) -> {
+				Map<Long, Set<Long>> relationshipsIndex = new HashMap<>();
+				for (Relationship aRelationship : term.getRelationships()) {
+					Set<Long> types = relationshipsIndex.computeIfAbsent(aRelationship.getRelatedTerm().getId(),
+							id -> new HashSet<>());
+					long relationshipTypeId = aRelationship.getType().getId();
+					if (types.contains(relationshipTypeId)) {
+						logger.log(INFO, "Duplicated relationship {0} {1} {2}", new String[] { term.getName(),
+								aRelationship.getRelatedTerm().getName(), aRelationship.getType().getRelationship() });
+					} else {
+						types.add(relationshipTypeId);
+					}
 				}
 			});
 
@@ -221,7 +253,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 				for (Pair<Term, Synonym.Type> synonymTerm : synonymTerms) {
 					Synonym synonym = new Synonym(term, synonymTerm.getLeft().getName(), synonymTerm.getRight(),
 							curator, version);
-					initVersion(synonym);
+					approve(synonym);
 				}
 			});
 		}
@@ -245,10 +277,16 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 				} else if (Obo2OWLConstants.Obo2OWLVocabulary.IRI_OIO_hasDbXref.getIRI()
 						.equals(owlAnnotationProperty.getIRI())) {
 					if (owlAnnotation.getValue() instanceof OWLLiteral) {
-						String[] splitted = getString(owlAnnotation).split(":");
-						Datasource datasource = getDatasource(splitted[ACRONYM_INDEX]);
-						CrossReference xref = new CrossReference(term, datasource, splitted[REFID_INDEX], curator);
-						term.getCrossReferences().add(xref);
+						String string = getString(owlAnnotation);
+						if (string != null && string.contains(":")) {
+							String[] splitted = string.split(":");
+							Datasource datasource = getDatasource(splitted[ACRONYM_INDEX]);
+							new CrossReference(term, datasource, splitted[REFID_INDEX], curator);
+						} else if (string != null) {
+							// TS28 from bioontology - without prefix
+						}
+					} else if (owlAnnotation.getValue() instanceof IRI) {
+						new CrossReference(term, iri.toString(), curator);
 					}
 				} else if (Obo2OWLConstants.Obo2OWLVocabulary.IRI_IAO_0000115.getIRI()
 						.equals(owlAnnotationProperty.getIRI())) {
@@ -257,15 +295,34 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 						.equals(owlAnnotationProperty.getIRI())) {
 					logger.log(INFO, "replaced_by unused in BAO");
 				} else if (synonymMap.containsKey(owlAnnotationProperty.getIRI())) {
-					Term synonymTerm = getTerm(((IRI)owlAnnotation.getValue()).getRemainder().orNull());
-					Term preferredTerm = termStack.peek();
-					Synonym.Type synonymType = synonymMap.get(owlAnnotationProperty.getIRI());
-					synonymsMap.computeIfAbsent(preferredTerm, t -> new HashSet<>())
-							.add(Pair.of(synonymTerm, synonymType));
+					if (owlAnnotation.getValue() instanceof IRI) {
+						IRI synonymIRI = (IRI) owlAnnotation.getValue();
+						Term synonymTerm = getTerm(synonymIRI.getRemainder().orNull());
+						Term preferredTerm = termStack.peek();
+						Synonym.Type synonymType = synonymMap.get(owlAnnotationProperty.getIRI());
+						synonymsMap.computeIfAbsent(preferredTerm, t -> new HashSet<>())
+								.add(Pair.of(synonymTerm, synonymType));
+					} else if (owlAnnotation.getValue() instanceof OWLLiteral) {
+						OWLLiteral literal = (OWLLiteral) owlAnnotation.getValue();
+						logger.log(INFO, literal.toString());
+					}
+
+				} else {
+					AnnotationType annotationType = annotationTypes
+							.computeIfAbsent(owlAnnotationProperty.getIRI().getShortForm(), shortForm -> {
+								AnnotationType anAnnotationType = new AnnotationType(shortForm, curator, version);
+								approve(anAnnotationType);
+								return anAnnotationType;
+							});
+
+					String value = getString(owlAnnotation);
+					Annotation annotation = new Annotation(value, annotationType, term, curator, version);
+					approve(annotation);
+					term.getAnnotations().add(annotation);
 				}
 			} else if (ParserState.RELATIONSHIP.equals(currentState)) {
 				if (owlAnnotationProperty.isLabel()) {
-					relationshipType.setRelationship(getString(owlAnnotation));
+					relationshipType.setName(getString(owlAnnotation));
 				}
 			}
 		}
@@ -275,7 +332,14 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		}
 
 		private String getString(OWLAnnotation owlAnnotation) {
-			return ((OWLLiteral) owlAnnotation.getValue()).getLiteral();
+			String result = null;
+			if (owlAnnotation.getValue() instanceof OWLLiteral) {
+				OWLLiteral owlLiteral = (OWLLiteral) owlAnnotation.getValue();
+				result = owlLiteral.getLiteral();
+			} else if (owlAnnotation.getValue() instanceof IRI) {
+				result = ((IRI) owlAnnotation.getValue()).getRemainder().orNull();
+			}
+			return result;
 		}
 
 		@Override
@@ -295,13 +359,13 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 				current = terms.get(fragment);
 			} else {
 				current = new Term(ontology, fragment /* temporary name */, fragment, curator, version);
-				initVersion(current);
+				approve(current);
 				terms.put(fragment, current);
 			}
 			return current;
 		}
 
-		private void initVersion(VersionedEntity versionedEntity) {
+		private void approve(VersionedEntity versionedEntity) {
 			versionedEntity.setStatus(Status.APPROVED);
 			versionedEntity.setApprovedVersion(version);
 		}
@@ -313,23 +377,21 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			Term relatedTerm = termStack.pop(); // do not inline, keep in order!
 			Term term = termStack.pop();
 
-			Map<Term, RelationshipType> relatedTerms = relationshipMap.computeIfAbsent(term, k -> new HashMap<>());
-			RelationshipType oldDirect = relatedTerms.get(relatedTerm);
-			RelationshipType inverse = relationshipMap.computeIfAbsent(relatedTerm, k -> new HashMap<>()).get(term);
+			RelationshipType isARelationship = relationshipTypes.get("is_a");
 
-			if (compareRelationships(oldDirect) || compareRelationships(inverse)) {
-				logger.severe("duplicated relationship");
+			Map<Long, Set<String>> relatedTerms = relationshipMap.computeIfAbsent(term.getId(), k -> new HashMap<>());
+			Set<String> relationshipTypesSet = relatedTerms.computeIfAbsent(relatedTerm.getId(), id -> new HashSet<>());
+
+			if (relationshipTypesSet.contains(isARelationship.getRelationship())) {
+				logger.log(INFO, "Duplicated relationship {0} {1} {2}", new String[] { term.getReferenceId(),
+						relatedTerm.getReferenceId(), isARelationship.getRelationship() });
 			} else {
-				relationship = new Relationship(term, relatedTerm,  relationshipTypes.get("is_a"), curator, version);
-				initVersion(relationship);
-				relatedTerms.put(relatedTerm, relationshipType);
+				relationshipTypesSet.add(isARelationship.getRelationship());
+				relationship = new Relationship(term, relatedTerm, isARelationship, curator, version);
+				approve(relationship);
 				term.getRelationships().add(relationship);
 				relationships.add(relationship);
 			}
-		}
-
-		private boolean compareRelationships(RelationshipType oldDirect) {
-			return oldDirect != null && oldDirect.getRelationship().equals(relationshipType.getRelationship());
 		}
 
 		@Override
@@ -349,8 +411,9 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 				relationshipType = relationshipTypes.get(propertyFragment);
 			} else {
 				// replace with computeIfAbsent
-				relationshipType = new RelationshipType(propertyFragment, propertyFragment, propertyFragment, curator, version);
-				initVersion(relationshipType);
+				relationshipType = new RelationshipType(propertyFragment, propertyFragment, propertyFragment, curator,
+						version);
+				approve(relationshipType);
 				relationshipTypes.put(relationshipType.getRelationship(), relationshipType);
 			}
 		}
@@ -384,7 +447,6 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		public void visit(OWLAnnotationAssertionAxiom axiom) {
 			logger.log(INFO, "OWLAnnotationAssertionAxiom:{0}", axiom.toString());
 
-
 			String referenceId = null;
 			if (axiom.getSubject() instanceof IRI) {
 				IRI subjectIRI = (IRI) axiom.getSubject();
@@ -403,6 +465,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 				state.push(ParserState.TERM);
 				termStack.push(terms.get(referenceId));
 			} else if (relationshipTypes.containsKey(referenceId)) {
+				relationshipType = relationshipTypes.get(referenceId);
 				state.push(ParserState.RELATIONSHIP);
 			} else {
 				state.push(ParserState.ANNOTATION);
@@ -445,7 +508,8 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 				try {
 					BeanUtils.setProperty(entity, propertyName, label);
 				} catch (IllegalAccessException | InvocationTargetException e) {
-					logger.log(Level.SEVERE, "Cannot set [property={},entity={}]", new Object[] { propertyName, entity.getId() });
+					logger.log(Level.SEVERE, "Cannot set [property={},entity={}]",
+							new Object[] { propertyName, entity.getId() });
 				}
 			}
 			return matched;
@@ -848,18 +912,23 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		public Collection<Datasource> getDatasources() {
 			return datasources.values();
 		}
+
+		public Collection<AnnotationType> getAnnotationTypes() {
+			return annotationTypes.values();
+		}
 	}
 
 	@Override
-	public ParseContext parseOWLontology(InputStream inputStream, Collection<RelationshipType> relationshipTypes, Collection<Datasource> datasources,
-			Curator curator, Version version, Ontology ontology) throws OWLOntologyCreationException {
+	public ParseContext parseOWLontology(InputStream inputStream, Collection<RelationshipType> relationshipTypes,
+			Collection<Datasource> datasources, Curator curator, Version version, Ontology ontology,
+			final Collection<AnnotationType> annotationTypes) throws OWLOntologyCreationException {
 
 		final OWLOntologyManager owlOntologyManager = OWLManager.createOWLOntologyManager();
 		OWLOntology owlOntology = owlOntologyManager.loadOntologyFromOntologyDocument(inputStream);
 		OWLOntologyWalker owlObjectWalker = new MyOWLOntologyWalker(owlOntology);
 
-		ParsingStructureWalker parsingStructureWalker = new ParsingStructureWalker(owlObjectWalker, owlOntologyManager, relationshipTypes, curator, version,
-				ontology, datasources);
+		ParsingStructureWalker parsingStructureWalker = new ParsingStructureWalker(owlObjectWalker, owlOntologyManager,
+				relationshipTypes, curator, version, ontology, datasources, annotationTypes);
 		parsingStructureWalker.visit(owlOntology);
 
 		Map<String, Term> terms = parsingStructureWalker.getTerms();
@@ -867,7 +936,8 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		logger.log(Level.INFO, termIds.toString());
 
 		logger.log(Level.INFO, "The End!");
-		return new ParseContextImpl(terms.values(), parsingStructureWalker.getDatasources(), parsingStructureWalker.getRelationshipTypes());
+		return new ParseContextImpl(terms.values(), parsingStructureWalker.getDatasources(),
+				parsingStructureWalker.getRelationshipTypes(), parsingStructureWalker.getAnnotationTypes());
 	}
 
 }

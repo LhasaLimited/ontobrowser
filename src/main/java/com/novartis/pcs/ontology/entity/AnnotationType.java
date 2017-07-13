@@ -82,6 +82,12 @@ public class AnnotationType extends VersionedEntity implements ReplaceableEntity
 	public int hashCode() {
 		return Objects.hash(super.hashCode(), annotationType, prefixedXmlType);
 	}
+
+	@Override
+	public String toString() {
+		return "AnnotationType [annotationType=" + annotationType + "]";
+	}
+	
 }
 /* ---------------------------------------------------------------------*
  * This software is the confidential and proprietary

@@ -9,6 +9,8 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 
+import com.novartis.pcs.ontology.dao.AnnotationTypeDAOLocal;
+import com.novartis.pcs.ontology.entity.AnnotationType;
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.DuplicateEntityException;
@@ -30,6 +32,9 @@ public abstract class OntologyImportServiceBase extends OntologyService
 
     @EJB
     private OntologySearchServiceLocal searchService;
+
+    @EJB
+    private AnnotationTypeDAOLocal annotationTypeDAO;
 
     public OntologyImportServiceBase() {
         super();
@@ -58,7 +63,7 @@ public abstract class OntologyImportServiceBase extends OntologyService
         saveParsed(ontology, version, context);
     }
 
-    abstract protected ParseContext parse(InputStream is, Curator curator, Version version, Ontology ontology,
+    protected abstract ParseContext parse(InputStream is, Curator curator, Version version, Ontology ontology,
             Collection<Term> terms);
 
     private void saveParsed(Ontology ontology, Version version, ParseContext context)
@@ -84,6 +89,12 @@ public abstract class OntologyImportServiceBase extends OntologyService
                 relationshipTypeDAO.save(relationshipType);
             }
         }
+        Collection<AnnotationType> annotationTypes = context.getAnnotationTypes();
+        for (AnnotationType annotationType : annotationTypes) {
+            if (annotationType.getId() == 0L) {
+                annotationTypeDAO.save(annotationType);
+            }
+        }
 
         if (ontology.getId() == 0L) {
             ontologyDAO.save(ontology);
@@ -102,7 +113,7 @@ public abstract class OntologyImportServiceBase extends OntologyService
     protected abstract void findRefId(Ontology ontology, Collection<Term> terms) throws InvalidEntityException;
 
     private void validateDuplicates(Collection<Term> terms) throws DuplicateEntityException {
-        Set<String> names = new HashSet<String>(terms.size());
+        Set<String> names = new HashSet<>(terms.size());
         for (Term term : terms) {
             if (!names.add(term.getName().toLowerCase())) {
                 logger.warning("Duplicated term:" + term.getName());

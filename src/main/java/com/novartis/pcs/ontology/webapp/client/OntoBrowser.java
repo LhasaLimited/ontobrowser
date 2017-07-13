@@ -137,7 +137,8 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 
 				public void onSuccess(Term term) {
 					if(term != null) {
-						eventBus.fireEvent(new ViewTermEvent(term));
+						GWT.log(term.getAnnotations().toString());
+						eventBus.fireEvent(new ViewTermEvent(term));						
 					}
 				}
 			});

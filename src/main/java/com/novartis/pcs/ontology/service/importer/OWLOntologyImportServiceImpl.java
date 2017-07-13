@@ -27,6 +27,8 @@ import javax.ejb.Local;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
 
+import com.novartis.pcs.ontology.dao.AnnotationTypeDAOLocal;
+import com.novartis.pcs.ontology.entity.AnnotationType;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 import com.novartis.pcs.ontology.entity.Curator;
@@ -51,6 +53,9 @@ public class OWLOntologyImportServiceImpl extends OntologyImportServiceBase {
     @EJB
     private OWLParsingServiceLocal owlParsingService;
 
+    @EJB
+    private AnnotationTypeDAOLocal annotationTypeDAO;
+
     /**
      * Default constructor.
      */
@@ -64,9 +69,10 @@ public class OWLOntologyImportServiceImpl extends OntologyImportServiceBase {
         try {
             Collection<RelationshipType> relationshipTypes = relationshipTypeDAO.loadAll();
             Collection<Datasource> datasources = datasourceDAO.loadAll();
+            Collection<AnnotationType> annotationTypes = annotationTypeDAO.loadAll();
 
             context = owlParsingService.parseOWLontology(is, relationshipTypes, datasources, curator, version,
-                    ontology);
+                    ontology, annotationTypes);
 
         } catch (OWLOntologyCreationException e) {
             logger.log(Level.WARNING, "IO exception: ", e);
@@ -77,7 +83,7 @@ public class OWLOntologyImportServiceImpl extends OntologyImportServiceBase {
     @Override
     protected void findRefId(Ontology ontology, Collection<Term> terms) throws InvalidEntityException {
         int nextInt = Math.abs(new java.util.Random().nextInt() % 1000);
-        ontology.setReferenceIdPrefix(nextInt + "");
+        ontology.setReferenceIdPrefix(Integer.toString(nextInt));
         ontology.setReferenceIdValue(nextInt);
 
     }

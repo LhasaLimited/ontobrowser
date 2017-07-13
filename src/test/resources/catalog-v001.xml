@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
     <group id="Folder Repository, directory=, recursive=true, Auto-Update=true, version=2" prefer="public" xml:base="">
-        <uri id="Automatically generated entry, Timestamp=1499756524933" name="http://bioassayontology.org/bao/external/UO_import.owl" uri="complete.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1499756524933" name="http://www.bioassayontology.org/bao/bao_complete.owl" uri="bao_complete.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1499756524933" name="http://www.lhasalimited.org/ontobrowser" uri="test-reference/test-reference.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1499862371600" name="http://bioassayontology.org/bao/external/UO_import.owl" uri="complete.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1499862371600" name="http://www.bioassayontology.org/bao/bao_complete.owl" uri="bao_complete.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1499862371600" name="http://www.lhasalimited.org/ontobrowser" uri="test-reference/test-reference.owl"/>
     </group>
 </catalog>
