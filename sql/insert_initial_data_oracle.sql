@@ -279,3 +279,76 @@ INSERT INTO DATASOURCE (
   0,
   1,
   (SELECT CURATOR_ID FROM CURATOR WHERE USERNAME='SYSTEM'));
+  
+  
+INSERT
+INTO ONTOLOGY
+  (
+    ONTOLOGY_ID,
+    ONTOLOGY_NAME,
+    DESCRIPTION,
+    IS_INTERNAL,
+    SOURCE_NAMESPACE,
+    SOURCE_URI,
+    SOURCE_RELEASE,
+    SOURCE_FORMAT,
+    REFERENCE_ID_PREFIX,
+    REFERENCE_ID_VALUE,
+    IS_CODELIST,
+    STATUS,
+    CREATED_DATE,
+    CREATED_BY,
+    CREATED_VERSION_ID,
+    APPROVED_VERSION_ID
+  )
+  VALUES
+  (
+    1,
+    'OWL',
+    'The OWL 2 Schema vocabulary (OWL 2)',
+    '1',
+    'owl',
+    'http://www.w3.org/2002/07/owl',
+    'http://www.w3.org/2002/07/owl',
+    'RDF/OWL',
+    'owl',
+    '1',
+    '0',
+    'APPROVED',
+    TO_DATE('2017-07-14 12:38:54', 'YYYY-MM-DD HH24:MI:SS'),
+    (SELECT CURATOR_ID FROM CURATOR WHERE USERNAME='SYSTEM'),
+    (SELECT MAX(VERSION_ID) FROM VERSION),
+    (SELECT MAX(VERSION_ID) FROM VERSION)
+  );
+
+INSERT
+INTO TERM
+  (
+    TERM_ID,
+    ONTOLOGY_ID,
+    TERM_NAME,
+    REFERENCE_ID,
+    DEFINITION_URL,
+    COMMENTS,
+    IS_ROOT,
+    STATUS,
+    CREATED_DATE,
+    CREATED_BY,
+    CREATED_VERSION_ID,
+    APPROVED_VERSION_ID
+  )
+  VALUES
+  (
+    1,
+    1,
+    'Thing',
+    'Thing',
+    'http://www.w3.org/2002/07/owl#Thing',
+    'The class of OWL individuals.',
+    '1',
+    'APPROVED',
+    TO_DATE('2017-07-14 12:49:19', 'YYYY-MM-DD HH24:MI:SS'),
+    (SELECT CURATOR_ID FROM CURATOR WHERE USERNAME='SYSTEM'),
+    (SELECT MAX(VERSION_ID) FROM VERSION),
+    (SELECT MAX(VERSION_ID) FROM VERSION)
+  );
