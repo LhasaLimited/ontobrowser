@@ -1,18 +1,19 @@
 package com.novartis.pcs.ontology.service.importer;
 
-import com.novartis.pcs.ontology.dao.CuratorDAOLocal;
-import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
-import com.novartis.pcs.ontology.dao.TermDAOLocal;
-import com.novartis.pcs.ontology.entity.Annotation;
-import com.novartis.pcs.ontology.entity.CrossReference;
-import com.novartis.pcs.ontology.entity.Datasource;
-import com.novartis.pcs.ontology.entity.DuplicateEntityException;
-import com.novartis.pcs.ontology.entity.InvalidEntityException;
-import com.novartis.pcs.ontology.entity.Ontology;
-import com.novartis.pcs.ontology.entity.Relationship;
-import com.novartis.pcs.ontology.entity.Synonym;
-import com.novartis.pcs.ontology.entity.Term;
-import junit.framework.AssertionFailedError;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import javax.ejb.EJB;
+
 import org.coode.owlapi.obo12.parser.OBOVocabulary;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -25,18 +26,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.ejb.EJB;
-import java.io.File;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
+import com.novartis.pcs.ontology.dao.CuratorDAOLocal;
+import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
+import com.novartis.pcs.ontology.dao.TermDAOLocal;
+import com.novartis.pcs.ontology.entity.Annotation;
+import com.novartis.pcs.ontology.entity.CrossReference;
+import com.novartis.pcs.ontology.entity.Datasource;
+import com.novartis.pcs.ontology.entity.DuplicateEntityException;
+import com.novartis.pcs.ontology.entity.InvalidEntityException;
+import com.novartis.pcs.ontology.entity.Ontology;
+import com.novartis.pcs.ontology.entity.Relationship;
+import com.novartis.pcs.ontology.entity.Synonym;
+import com.novartis.pcs.ontology.entity.Term;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import junit.framework.AssertionFailedError;
 
 @RunWith(Arquillian.class)
 @Transactional(TransactionMode.ROLLBACK)
@@ -66,7 +69,8 @@ public class OntologyImportServiceImplArq2TestIT {
 				.resolve().withTransitivity().asFile();
 
 		return ShrinkWrap.create(WebArchive.class, "ontobrowser.war").addAsLibraries(testDeps).addPackages(true, "com.novartis.pcs.ontology")
-				.addPackages(false, "org.semanticweb.owlapi.util", "org.coode.owlapi.obo12.parser").addAsResource("META-INF/persistence.xml")
+				.addPackages(false, "org.semanticweb.owlapi.util", "org.coode.owlapi.obo12.parser")
+				.addAsResource("META-INF/persistence-test.xml", "META-INF/persistence.xml")
 				.addAsResource("test-reference/test-reference.owl");
 	}
 
