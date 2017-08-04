@@ -163,7 +163,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		private Map<String, RelationshipType> relationshipTypes = new HashMap<>();
 		private Map<String, Datasource> datasources = new HashMap<>();
 		private Map<String, AnnotationType> annotationTypes;
-		private Map<Long, Map<Long, Set<String>>> relationshipMap = new HashMap<>();
+		private Map<String, Map<String, Set<String>>> relationshipMap = new HashMap<>();
 		private Map<Term, Set<Pair<Term, Synonym.Type>>> synonymsMap = new HashMap<>();
 
 		private Map<IRI, List<OWLAnnotation>> annotationsBySubject = new HashMap<>();
@@ -179,7 +179,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		public ParsingStructureWalker(OWLObjectWalker<OWLOntology> owlObjectWalker,
 				OWLOntologyManager owlOntologyManager, Collection<RelationshipType> relationshipTypes, Curator curator,
 				Version version, Ontology ontology, final Collection<Datasource> datasources,
-				final Collection<AnnotationType> annotationTypes) {
+				final Collection<AnnotationType> annotationTypes, final Collection<Term> terms) {
 			super(owlObjectWalker);
 			this.owlOntologyManager = owlOntologyManager;
 			this.curator = curator;
@@ -190,6 +190,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			this.datasources = datasources.stream().collect(Collectors.toMap(Datasource::getAcronym, identity()));
 			this.annotationTypes = annotationTypes.stream()
 					.collect(Collectors.toMap(AnnotationType::getPrefixedXmlType, identity()));
+			this.terms = terms.stream().collect(Collectors.toMap(Term::getReferenceId, identity()));
 
 		}
 
@@ -235,11 +236,12 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			});
 
 			terms.forEach((termName, term) -> {
-				Map<Long, Set<Long>> relationshipsIndex = new HashMap<>();
+				Map<String, Set<String>> relationshipsIndex = new HashMap<>();
 				for (Relationship aRelationship : term.getRelationships()) {
-					Set<Long> types = relationshipsIndex.computeIfAbsent(aRelationship.getRelatedTerm().getId(),
+					Set<String> types = relationshipsIndex
+							.computeIfAbsent(aRelationship.getRelatedTerm().getReferenceId(),
 							id -> new HashSet<>());
-					long relationshipTypeId = aRelationship.getType().getId();
+					String relationshipTypeId = aRelationship.getType().getRelationship();
 					if (types.contains(relationshipTypeId)) {
 						logger.log(INFO, "Duplicated relationship {0} {1} {2}", new String[] { term.getName(),
 								aRelationship.getRelatedTerm().getName(), aRelationship.getType().getRelationship() });
@@ -379,8 +381,10 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 
 			RelationshipType isARelationship = relationshipTypes.get("is_a");
 
-			Map<Long, Set<String>> relatedTerms = relationshipMap.computeIfAbsent(term.getId(), k -> new HashMap<>());
-			Set<String> relationshipTypesSet = relatedTerms.computeIfAbsent(relatedTerm.getId(), id -> new HashSet<>());
+			Map<String, Set<String>> relatedTerms = relationshipMap.computeIfAbsent(term.getReferenceId(),
+					k -> new HashMap<>());
+			Set<String> relationshipTypesSet = relatedTerms.computeIfAbsent(relatedTerm.getReferenceId(),
+					id -> new HashSet<>());
 
 			if (relationshipTypesSet.contains(isARelationship.getRelationship())) {
 				logger.log(INFO, "Duplicated relationship {0} {1} {2}", new String[] { term.getReferenceId(),
@@ -921,22 +925,23 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 	@Override
 	public ParseContext parseOWLontology(InputStream inputStream, Collection<RelationshipType> relationshipTypes,
 			Collection<Datasource> datasources, Curator curator, Version version, Ontology ontology,
-			final Collection<AnnotationType> annotationTypes) throws OWLOntologyCreationException {
+			final Collection<AnnotationType> annotationTypes, final Collection<Term> terms)
+			throws OWLOntologyCreationException {
 
 		final OWLOntologyManager owlOntologyManager = OWLManager.createOWLOntologyManager();
 		OWLOntology owlOntology = owlOntologyManager.loadOntologyFromOntologyDocument(inputStream);
 		OWLOntologyWalker owlObjectWalker = new MyOWLOntologyWalker(owlOntology);
 
 		ParsingStructureWalker parsingStructureWalker = new ParsingStructureWalker(owlObjectWalker, owlOntologyManager,
-				relationshipTypes, curator, version, ontology, datasources, annotationTypes);
+				relationshipTypes, curator, version, ontology, datasources, annotationTypes, terms);
 		parsingStructureWalker.visit(owlOntology);
 
-		Map<String, Term> terms = parsingStructureWalker.getTerms();
-		Set<String> termIds = terms.keySet();
+		Map<String, Term> terms2 = parsingStructureWalker.getTerms();
+		Set<String> termIds = terms2.keySet();
 		logger.log(Level.INFO, termIds.toString());
 
 		logger.log(Level.INFO, "The End!");
-		return new ParseContextImpl(terms.values(), parsingStructureWalker.getDatasources(),
+		return new ParseContextImpl(terms2.values(), parsingStructureWalker.getDatasources(),
 				parsingStructureWalker.getRelationshipTypes(), parsingStructureWalker.getAnnotationTypes());
 	}
 

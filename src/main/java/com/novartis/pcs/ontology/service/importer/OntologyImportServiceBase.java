@@ -1,8 +1,8 @@
 package com.novartis.pcs.ontology.service.importer;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -47,7 +47,7 @@ public abstract class OntologyImportServiceBase extends OntologyService
         // also need to lock ontology because we potentially
         // update the current term reference id value
         Ontology ontology = ontologyDAO.loadByName(ontologyName, true);
-        Collection<Term> terms = Collections.emptyList();
+		Collection<Term> terms = new ArrayList<>();
         Version version = lastUnpublishedVersion(curator);
 
         if (ontology == null) {
@@ -58,6 +58,7 @@ public abstract class OntologyImportServiceBase extends OntologyService
             terms = termDAO.loadAll(ontology);
         }
 
+		terms.add(termDAO.loadByReferenceId("Thing"));
         // According to spec OBO files are UTF-8 encoded
         ParseContext context = parse(is, curator, version, ontology, terms);
         saveParsed(ontology, version, context);

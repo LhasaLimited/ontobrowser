@@ -89,6 +89,9 @@ public class OntologyImportServiceImpl extends OntologyImportServiceBase
         int refIdValue = 0;
         
         for(Term term: terms){
+        	if ("Thing".equals(term.getReferenceId())){
+        		continue;
+			}
             String refId = term.getReferenceId();
             int colon = refId.indexOf(':');
             

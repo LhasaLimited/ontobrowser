@@ -27,10 +27,10 @@ import javax.ejb.Local;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
 
-import com.novartis.pcs.ontology.dao.AnnotationTypeDAOLocal;
-import com.novartis.pcs.ontology.entity.AnnotationType;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
+import com.novartis.pcs.ontology.dao.AnnotationTypeDAOLocal;
+import com.novartis.pcs.ontology.entity.AnnotationType;
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
@@ -72,7 +72,7 @@ public class OWLOntologyImportServiceImpl extends OntologyImportServiceBase {
             Collection<AnnotationType> annotationTypes = annotationTypeDAO.loadAll();
 
             context = owlParsingService.parseOWLontology(is, relationshipTypes, datasources, curator, version,
-                    ontology, annotationTypes);
+					ontology, annotationTypes, terms);
 
         } catch (OWLOntologyCreationException e) {
             logger.log(Level.WARNING, "IO exception: ", e);
