@@ -17,12 +17,15 @@ limitations under the License.
 */
 package com.novartis.pcs.ontology.webapp.client.view;
 
+import java.util.Set;
+
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTMLTable.CellFormatter;
-import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.TabPanel;
+import com.novartis.pcs.ontology.entity.Annotation;
 import com.novartis.pcs.ontology.entity.CrossReference;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
@@ -42,9 +45,10 @@ public class TermDetailsView extends OntoBrowserView implements ViewTermHandler,
 			"Id", "Ontology", "Term", "Definition", "Source", "Reference Id", "Comments", "Created By", "Status" 
 		};
 		
-	private final Panel panel = new SimplePanel();
+	private final SimplePanel simplePanel = new SimplePanel(); 
+	private final TabPanel tabPanel = new TabPanel();
 	private final Grid grid = new Grid(LABELS.length, 2);
-	
+	private final Grid annotationGrid = new Grid(0,2);
 	private Term currentTerm;
 		
 	public TermDetailsView(EventBus eventBus, OntoBrowserServiceAsync service) {
@@ -53,14 +57,18 @@ public class TermDetailsView extends OntoBrowserView implements ViewTermHandler,
 		for(int i = 0; i < LABELS.length; i++) {
 			grid.setText(i, 0, LABELS[i] + ":");
 		}
+		grid.setWidth("100%");
 				
-		CellFormatter cellFormatter = grid.getCellFormatter(); 
-		for(int row = 0; row < grid.getRowCount(); row++) {
-			cellFormatter.addStyleName(row, 0, "label");
-		}
+		setLabelStyle(grid);
 		
-		panel.add(grid);
-		initWidget(panel);
+		tabPanel.add(grid, "General");
+		tabPanel.add(annotationGrid, "Annotations");		
+		tabPanel.setWidth("100%");
+		tabPanel.selectTab(0);
+		
+		simplePanel.add(tabPanel);
+		initWidget(simplePanel);
+		
 		addStyleName("padded-border vert-scroll fixed-height");
 		
 		eventBus.addHandler(ViewTermEvent.TYPE, this);
@@ -110,7 +118,25 @@ public class TermDetailsView extends OntoBrowserView implements ViewTermHandler,
 		grid.setText(row++, 1, currentTerm.getComments());
 		grid.setText(row++, 1, currentTerm.getCreatedBy().getUsername());
 		grid.setText(row++, 1, currentTerm.getStatus().toString());
+		
+		fillAnnotations(currentTerm.getAnnotations());
 	}
+
+	private void fillAnnotations(Set<Annotation> annotations) {
+		annotationGrid.clear();
+		annotationGrid.resizeRows(annotations.size());
+		tabPanel.getTabBar().setTabText(1, "Annotations ("+annotations.size()+")");
+		
+		int row = 0;		
+		for (Annotation annotation : annotations) {		
+			annotationGrid.setText(row, 0, annotation.getAnnotationType().getPrefixedXmlType() + ":");
+			annotationGrid.setText(row, 1, annotation.getAnnotation());
+			row++;
+		}		
+		
+		setLabelStyle(annotationGrid);
+	}
+
 
 	@Override
 	public void onEntityUpdated(EntityUpdatedEvent<Term> event) {
@@ -123,5 +149,13 @@ public class TermDetailsView extends OntoBrowserView implements ViewTermHandler,
 	@Override
 	public void onEntityDeleted(EntityDeletedEvent<Term> event) {
 				
+	}
+	
+	private void setLabelStyle(Grid gridWithLabels) {
+		int row;
+		CellFormatter cellFormatter = gridWithLabels.getCellFormatter(); 
+		for(row = 0; row < annotationGrid.getRowCount(); row++) {
+			cellFormatter.addStyleName(row, 0, "label");
+		}
 	}
 }
