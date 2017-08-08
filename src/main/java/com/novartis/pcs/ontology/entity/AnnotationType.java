@@ -49,6 +49,15 @@ public class AnnotationType extends VersionedEntity implements ReplaceableEntity
 	@Column(name = "PREFIXED_XML_TYPE")
 	private String prefixedXmlType;
 
+	
+	public String getAnnotationType() {
+		return annotationType;
+	}
+
+	public void setAnnotationType(String annotationType) {
+		this.annotationType = annotationType;
+	}
+
 	public String getPrefixedXmlType() {
 		return prefixedXmlType;
 	}
@@ -86,6 +95,12 @@ public class AnnotationType extends VersionedEntity implements ReplaceableEntity
 	@Override
 	public String toString() {
 		return "AnnotationType [annotationType=" + annotationType + "]";
+	}
+
+	public String getLabel() {
+		return (getAnnotationType() == null || getAnnotationType().isEmpty()
+		? getPrefixedXmlType()
+		: getAnnotationType()) + ":";
 	}
 	
 }

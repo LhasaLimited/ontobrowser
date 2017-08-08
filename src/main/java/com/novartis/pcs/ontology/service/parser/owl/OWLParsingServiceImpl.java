@@ -132,7 +132,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 	private Logger logger = Logger.getLogger(getClass().getName());
 
 	enum ParserState {
-		ROOT, ONTOLOGY, TERM, OBJECT_PROPERTY, RELATIONSHIP, ANNOTATION
+		ROOT, ONTOLOGY, TERM, OBJECT_PROPERTY, RELATIONSHIP, ANNOTATION, ANNOTATION_TYPE
 	}
 
 	private class MyOWLOntologyWalker extends OWLOntologyWalker {
@@ -176,6 +176,8 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		private Relationship relationship;
 		private IRI iri;
 
+		private AnnotationType annotationType;
+
 		public ParsingStructureWalker(OWLObjectWalker<OWLOntology> owlObjectWalker,
 				OWLOntologyManager owlOntologyManager, Collection<RelationshipType> relationshipTypes, Curator curator,
 				Version version, Ontology ontology, final Collection<Datasource> datasources,
@@ -210,17 +212,17 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			}
 			Set<OWLAnnotationProperty> annotationProps = owlOntology.getAnnotationPropertiesInSignature();
 			for (OWLAnnotationProperty annotationProp : annotationProps) {
-				visitProperty(annotationProp.getIRI().getRemainder().orNull());
+				visitPropertyAnnotation(annotationProp.getIRI().getRemainder().orNull());
 			}
 
 			Set<OWLObjectProperty> objectProperties = owlOntology.getObjectPropertiesInSignature();
 			for (OWLObjectProperty objectProperty : objectProperties) {
-				visitProperty(objectProperty.getIRI().getRemainder().orNull());
+				visitPropertyRelationship(objectProperty.getIRI().getRemainder().orNull());
 			}
 
 			Set<OWLDataProperty> dataProperties = owlOntology.getDataPropertiesInSignature();
 			for (OWLDataProperty owlDataProperty : dataProperties) {
-				visitProperty(owlDataProperty.getIRI().getRemainder().orNull());
+				visitPropertyRelationship(owlDataProperty.getIRI().getRemainder().orNull());
 			}
 
 			state.push(ParserState.ONTOLOGY);
@@ -310,12 +312,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 					}
 
 				} else {
-					AnnotationType annotationType = annotationTypes
-							.computeIfAbsent(owlAnnotationProperty.getIRI().getShortForm(), shortForm -> {
-								AnnotationType anAnnotationType = new AnnotationType(shortForm, curator, version);
-								approve(anAnnotationType);
-								return anAnnotationType;
-							});
+					AnnotationType annotationType = annotationTypes.get(owlAnnotationProperty.getIRI().getShortForm());
 
 					String value = getString(owlAnnotation);
 					Annotation annotation = new Annotation(value, annotationType, term, curator, version);
@@ -325,6 +322,10 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			} else if (ParserState.RELATIONSHIP.equals(currentState)) {
 				if (owlAnnotationProperty.isLabel()) {
 					relationshipType.setName(getString(owlAnnotation));
+				}
+			} else if (ParserState.ANNOTATION_TYPE.equals(currentState)){
+				if(owlAnnotationProperty.isLabel()) {
+					annotationType.setAnnotationType(getString(owlAnnotation));
 				}
 			}
 		}
@@ -406,11 +407,22 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 
 			String objectPropertyFragment = property.getIRI().getRemainder().orNull();
 
-			visitProperty(objectPropertyFragment);
+			visitPropertyRelationship(objectPropertyFragment);
 			state.pop();
 		}
 
-		private void visitProperty(String propertyFragment) {
+		private void visitPropertyAnnotation(String propertyFragment) {
+			if (annotationTypes.containsKey(propertyFragment)) {
+				annotationType = annotationTypes.get(propertyFragment);
+			} else {
+				// replace with computeIfAbsent
+				annotationType = new AnnotationType(propertyFragment, curator, version);
+				approve(annotationType);
+				annotationTypes.put(propertyFragment, annotationType);
+			}
+		}
+		
+		private void visitPropertyRelationship(String propertyFragment) {
 			if (relationshipTypes.containsKey(propertyFragment)) {
 				relationshipType = relationshipTypes.get(propertyFragment);
 			} else {
@@ -471,6 +483,9 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			} else if (relationshipTypes.containsKey(referenceId)) {
 				relationshipType = relationshipTypes.get(referenceId);
 				state.push(ParserState.RELATIONSHIP);
+			} else if (annotationTypes.containsKey(referenceId)) {
+				annotationType = annotationTypes.get(referenceId);
+				state.push(ParserState.ANNOTATION_TYPE);
 			} else {
 				state.push(ParserState.ANNOTATION);
 			}
@@ -505,6 +520,8 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 				entity = terms.get(fragment);
 			} else if (relationshipTypes.containsKey(fragment)) {
 				entity = relationshipTypes.get(fragment);
+			} else if(annotationTypes.containsKey(fragment)) {
+				entity = annotationTypes.get(fragment);
 			}
 			boolean matched = entity != null;
 

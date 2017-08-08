@@ -610,9 +610,7 @@ CREATE TABLE ANNOTATION_TYPE (
     ANNOTATION_TYPE_ID NUMBER(12)     NOT NULL
                                         CONSTRAINT ANNT_TYPE_PK
                                         PRIMARY KEY,
-    ANNOTATION_TYPE   VARCHAR2(128)    NOT NULL
-                                        CONSTRAINT ANNT_TYPE_UNIQUE 
-                                        UNIQUE,
+    ANNOTATION_TYPE   VARCHAR2(128)    NOT NULL,
 
     PREFIXED_XML_TYPE   VARCHAR2(64)   NOT NULL,
 

@@ -27,6 +27,18 @@
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Ontology comment 2</Literal>
     </Annotation>
     <Declaration>
+        <AnnotationProperty abbreviatedIRI="obo:IAO_0000115"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty abbreviatedIRI="obo:IAO_0000114"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty abbreviatedIRI="oboInOwl:hasNarrowSynonym"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#OB_00016"/>
+    </Declaration>
+    <Declaration>
         <Class IRI="#OB_00015"/>
     </Declaration>
     <Declaration>
@@ -40,9 +52,6 @@
     </Declaration>
     <Declaration>
         <Class IRI="#OB_00001"/>
-    </Declaration>
-    <Declaration>
-        <AnnotationProperty abbreviatedIRI="obo:IAO_0000115"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasDbXref"/>
@@ -54,13 +63,7 @@
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasRelatedSynonym"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty abbreviatedIRI="oboInOwl:hasNarrowSynonym"/>
-    </Declaration>
-    <Declaration>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasExactSynonym"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="#OB_00016"/>
     </Declaration>
     <SubClassOf>
         <Class IRI="#OB_00002"/>
@@ -82,6 +85,11 @@
         <Class IRI="#OB_00016"/>
         <Class IRI="#OB_00001"/>
     </SubClassOf>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
+        <AbbreviatedIRI>obo:IAO_0000114</AbbreviatedIRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">has curation status</Literal>
+    </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <AbbreviatedIRI>obo:IAO_0000115</AbbreviatedIRI>
@@ -136,6 +144,11 @@
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <IRI>#OB_00002</IRI>
         <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">assay_kit</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="obo:IAO_0000114"/>
+        <IRI>#OB_00003</IRI>
+        <AbbreviatedIRI>obo:IAO_0000122</AbbreviatedIRI>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="obo:IAO_0000115"/>

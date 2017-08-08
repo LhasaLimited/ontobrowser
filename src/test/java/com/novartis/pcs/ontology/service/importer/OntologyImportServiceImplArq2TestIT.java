@@ -64,11 +64,11 @@ public class OntologyImportServiceImplArq2TestIT {
 
 	@Deployment(name = "ontobrowser")
 	public static WebArchive create() {
-		File[] testDeps = Maven.resolver().loadPomFromFile("pom.xml")
-				.importRuntimeDependencies().importTestDependencies()
-				.resolve().withTransitivity().asFile();
+		File[] testDeps = Maven.resolver().loadPomFromFile("pom.xml").importRuntimeDependencies()
+				.importTestDependencies().resolve().withTransitivity().asFile();
 
-		return ShrinkWrap.create(WebArchive.class, "ontobrowser.war").addAsLibraries(testDeps).addPackages(true, "com.novartis.pcs.ontology")
+		return ShrinkWrap.create(WebArchive.class, "ontobrowser.war").addAsLibraries(testDeps)
+				.addPackages(true, "com.novartis.pcs.ontology")
 				.addPackages(false, "org.semanticweb.owlapi.util", "org.coode.owlapi.obo12.parser")
 				.addAsResource("META-INF/persistence-test.xml", "META-INF/persistence.xml")
 				.addAsResource("test-reference/test-reference.owl");
@@ -116,8 +116,9 @@ public class OntologyImportServiceImplArq2TestIT {
 	public void shouldImportSubclass() throws DuplicateEntityException, InvalidEntityException {
 		Term term = termDAO.loadByName("assay kit", ontology, true);
 		assertThat(term.getReferenceId(), is("OB_00003"));
-		Optional<Relationship> found = term.getRelationships().stream().filter(relationship -> OBOVocabulary.IS_A.getName().equals(relationship.getType()
-				.getRelationship())).findAny();
+		Optional<Relationship> found = term.getRelationships().stream()
+				.filter(relationship -> OBOVocabulary.IS_A.getName().equals(relationship.getType().getRelationship()))
+				.findAny();
 		Term relatedTerm = found.orElseThrow(AssertionFailedError::new).getRelatedTerm();
 		assertThat(relatedTerm.getName(), is(ROOT_NAME));
 		assertThat(relatedTerm.getReferenceId(), is(ROOT_IRI));
@@ -126,7 +127,8 @@ public class OntologyImportServiceImplArq2TestIT {
 	@Test
 	public void shouldImportSynonyms() {
 		Term term = termDAO.loadByName("assay kit", ontology, true);
-		Map<Synonym.Type, Synonym> synonymMap = term.getSynonyms().stream().collect(Collectors.toMap(Synonym::getType, Function.identity()));
+		Map<Synonym.Type, Synonym> synonymMap = term.getSynonyms().stream()
+				.collect(Collectors.toMap(Synonym::getType, Function.identity()));
 		assertThat(synonymMap.get(Synonym.Type.BROAD).getSynonym(), is("assay_kit_broad"));
 		assertThat(synonymMap.get(Synonym.Type.EXACT).getSynonym(), is("assay_kit"));
 		assertThat(synonymMap.get(Synonym.Type.NARROW).getSynonym(), is("assay_kit_narrow"));
@@ -134,11 +136,24 @@ public class OntologyImportServiceImplArq2TestIT {
 	}
 
 	@Test
-	public void shouldImportAnnotation(){
+	public void shouldImportAnnotation() {
 		Term term = termDAO.loadByName("assay kit", ontology, true);
-		Optional<Annotation> first = term.getAnnotations().stream().findFirst();
+		Optional<Annotation> first = term.getAnnotations().stream().filter(
+				a -> a.getAnnotationType().getPrefixedXmlType().equals("seeAlso"))
+				.findFirst();
 		Annotation annotation = first.orElseThrow(AssertionFailedError::new);
 		assertThat(annotation.getAnnotation(), is("See the wikipedia"));
-		assertThat(annotation.getAnnotationType().getPrefixedXmlType(), is("seeAlso"));
 	}
+
+	@Test
+	public void shouldMapAnnotationLabel() {
+		Term term = termDAO.loadByName("assay kit", ontology, true);
+		Optional<Annotation> first = term.getAnnotations().stream().filter(
+				a -> a.getAnnotationType().getPrefixedXmlType().equals("IAO_0000114"))
+				.findFirst();
+		Annotation annotation = first.orElseThrow(AssertionFailedError::new);
+		assertThat(annotation.getAnnotation(), is("IAO_0000122"));
+		assertThat(annotation.getAnnotationType().getAnnotationType(), is("has curation status"));
+	}
+
 }
