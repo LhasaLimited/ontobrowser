@@ -6,7 +6,7 @@
      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
      ontologyIRI="http://www.lhasalimited.org/ontobrowser">
-    <Prefix name="" IRI="http://www.lhasalimited.org/ontobrowser#"/>
+    <Prefix name="" IRI="http://www.lhasalimited.org/ontobrowser/"/>
     <Prefix name="obo" IRI="http://purl.obolibrary.org/obo/"/>
     <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
     <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
@@ -42,10 +42,10 @@
         <Class IRI="#OB_00015"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#OB_00014"/>
+        <Class IRI="#OB_00003"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#OB_00003"/>
+        <Class IRI="#OB_00014"/>
     </Declaration>
     <Declaration>
         <Class IRI="#OB_00002"/>
@@ -143,7 +143,7 @@
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <IRI>#OB_00002</IRI>
-        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">assay_kit</Literal>
+        <Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#string">assay_kit_1</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="obo:IAO_0000114"/>
@@ -158,22 +158,22 @@
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasBroadSynonym"/>
         <IRI>#OB_00003</IRI>
-        <IRI>#OB_00014</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay kit broad</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasExactSynonym"/>
         <IRI>#OB_00003</IRI>
-        <IRI>#OB_00002</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay kit exact</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasNarrowSynonym"/>
         <IRI>#OB_00003</IRI>
-        <IRI>#OB_00015</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay kit narrow</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasRelatedSynonym"/>
         <IRI>#OB_00003</IRI>
-        <IRI>#OB_00016</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay kit related</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
@@ -188,17 +188,17 @@
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <IRI>#OB_00014</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay_kit_broad</Literal>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay_kit_2</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <IRI>#OB_00015</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay_kit_narrow</Literal>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay_kit_3</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <IRI>#OB_00016</IRI>
-        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay_kit_related</Literal>
+        <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay_kit_4</Literal>
     </AnnotationAssertion>
 </Ontology>
 

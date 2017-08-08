@@ -129,10 +129,10 @@ public class OntologyImportServiceImplArq2TestIT {
 		Term term = termDAO.loadByName("assay kit", ontology, true);
 		Map<Synonym.Type, Synonym> synonymMap = term.getSynonyms().stream()
 				.collect(Collectors.toMap(Synonym::getType, Function.identity()));
-		assertThat(synonymMap.get(Synonym.Type.BROAD).getSynonym(), is("assay_kit_broad"));
-		assertThat(synonymMap.get(Synonym.Type.EXACT).getSynonym(), is("assay_kit"));
-		assertThat(synonymMap.get(Synonym.Type.NARROW).getSynonym(), is("assay_kit_narrow"));
-		assertThat(synonymMap.get(Synonym.Type.RELATED).getSynonym(), is("assay_kit_related"));
+		assertThat(synonymMap.get(Synonym.Type.BROAD).getSynonym(), is("assay kit broad"));
+		assertThat(synonymMap.get(Synonym.Type.EXACT).getSynonym(), is("assay kit exact"));
+		assertThat(synonymMap.get(Synonym.Type.NARROW).getSynonym(), is("assay kit narrow"));
+		assertThat(synonymMap.get(Synonym.Type.RELATED).getSynonym(), is("assay kit related"));
 	}
 
 	@Test

@@ -25,7 +25,6 @@ import javax.ejb.Stateless;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.obolibrary.obo2owl.Obo2OWLConstants;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
@@ -120,6 +119,7 @@ import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Synonym;
+import com.novartis.pcs.ontology.entity.Synonym.Type;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.entity.VersionedEntity;
@@ -164,7 +164,6 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		private Map<String, Datasource> datasources = new HashMap<>();
 		private Map<String, AnnotationType> annotationTypes;
 		private Map<String, Map<String, Set<String>>> relationshipMap = new HashMap<>();
-		private Map<Term, Set<Pair<Term, Synonym.Type>>> synonymsMap = new HashMap<>();
 
 		private Map<IRI, List<OWLAnnotation>> annotationsBySubject = new HashMap<>();
 
@@ -193,7 +192,6 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			this.annotationTypes = annotationTypes.stream()
 					.collect(Collectors.toMap(AnnotationType::getPrefixedXmlType, identity()));
 			this.terms = terms.stream().collect(Collectors.toMap(Term::getReferenceId, identity()));
-
 		}
 
 		@Override
@@ -253,13 +251,6 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 				}
 			});
 
-			synonymsMap.forEach((term, synonymTerms) -> {
-				for (Pair<Term, Synonym.Type> synonymTerm : synonymTerms) {
-					Synonym synonym = new Synonym(term, synonymTerm.getLeft().getName(), synonymTerm.getRight(),
-							curator, version);
-					approve(synonym);
-				}
-			});
 		}
 
 		@Override
@@ -299,21 +290,17 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 						.equals(owlAnnotationProperty.getIRI())) {
 					logger.log(INFO, "replaced_by unused in BAO");
 				} else if (synonymMap.containsKey(owlAnnotationProperty.getIRI())) {
-					if (owlAnnotation.getValue() instanceof IRI) {
-						IRI synonymIRI = (IRI) owlAnnotation.getValue();
-						Term synonymTerm = getTerm(synonymIRI.getRemainder().orNull());
-						Term preferredTerm = termStack.peek();
-						Synonym.Type synonymType = synonymMap.get(owlAnnotationProperty.getIRI());
-						synonymsMap.computeIfAbsent(preferredTerm, t -> new HashSet<>())
-								.add(Pair.of(synonymTerm, synonymType));
-					} else if (owlAnnotation.getValue() instanceof OWLLiteral) {
+					Type type = synonymMap.get(owlAnnotationProperty.getIRI());
+					if (owlAnnotation.getValue() instanceof OWLLiteral) {
 						OWLLiteral literal = (OWLLiteral) owlAnnotation.getValue();
-						logger.log(INFO, literal.toString());
+						Synonym synonym = new Synonym(term, literal.getLiteral(), type, curator, version);
+						approve(synonym);
+					} else if (owlAnnotation.getValue() instanceof IRI) {
+						logger.warning("IRI not supported for Synonyms");
 					}
 
 				} else {
 					AnnotationType annotationType = annotationTypes.get(owlAnnotationProperty.getIRI().getShortForm());
-
 					String value = getString(owlAnnotation);
 					Annotation annotation = new Annotation(value, annotationType, term, curator, version);
 					approve(annotation);
