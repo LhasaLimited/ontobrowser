@@ -58,6 +58,8 @@ public class TermDetailsView extends OntoBrowserView
 			grid.setText(i, 0, LABELS[i] + ":");
 		}
 		grid.setWidth("100%");
+		annotationGrid.setHeight("auto");
+		annotationGrid.setWidth("100%");
 
 		setLabelStyle(grid);
 
@@ -69,7 +71,7 @@ public class TermDetailsView extends OntoBrowserView
 		simplePanel.add(tabPanel);
 		initWidget(simplePanel);
 
-		addStyleName("padded-border vert-scroll fixed-height");
+		addStyleName("fixed-height");
 
 		eventBus.addHandler(ViewTermEvent.TYPE, this);
 		eventBus.addHandler(TermUpdatedEvent.TYPE, this);
@@ -152,7 +154,7 @@ public class TermDetailsView extends OntoBrowserView
 	private void setLabelStyle(Grid gridWithLabels) {
 		int row;
 		CellFormatter cellFormatter = gridWithLabels.getCellFormatter();
-		for (row = 0; row < annotationGrid.getRowCount(); row++) {
+		for (row = 0; row < gridWithLabels.getRowCount(); row++) {
 			cellFormatter.addStyleName(row, 0, "label");
 		}
 	}
