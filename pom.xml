@@ -129,6 +129,12 @@
           <artifactId>wildfly-arquillian-container-managed</artifactId>
           <version>${arquillian-wildfly-container-version}</version>
           <scope>test</scope>
+          <exclusions>
+          	<exclusion>
+          		<groupId>sun.jdk</groupId>
+          		<artifactId>jconsole</artifactId>
+          	</exclusion>
+          </exclusions>
       </dependency>
       <dependency>
           <groupId>xml-apis</groupId>
