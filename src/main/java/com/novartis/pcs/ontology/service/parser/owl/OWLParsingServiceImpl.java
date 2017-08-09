@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,8 +19,6 @@ import java.util.logging.Logger;
 import javax.ejb.Local;
 import javax.ejb.Stateless;
 
-import org.apache.commons.lang3.StringUtils;
-import org.obolibrary.obo2owl.Obo2OWLConstants;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
@@ -102,20 +101,25 @@ import org.semanticweb.owlapi.util.OWLOntologyWalker;
 import org.semanticweb.owlapi.util.StructureWalker;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-import com.novartis.pcs.ontology.entity.Annotation;
 import com.novartis.pcs.ontology.entity.AnnotationType;
-import com.novartis.pcs.ontology.entity.CrossReference;
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.RelationshipType;
-import com.novartis.pcs.ontology.entity.Synonym;
-import com.novartis.pcs.ontology.entity.Synonym.Type;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.service.parser.ParseContext;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.AnnotationTypeNameHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.OntologyDescriptionHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.RelationshipTypeNameHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermAnnotationHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermCommentHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermCrossReferenceHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermDefinitionHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermLabelHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermReplacedByHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermSynonymHandler;
 
 @Stateless
 @Local(OWLParsingServiceLocal.class)
@@ -131,21 +135,13 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 
 	class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
-		private final Map<IRI, Synonym.Type> synonymMap = ImmutableMap.of(
-				Obo2OWLConstants.Obo2OWLVocabulary.IRI_OIO_hasBroadSynonym.getIRI(), Synonym.Type.BROAD,
-				Obo2OWLConstants.Obo2OWLVocabulary.IRI_OIO_hasExactSynonym.getIRI(), Synonym.Type.EXACT,
-				Obo2OWLConstants.Obo2OWLVocabulary.IRI_OIO_hasRelatedSynonym.getIRI(), Synonym.Type.RELATED,
-				Obo2OWLConstants.Obo2OWLVocabulary.IRI_OIO_hasNarrowSynonym.getIRI(), Synonym.Type.NARROW);
-
-		private static final int ACRONYM_INDEX = 0;
-		private static final int REFID_INDEX = 1;
-
 		private final OWLOntologyManager owlOntologyManager;
 		private final OWLParserContext context;
 		// indexes of entities
 		private final Map<String, Map<String, Set<String>>> relationshipMap = new HashMap<>();
 		private final Map<IRI, List<OWLAnnotation>> annotationsBySubject = new HashMap<>();
 
+		private final Set<OWLVisitorHandler> handlers = new LinkedHashSet<>();
 		// current state
 
 		public ParsingStructureWalker(OWLObjectWalker<OWLOntology> owlObjectWalker,
@@ -153,6 +149,19 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			super(owlObjectWalker);
 			this.context = context;
 			this.owlOntologyManager = owlOntologyManager;
+
+			handlers.add(new TermLabelHandler());
+			handlers.add(new TermCommentHandler());
+			handlers.add(new TermCrossReferenceHandler());
+			handlers.add(new TermDefinitionHandler());
+			handlers.add(new TermReplacedByHandler());
+			handlers.add(new TermSynonymHandler());
+			handlers.add(new TermAnnotationHandler());
+
+			handlers.add(new RelationshipTypeNameHandler());
+			handlers.add(new AnnotationTypeNameHandler());
+
+			handlers.add(new OntologyDescriptionHandler());
 		}
 
 		@Override
@@ -171,17 +180,21 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			}
 			Set<OWLAnnotationProperty> annotationProps = owlOntology.getAnnotationPropertiesInSignature();
 			for (OWLAnnotationProperty annotationProp : annotationProps) {
-				context.visitPropertyAnnotation(annotationProp.getIRI().getRemainder().orNull());
+				context.visitPropertyAnnotation(annotationProp.getIRI().getRemainder().orNull(),
+						this::createAnnotationType);
 			}
+
 
 			Set<OWLObjectProperty> objectProperties = owlOntology.getObjectPropertiesInSignature();
 			for (OWLObjectProperty objectProperty : objectProperties) {
-				context.visitPropertyRelationship(objectProperty.getIRI().getRemainder().orNull());
+				context.visitPropertyRelationship(objectProperty.getIRI().getRemainder().orNull(),
+						this::createRelationshipType);
 			}
 
 			Set<OWLDataProperty> dataProperties = owlOntology.getDataPropertiesInSignature();
 			for (OWLDataProperty owlDataProperty : dataProperties) {
-				context.visitPropertyRelationship(owlDataProperty.getIRI().getRemainder().orNull());
+				context.visitPropertyRelationship(owlDataProperty.getIRI().getRemainder().orNull(),
+						this::createRelationshipType);
 			}
 
 			context.statePush(ParserState.ONTOLOGY);
@@ -190,6 +203,19 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 
 			addRootRelationships();
 			validateDuplicates();
+		}
+
+		private AnnotationType createAnnotationType(String name) {
+			AnnotationType anAnnotationType = new AnnotationType(name, context.getCurator(), context.getVersion());
+			context.approve(anAnnotationType);
+			return anAnnotationType;
+		}
+
+		private RelationshipType createRelationshipType(String propertyFragment) {
+			RelationshipType relationshipType = new RelationshipType(propertyFragment, propertyFragment,
+					propertyFragment, context.getCurator(), context.getVersion());
+			context.approve(relationshipType);
+			return relationshipType;
 		}
 
 		private void validateDuplicates() {
@@ -216,94 +242,20 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			Term thing = context.getTerm("Thing");
 			terms.forEach((termName, term) -> {
 				if (term.getRelationships().isEmpty() && !term.equals(thing)) {
-					// added to term in constructor
-					context.approve(new Relationship(term, thing, context.getRelationshipType("is_a"),
-							context.getCurator(), context.getVersion()));
+					createRelationship(thing, term, context.getRelationshipType("is_a"));
 				}
 			});
 		}
 
 		@Override
 		public void visit(OWLAnnotation owlAnnotation) {
+			for (OWLVisitorHandler handler : handlers) {
+				if (handler.match(context, owlAnnotation)) {
+					handler.handleAnnotation(context, owlAnnotation);
+					break;
+				}
+			}
 			logger.log(FINE, "OWLAnnotation:{0}", owlAnnotation.toString());
-			OWLAnnotationProperty owlAnnotationProperty = owlAnnotation.getProperty();
-			ParserState currentState = context.statePeek();
-			if (ParserState.ONTOLOGY.equals(currentState)) {
-				if (owlAnnotationProperty.isComment()) {
-					String description = appendNonEmpty(context.getOntology().getDescription(),
-							getString(owlAnnotation));
-					context.getOntology().setDescription(StringUtils.abbreviate(description, 1024));
-				}
-			} else if (ParserState.TERM.equals(currentState)) {
-				Term term = context.termPeek();
-				if (owlAnnotationProperty.isLabel()) {
-					term.setName(getString(owlAnnotation));
-				} else if (owlAnnotationProperty.isComment()) {
-					term.setComments(getString(owlAnnotation));
-				} else if (Obo2OWLConstants.Obo2OWLVocabulary.IRI_OIO_hasDbXref.getIRI()
-						.equals(owlAnnotationProperty.getIRI())) {
-					if (owlAnnotation.getValue() instanceof OWLLiteral) {
-						String string = getString(owlAnnotation);
-						if (string != null && string.contains(":")) {
-							String[] splitted = string.split(":");
-							Datasource datasource = context.getDatasource(splitted[ACRONYM_INDEX]);
-							new CrossReference(term, datasource, splitted[REFID_INDEX], context.getCurator());
-						} else if (string != null) {
-							// TS28 from bioontology - without prefix
-						}
-					} else if (owlAnnotation.getValue() instanceof IRI) {
-						new CrossReference(term, context.getIri().toString(), context.getCurator());
-					}
-				} else if (Obo2OWLConstants.Obo2OWLVocabulary.IRI_IAO_0000115.getIRI()
-						.equals(owlAnnotationProperty.getIRI())) {
-					term.setDefinition(getString(owlAnnotation));
-				} else if (Obo2OWLConstants.Obo2OWLVocabulary.IRI_IAO_0100001.getIRI()
-						.equals(owlAnnotationProperty.getIRI())) {
-					logger.log(INFO, "replaced_by unused in BAO");
-				} else if (synonymMap.containsKey(owlAnnotationProperty.getIRI())) {
-					Type type = synonymMap.get(owlAnnotationProperty.getIRI());
-					if (owlAnnotation.getValue() instanceof OWLLiteral) {
-						OWLLiteral literal = (OWLLiteral) owlAnnotation.getValue();
-						Synonym synonym = new Synonym(term, literal.getLiteral(), type, context.getCurator(),
-								context.getVersion());
-						context.approve(synonym);
-					} else if (owlAnnotation.getValue() instanceof IRI) {
-						logger.warning("IRI not supported for Synonyms");
-					}
-
-				} else {
-					AnnotationType annotationType = context
-							.getAnnotationType(owlAnnotationProperty.getIRI().getShortForm());
-					String value = getString(owlAnnotation);
-					Annotation annotation = new Annotation(value, annotationType, term, context.getCurator(),
-							context.getVersion());
-					context.approve(annotation);
-					term.getAnnotations().add(annotation);
-				}
-			} else if (ParserState.RELATIONSHIP.equals(currentState)) {
-				if (owlAnnotationProperty.isLabel()) {
-					context.getRelationshipType().setName(getString(owlAnnotation));
-				}
-			} else if (ParserState.ANNOTATION_TYPE.equals(currentState)){
-				if(owlAnnotationProperty.isLabel()) {
-					context.getAnnotationType().setAnnotationType(getString(owlAnnotation));
-				}
-			}
-		}
-
-		private String appendNonEmpty(String existing, String appended) {
-			return existing != null && !existing.isEmpty() ? existing + " " + appended : appended;
-		}
-
-		private String getString(OWLAnnotation owlAnnotation) {
-			String result = null;
-			if (owlAnnotation.getValue() instanceof OWLLiteral) {
-				OWLLiteral owlLiteral = (OWLLiteral) owlAnnotation.getValue();
-				result = owlLiteral.getLiteral();
-			} else if (owlAnnotation.getValue() instanceof IRI) {
-				result = ((IRI) owlAnnotation.getValue()).getRemainder().orNull();
-			}
-			return result;
 		}
 
 		@Override
@@ -337,11 +289,16 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 						relatedTerm.getReferenceId(), isARelationship.getRelationship() });
 			} else {
 				relationshipTypesSet.add(isARelationship.getRelationship());
-				Relationship relationship = new Relationship(term, relatedTerm, isARelationship, context.getCurator(),
-						context.getVersion());
-				context.approve(relationship);
+				Relationship relationship = createRelationship(relatedTerm, term, isARelationship);
 				term.getRelationships().add(relationship);
 			}
+		}
+
+		private Relationship createRelationship(final Term relatedTerm, final Term term, final RelationshipType relationshipType) {
+			// added to term in constructor
+			Relationship relationship = new Relationship(term, relatedTerm, relationshipType, context.getCurator(), context.getVersion());
+			context.approve(relationship);
+			return relationship;
 		}
 
 		@Override
@@ -349,10 +306,6 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			logger.log(FINE, "OWLObjectProperty:{0}", property.toString());
 			context.statePush(ParserState.OBJECT_PROPERTY);
 			super.visit(property);
-
-			String objectPropertyFragment = property.getIRI().getRemainder().orNull();
-
-			context.visitPropertyRelationship(objectPropertyFragment);
 			context.statePop();
 		}
 
@@ -782,7 +735,6 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			logger.log(INFO, "OWLTransitiveObjectPropertyAxiom:{0}", axiom.toString());
 			super.visit(axiom);
 		}
-
 
 	}
 

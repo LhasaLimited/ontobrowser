@@ -183,7 +183,7 @@ public class OWLParserContext {
 		return current;
 	}
 
-	void approve(VersionedEntity versionedEntity) {
+	public void approve(VersionedEntity versionedEntity) {
 		versionedEntity.setStatus(VersionedEntity.Status.APPROVED);
 		versionedEntity.setApprovedVersion(getVersion());
 	}
@@ -192,30 +192,24 @@ public class OWLParserContext {
 		return terms.containsKey(referenceId);
 	}
 
-	void visitPropertyRelationship(String propertyFragment) {
-		RelationshipType relationshipType;
-		if (hasRelationshipType(propertyFragment)) {
-			relationshipType = getRelationshipType(propertyFragment);
-		} else {
-			// replace with computeIfAbsent
-			relationshipType = new RelationshipType(propertyFragment, propertyFragment, propertyFragment, getCurator(),
-					getVersion());
-			approve(relationshipType);
-			addRelationshipType(relationshipType);
-		}
+	void visitPropertyRelationship(String propertyFragment, final Function<String,RelationshipType> relationshipTypeFunction) {
+		RelationshipType relationshipType = relationshipTypes.computeIfAbsent(propertyFragment, relationshipTypeFunction);
+
+//		RelationshipType relationshipType;
+//		if (hasRelationshipType(propertyFragment)) {
+//			relationshipType = getRelationshipType(propertyFragment);
+//		} else {
+//			// replace with computeIfAbsent
+//			relationshipType = new RelationshipType(propertyFragment, propertyFragment, propertyFragment, getCurator(),
+//					getVersion());
+//			approve(relationshipType);
+//			addRelationshipType(relationshipType);
+//		}
 		setRelationshipType(relationshipType);
 	}
 
-	void visitPropertyAnnotation(String propertyFragment) {
-		AnnotationType annotationType;
-		if (hasAnnotationType(propertyFragment)) {
-			annotationType = getAnnotationType(propertyFragment);
-		} else {
-			// replace with computeIfAbsent
-			annotationType = new AnnotationType(propertyFragment, getCurator(), getVersion());
-			approve(annotationType);
-			addAnnotationType(annotationType);
-		}
+	void visitPropertyAnnotation(String propertyFragment, final Function<String, AnnotationType> annotationTypeFunction) {
+		AnnotationType annotationType = annotationTypes.computeIfAbsent(propertyFragment, annotationTypeFunction);
 		setAnnotationType(annotationType);
 	}
 
