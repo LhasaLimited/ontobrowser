@@ -12,11 +12,13 @@
 
 	</container>
 	<extension qualifier="persistence">
-		<property name="defaultDataSource">java:jboss/datasources/ontobrowser</property>
+		<property name="defaultDataSource">java:jboss/datasources/ontobrowserTest</property>
+		<property name="defaultCleanupStrategy">USED_TABLES_ONLY</property>
 	</extension>
 	<extension qualifier="persistence-dbunit">
 		<property name="datatypeFactory">org.dbunit.ext.oracle.Oracle10DataTypeFactory</property>
 		<property name="useIdentityInsert">true</property>
 		<property name="excludePoi">true</property>
+		<property name="skipOracleRecycleBinTables">true</property>
 	</extension>
 </arquillian>
