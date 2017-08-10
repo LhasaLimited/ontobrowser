@@ -171,16 +171,12 @@ public class OWLParserContext {
 		return terms;
 	}
 
-	Term getTerm(String fragment) {
-		Term current;
-		if (terms.containsKey(fragment)) {
-			current = terms.get(fragment);
-		} else {
-			current = new Term(getOntology(), fragment, fragment, getCurator(), getVersion());
-			approve(current);
-			terms.put(fragment, current);
-		}
-		return current;
+	public Term getTerm(String fragment){
+		return terms.get(fragment);
+	}
+
+	public Term getTerm(String fragment, Function<String, Term> createTerm) {
+		return terms.computeIfAbsent(fragment, createTerm);
 	}
 
 	public void approve(VersionedEntity versionedEntity) {
@@ -194,17 +190,6 @@ public class OWLParserContext {
 
 	void visitPropertyRelationship(String propertyFragment, final Function<String,RelationshipType> relationshipTypeFunction) {
 		RelationshipType relationshipType = relationshipTypes.computeIfAbsent(propertyFragment, relationshipTypeFunction);
-
-//		RelationshipType relationshipType;
-//		if (hasRelationshipType(propertyFragment)) {
-//			relationshipType = getRelationshipType(propertyFragment);
-//		} else {
-//			// replace with computeIfAbsent
-//			relationshipType = new RelationshipType(propertyFragment, propertyFragment, propertyFragment, getCurator(),
-//					getVersion());
-//			approve(relationshipType);
-//			addRelationshipType(relationshipType);
-//		}
 		setRelationshipType(relationshipType);
 	}
 
