@@ -227,8 +227,18 @@
           <modules>
             <module>com.novartis.pcs.ontology.webapp.OntoBrowser</module>
           </modules>
+            <launcherDir>target/ontobrowser</launcherDir>
+            <incremental>false</incremental>
         </configuration>
       </plugin>
+        <plugin>
+            <groupId>org.wildfly.plugins</groupId>
+            <artifactId>wildfly-maven-plugin</artifactId>
+            <version>1.2.0.Alpha6</version>
+            <configuration>
+              <jboss-home>C:\software\wildfly\wildfly-8.2.1.Final</jboss-home>
+            </configuration>
+        </plugin>
     </plugins>
   </build>
 </project>
