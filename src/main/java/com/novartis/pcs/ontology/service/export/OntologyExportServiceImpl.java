@@ -67,6 +67,7 @@ import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyFormat;
+import org.semanticweb.owlapi.model.OWLOntologyID;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import com.novartis.pcs.ontology.dao.DatasourceDAOLocal;
@@ -367,8 +368,8 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 		try {
 			OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
 			OWLDataFactory factory = manager.getOWLDataFactory();
-			IRI ontologyIRI = createIRI(baseURL.toURI(), ontology.getName());
-	        OWLOntology onto = manager.createOntology(ontologyIRI);
+			OWLOntologyID owlOntologyID = new OWLOntologyID(IRI.create(ontology.getSourceUri()), IRI.create(ontology.getSourceRelease()));
+	        OWLOntology onto = manager.createOntology(owlOntologyID);
 	        
 	        OWLAnnotation ontologyLabel = factory.getOWLAnnotation(factory.getRDFSLabel(), 
 	        		factory.getOWLLiteral(ontology.getName()));

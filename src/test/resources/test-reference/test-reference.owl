@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
 <Ontology xmlns="http://www.w3.org/2002/07/owl#"
-     xml:base="http://www.lhasalimited.org/ontobrowser"
+     xml:base="http://www.lhasalimited.org/ontobrowser.owl"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:xml="http://www.w3.org/XML/1998/namespace"
      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-     ontologyIRI="http://www.lhasalimited.org/ontobrowser">
-    <Prefix name="" IRI="http://www.lhasalimited.org/ontobrowser/"/>
+     ontologyIRI="http://www.lhasalimited.org/ontobrowser.owl"
+     versionIRI="http://www.lhasalimited.org/1.0/ontobrowser.owl">
+    <Prefix name="" IRI="http://www.lhasalimited.org/ontobrowser.owl#"/>
     <Prefix name="obo" IRI="http://purl.obolibrary.org/obo/"/>
     <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
     <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>

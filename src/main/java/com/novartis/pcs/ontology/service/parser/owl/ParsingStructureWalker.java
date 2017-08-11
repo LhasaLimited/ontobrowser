@@ -85,6 +85,7 @@ import org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyID;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLReflexiveObjectPropertyAxiom;
 import org.semanticweb.owlapi.model.OWLSameIndividualAxiom;
@@ -150,8 +151,8 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	@Override
 	public void visit(OWLOntology owlOntology) {
 		logger.log(FINE, "OWLOntology:{0}", owlOntology.toString());
-		IRI documentIRI = owlOntologyManager.getOntologyDocumentIRI(owlOntology);
-		context.getOntology().setSourceUri(documentIRI.toString());
+
+		fillSourceProperties(owlOntology);
 
 		Set<OWLClass> owlClasses = owlOntology.getClassesInSignature();
 		for (OWLClass owlClass : owlClasses) {
@@ -184,6 +185,14 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		context.statePop();
 
 		addRootRelationships();
+	}
+
+	private void fillSourceProperties(final OWLOntology owlOntology) {
+		OWLOntologyID ontologyID = owlOntology.getOntologyID();
+		String ontologyIRI = ontologyID.getOntologyIRI().toString();
+		context.getOntology().setSourceUri(ontologyIRI);
+		context.getOntology().setSourceRelease(ontologyID.getVersionIRI().toString());
+		context.getOntology().setSourceNamespace(ontologyIRI.endsWith("/") ? ontologyIRI : ontologyIRI + "#");
 	}
 
 	private Term createTerm(String fragment){

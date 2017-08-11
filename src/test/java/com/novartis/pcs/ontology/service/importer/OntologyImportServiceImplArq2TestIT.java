@@ -86,6 +86,9 @@ public class OntologyImportServiceImplArq2TestIT {
 	@Test
 	public void shouldImportOntology() throws DuplicateEntityException, InvalidEntityException {
 		assertThat(ontology.getDescription(), is("Ontology comment 2 Ontology comment"));
+		assertThat(ontology.getSourceNamespace(), is("http://www.lhasalimited.org/ontobrowser.owl#"));
+		assertThat(ontology.getSourceUri(), is("http://www.lhasalimited.org/ontobrowser.owl"));
+		assertThat(ontology.getSourceRelease(), is("http://www.lhasalimited.org/1.0/ontobrowser.owl"));
 	}
 
 	@Test
