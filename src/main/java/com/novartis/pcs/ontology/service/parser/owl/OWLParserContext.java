@@ -1,14 +1,6 @@
 package com.novartis.pcs.ontology.service.parser.owl;
 
-import com.novartis.pcs.ontology.entity.AnnotationType;
-import com.novartis.pcs.ontology.entity.Curator;
-import com.novartis.pcs.ontology.entity.Datasource;
-import com.novartis.pcs.ontology.entity.Ontology;
-import com.novartis.pcs.ontology.entity.RelationshipType;
-import com.novartis.pcs.ontology.entity.Term;
-import com.novartis.pcs.ontology.entity.Version;
-import com.novartis.pcs.ontology.entity.VersionedEntity;
-import org.semanticweb.owlapi.model.IRI;
+import static java.util.function.UnaryOperator.identity;
 
 import java.util.Collection;
 import java.util.Deque;
@@ -17,7 +9,16 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static java.util.function.UnaryOperator.identity;
+import org.semanticweb.owlapi.model.IRI;
+
+import com.novartis.pcs.ontology.entity.AnnotationType;
+import com.novartis.pcs.ontology.entity.Curator;
+import com.novartis.pcs.ontology.entity.Datasource;
+import com.novartis.pcs.ontology.entity.Ontology;
+import com.novartis.pcs.ontology.entity.RelationshipType;
+import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.entity.Version;
+import com.novartis.pcs.ontology.entity.VersionedEntity;
 
 
 public class OWLParserContext {
@@ -171,14 +172,13 @@ public class OWLParserContext {
 		return terms;
 	}
 
-	public Term getTerm(String fragment){
-		return terms.get(fragment);
+	public Term getTerm(String referenceId) {
+		return terms.get(referenceId);
 	}
 
-	public Term getTerm(String fragment, Function<String, Term> createTerm) {
-		return terms.computeIfAbsent(fragment, createTerm);
+	public void putTerm(final String referenceId, final Term term) {
+		terms.put(referenceId, term);
 	}
-
 	public void approve(VersionedEntity versionedEntity) {
 		versionedEntity.setStatus(VersionedEntity.Status.APPROVED);
 		versionedEntity.setApprovedVersion(getVersion());

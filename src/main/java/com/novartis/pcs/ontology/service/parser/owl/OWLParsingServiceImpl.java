@@ -56,7 +56,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 
 		final OWLParserContext context = new OWLParserContext(curator, version, datasources, ontology,
 				relationshipTypes, annotationTypes, terms);
-		ParsingStructureWalker parsingStructureWalker = new ParsingStructureWalker(owlObjectWalker, owlOntologyManager,
+		ParsingStructureWalker parsingStructureWalker = new ParsingStructureWalker(owlObjectWalker,
 				context);
 		parsingStructureWalker.visit(owlOntology);
 

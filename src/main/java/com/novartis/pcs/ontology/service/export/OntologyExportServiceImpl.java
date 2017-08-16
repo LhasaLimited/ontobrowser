@@ -17,7 +17,6 @@ limitations under the License.
 */
 package com.novartis.pcs.ontology.service.export;
 
-import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.createIRI;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.escapeOBO;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.escapeQuote;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.getRelationshipIRI;
@@ -362,11 +361,16 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	private void exportAsOWL(Ontology ontology, OutputStream os, OWLOntologyFormat format,
 			Collection<Datasource> xrefDatasources) {
 		try {
+
+			IRIProvider iriProvider = ontology.isInternal() ? new DefaultIRIProvider(ontology, baseURL)
+					: new URLIRIProvider();
+
 			OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+
 			OWLDataFactory factory = manager.getOWLDataFactory();
 			OWLOntologyID owlOntologyID = new OWLOntologyID(IRI.create(ontology.getSourceUri()), IRI.create(ontology.getSourceRelease()));
 	        OWLOntology onto = manager.createOntology(owlOntologyID);
@@ -386,7 +390,7 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 			for(Term term : terms) {
 				if(term.getStatus().equals(Status.APPROVED) 
 						|| term.getStatus().equals(Status.OBSOLETE)) {
-					IRI termIRI = createIRI(baseURL.toURI(), ontology.getName(), term.getReferenceId());
+					IRI termIRI = iriProvider.getIRI(term);
 					OWLClass termClass = factory.getOWLClass(termIRI);
 					
 					manager.addAxiom(onto, factory.getOWLDeclarationAxiom(termClass));
@@ -407,7 +411,7 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 						if(relationship.getStatus().equals(Status.APPROVED)) {
 							RelationshipType type = relationship.getType();
 							Term relatedTerm = relationship.getRelatedTerm();
-							IRI relatedTermIRI = createIRI(baseURL.toURI(), ontology.getName(), relatedTerm.getReferenceId());
+							IRI relatedTermIRI = iriProvider.getIRI(relatedTerm);
 							OWLClass relatedTermClass = factory.getOWLClass(relatedTermIRI);
 							
 							relationshipTypes.add(type);

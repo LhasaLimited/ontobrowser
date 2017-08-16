@@ -6,21 +6,19 @@
  */
 package com.novartis.pcs.ontology.service.parser.owl;
 
-import com.google.common.base.Optional;
-import com.novartis.pcs.ontology.entity.AnnotationType;
-import com.novartis.pcs.ontology.entity.Relationship;
-import com.novartis.pcs.ontology.entity.RelationshipType;
-import com.novartis.pcs.ontology.entity.Term;
-import com.novartis.pcs.ontology.service.parser.owl.handlers.AnnotationTypeNameHandler;
-import com.novartis.pcs.ontology.service.parser.owl.handlers.OntologyDescriptionHandler;
-import com.novartis.pcs.ontology.service.parser.owl.handlers.RelationshipTypeNameHandler;
-import com.novartis.pcs.ontology.service.parser.owl.handlers.TermAnnotationHandler;
-import com.novartis.pcs.ontology.service.parser.owl.handlers.TermCommentHandler;
-import com.novartis.pcs.ontology.service.parser.owl.handlers.TermCrossReferenceHandler;
-import com.novartis.pcs.ontology.service.parser.owl.handlers.TermDefinitionHandler;
-import com.novartis.pcs.ontology.service.parser.owl.handlers.TermLabelHandler;
-import com.novartis.pcs.ontology.service.parser.owl.handlers.TermReplacedByHandler;
-import com.novartis.pcs.ontology.service.parser.owl.handlers.TermSynonymHandler;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
@@ -86,7 +84,6 @@ import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyID;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLReflexiveObjectPropertyAxiom;
 import org.semanticweb.owlapi.model.OWLSameIndividualAxiom;
 import org.semanticweb.owlapi.model.OWLSubAnnotationPropertyOfAxiom;
@@ -99,18 +96,20 @@ import org.semanticweb.owlapi.model.OWLTransitiveObjectPropertyAxiom;
 import org.semanticweb.owlapi.util.OWLObjectWalker;
 import org.semanticweb.owlapi.util.StructureWalker;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
+import com.novartis.pcs.ontology.entity.AnnotationType;
+import com.novartis.pcs.ontology.entity.Relationship;
+import com.novartis.pcs.ontology.entity.RelationshipType;
+import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.AnnotationTypeNameHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.OntologyDescriptionHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.RelationshipTypeNameHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermAnnotationHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermCommentHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermCrossReferenceHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermDefinitionHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermLabelHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermReplacedByHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermSynonymHandler;
 
 /**
  * @author Artur Polit
@@ -119,7 +118,6 @@ import static java.util.logging.Level.INFO;
 class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	private final Logger logger = Logger.getLogger(getClass().getName());
 
-	private final OWLOntologyManager owlOntologyManager;
 	private final OWLParserContext context;
 	// indexes of entities
 	private final Map<String, Map<String, Set<String>>> relationshipMap = new HashMap<>();
@@ -128,11 +126,9 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	private final Set<OWLVisitorHandler> handlers = new LinkedHashSet<>();
 	// current state
 
-	public ParsingStructureWalker(OWLObjectWalker<OWLOntology> owlObjectWalker,
-								  OWLOntologyManager owlOntologyManager, final OWLParserContext context) {
+	public ParsingStructureWalker(final OWLObjectWalker<OWLOntology> owlObjectWalker, final OWLParserContext context) {
 		super(owlObjectWalker);
 		this.context = context;
-		this.owlOntologyManager = owlOntologyManager;
 
 		handlers.add(new TermLabelHandler());
 		handlers.add(new TermCommentHandler());
@@ -156,10 +152,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 		Set<OWLClass> owlClasses = owlOntology.getClassesInSignature();
 		for (OWLClass owlClass : owlClasses) {
-			Optional<String> remainder = owlClass.getIRI().getRemainder();
-			if (remainder.isPresent()) {
-				context.getTerm(remainder.get(), this::createTerm);
-			}
+			context.putTerm(owlClass.getIRI().getRemainder().get(), createTerm(owlClass));
 		}
 		Set<OWLAnnotationProperty> annotationProps = owlOntology.getAnnotationPropertiesInSignature();
 		for (OWLAnnotationProperty annotationProp : annotationProps) {
@@ -195,10 +188,12 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		context.getOntology().setSourceNamespace(ontologyIRI.endsWith("/") ? ontologyIRI : ontologyIRI + "#");
 	}
 
-	private Term createTerm(String fragment){
-			Term current = new Term(context.getOntology(), fragment, fragment, context.getCurator(), context.getVersion());
-			context.approve(current);
-			return current;
+	private Term createTerm(OWLClass owlClass) {
+		String fragment = owlClass.getIRI().getRemainder().get();
+		Term current = new Term(context.getOntology(), fragment, fragment, context.getCurator(), context.getVersion());
+		current.setUrl(owlClass.getIRI().toString());
+		context.approve(current);
+		return current;
 	}
 	private AnnotationType createAnnotationType(String name) {
 		AnnotationType anAnnotationType = new AnnotationType(name, context.getCurator(), context.getVersion());

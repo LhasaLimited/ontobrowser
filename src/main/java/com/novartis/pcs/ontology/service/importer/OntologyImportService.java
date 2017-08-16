@@ -24,6 +24,6 @@ import com.novartis.pcs.ontology.entity.DuplicateEntityException;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
 
 public interface OntologyImportService {
-	public void importOntology(String ontologyName, InputStream is, Curator curator)
+	void importOntology(String ontologyName, InputStream is, Curator curator)
 			throws DuplicateEntityException, InvalidEntityException;
 }

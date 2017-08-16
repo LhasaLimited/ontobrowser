@@ -54,6 +54,7 @@ public abstract class OntologyImportServiceBase extends OntologyService
             ontology = new Ontology(ontologyName, curator, version);
             ontology.setStatus(Status.APPROVED);
             ontology.setApprovedVersion(version);
+			ontology.setInternal(false);
         } else {
             terms = termDAO.loadAll(ontology);
         }

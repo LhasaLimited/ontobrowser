@@ -98,6 +98,7 @@ public class OntologyImportServiceImplArq2TestIT {
 		assertThat(term.getReferenceId(), is(ROOT_IRI));
 		assertThat(term.getDefinition(), is("The biological assay"));
 		assertThat(term.getComments(), is("Some comment"));
+		assertThat(term.getUrl(), is("http://www.lhasalimited.org/ontobrowser.owl#OB_00001"));
 	}
 
 	@Test
