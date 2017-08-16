@@ -236,7 +236,10 @@
             <artifactId>wildfly-maven-plugin</artifactId>
             <version>1.2.0.Alpha6</version>
             <configuration>
-              <jboss-home>C:\software\wildfly\wildfly-8.2.1.Final</jboss-home>
+                <jboss-home>C:\software\wildfly\wildfly-8.2.1.Final</jboss-home>
+                <java-opts>
+                  <java-opt>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8787</java-opt>
+                </java-opts>
             </configuration>
         </plugin>
     </plugins>
