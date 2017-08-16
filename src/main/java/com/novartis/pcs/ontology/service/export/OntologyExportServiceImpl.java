@@ -17,21 +17,24 @@ limitations under the License.
 */
 package com.novartis.pcs.ontology.service.export;
 
+import static com.novartis.pcs.ontology.entity.VersionedEntity.Status.APPROVED;
+import static com.novartis.pcs.ontology.entity.VersionedEntity.Status.OBSOLETE;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.escapeOBO;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.escapeQuote;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.getRelationshipIRI;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.isBuiltIn;
+import static java.util.Arrays.asList;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -65,6 +68,7 @@ import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyFormat;
 import org.semanticweb.owlapi.model.OWLOntologyID;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -103,7 +107,7 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 	@Resource(lookup="java:global/ontobrowser/export/owl/uri")
 	private URL baseURL;
 	
-	private Logger logger = Logger.getLogger(getClass().getName());
+	private final Logger logger = Logger.getLogger(getClass().getName());
 	
     /**
      * Default constructor. 
@@ -123,7 +127,7 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
     		throws OntologyNotFoundException {
     	Collection<Datasource> datasources = datasourceDAO.loadAll();
     	if(!includeNonPublicXrefs) {
-    	  	Collection<Datasource> external = new ArrayList<Datasource>();
+			Collection<Datasource> external = new ArrayList<>();
 	    	for(Datasource datasource : datasources) {
 	    		if(datasource.isPubliclyAccessible()) {
 	    			external.add(datasource);
@@ -175,7 +179,7 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 		DateFormat formatter = new SimpleDateFormat("dd:MM:yyyy HH:mm");
 		
 		if(!(terms instanceof List<?>)) {
-			terms = new ArrayList<Term>(terms);
+			terms = new ArrayList<>(terms);
 		}
 		
 		Collections.sort((List<Term>)terms, new TermReferenceIdComparator());
@@ -188,7 +192,7 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 					.append("auto-generated-by: OntoBrowser Export Service\n")
 					.append("\n");
 			
-			Set<RelationshipType> relationshipTypes = new HashSet<RelationshipType>();
+			Set<RelationshipType> relationshipTypes = new HashSet<>();
 			for(Term term : terms) {
 				if(term.getStatus().equals(Status.APPROVED) 
 						|| term.getStatus().equals(Status.OBSOLETE)) {
@@ -285,7 +289,7 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 						}
 					}
 					
-					List<Relationship> relationships = new ArrayList<Relationship>(term.getRelationships());
+					List<Relationship> relationships = new ArrayList<>(term.getRelationships());
 					Collections.sort(relationships, new RelationshipComparator());				
 					for(Relationship relationship : relationships) {
 						if(relationship.getStatus().equals(Status.APPROVED)) {
@@ -372,153 +376,168 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 			OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
 
 			OWLDataFactory factory = manager.getOWLDataFactory();
-			OWLOntologyID owlOntologyID = new OWLOntologyID(IRI.create(ontology.getSourceUri()), IRI.create(ontology.getSourceRelease()));
-	        OWLOntology onto = manager.createOntology(owlOntologyID);
-	        
-	        OWLAnnotation ontologyLabel = factory.getOWLAnnotation(factory.getRDFSLabel(), 
-	        		factory.getOWLLiteral(ontology.getName()));
-			manager.applyChange(new AddOntologyAnnotation(onto, ontologyLabel));
-			
-			if(ontology.getDescription() != null) {
-				OWLAnnotation comment = factory.getOWLAnnotation(factory.getRDFSComment(), 
-		        		factory.getOWLLiteral(ontology.getDescription()));
-				manager.applyChange(new AddOntologyAnnotation(onto, comment));
-			}
-	        
+			OWLOntology onto = exportOntology(ontology, manager, factory);
+			ExportContext exportContext = new ExportContext(manager, factory, onto);
+
 			Collection<Term> terms = termDAO.loadAll(ontology);
-	        Set<RelationshipType> relationshipTypes = new HashSet<RelationshipType>();
-			for(Term term : terms) {
-				if(term.getStatus().equals(Status.APPROVED) 
-						|| term.getStatus().equals(Status.OBSOLETE)) {
-					IRI termIRI = iriProvider.getIRI(term);
-					OWLClass termClass = factory.getOWLClass(termIRI);
-					
-					manager.addAxiom(onto, factory.getOWLDeclarationAxiom(termClass));
-					
-					manager.addAxiom(onto, factory.getOWLAnnotationAssertionAxiom(factory.getRDFSLabel(),
-							termIRI, factory.getOWLLiteral(term.getName())));				
-					
-					if(term.getComments() != null) {
-						OWLLiteral comment = factory.getOWLLiteral(term.getComments());
-						OWLAxiom axiom = factory.getOWLAnnotationAssertionAxiom(factory.getRDFSComment(),
-								termIRI, comment);
-						manager.addAxiom(onto, axiom);
-					}
-					
-					Set<OWLClassExpression> intersectClasses = new HashSet<OWLClassExpression>();
-					Set<OWLClassExpression> unionClasses = new HashSet<OWLClassExpression>();
-					for(Relationship relationship : term.getRelationships()) {
-						if(relationship.getStatus().equals(Status.APPROVED)) {
-							RelationshipType type = relationship.getType();
-							Term relatedTerm = relationship.getRelatedTerm();
-							IRI relatedTermIRI = iriProvider.getIRI(relatedTerm);
-							OWLClass relatedTermClass = factory.getOWLClass(relatedTermIRI);
-							
-							relationshipTypes.add(type);
-							
-							if(relationship.isIntersection()) {
-								OWLClassExpression intersect = relatedTermClass;
-								if(!type.getRelationship().equals("is_a")) {
-									IRI relationshipIRI = getRelationshipIRI(type.getRelationship());
-									OWLObjectProperty objectProp = factory.getOWLObjectProperty(relationshipIRI);
-									OWLObjectSomeValuesFrom someValuesFrom = factory.getOWLObjectSomeValuesFrom(objectProp, relatedTermClass);
-									intersect = someValuesFrom;
-								}
-								intersectClasses.add(intersect);
-							} else if(type.getRelationship().equals("is_a")) {
-								OWLAxiom axiom = factory.getOWLSubClassOfAxiom(termClass, relatedTermClass);
-								manager.addAxiom(onto, axiom);
-							} else if(type.getRelationship().equals("union_of")) {			
-								unionClasses.add(relatedTermClass);
-							} else if(type.getRelationship().equals("disjoint_from")) {
-								OWLAxiom axiom = factory.getOWLDisjointClassesAxiom(termClass, relatedTermClass);
-								manager.addAxiom(onto, axiom);
-							} else {
+			exportTerms(iriProvider, factory, terms, exportContext);
+
+			exportRelationshipTypes(factory, exportContext);
+
+			manager.saveOntology(onto, format, os);
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Failed to export " + ontology.getName() + " in OWL format", e);
+			throw new RuntimeException(e);
+		}
+	}
+
+	private OWLOntology exportOntology(final Ontology ontology, final OWLOntologyManager manager,
+			final OWLDataFactory factory) throws OWLOntologyCreationException {
+		OWLOntologyID owlOntologyID = new OWLOntologyID(IRI.create(ontology.getSourceUri()),
+				IRI.create(ontology.getSourceRelease()));
+		OWLOntology onto = manager.createOntology(owlOntologyID);
+
+		OWLAnnotation ontologyLabel = factory.getOWLAnnotation(factory.getRDFSLabel(),
+				factory.getOWLLiteral(ontology.getName()));
+		manager.applyChange(new AddOntologyAnnotation(onto, ontologyLabel));
+
+		if (ontology.getDescription() != null) {
+			OWLAnnotation comment = factory.getOWLAnnotation(factory.getRDFSComment(),
+					factory.getOWLLiteral(ontology.getDescription()));
+			manager.applyChange(new AddOntologyAnnotation(onto, comment));
+		}
+		return onto;
+	}
+
+	private void exportTerms(final IRIProvider iriProvider, final OWLDataFactory factory, final Collection<Term> terms,
+			final ExportContext exportContext) throws URISyntaxException {
+		for (Term term : terms) {
+			if (term.getStatus().equals(Status.APPROVED) || term.getStatus().equals(Status.OBSOLETE)) {
+				IRI termIRI = iriProvider.getIRI(term);
+				OWLClass termClass = factory.getOWLClass(termIRI);
+
+				exportContext.addAxiom(factory.getOWLDeclarationAxiom(termClass));
+
+				exportContext.addAxiom(factory.getOWLAnnotationAssertionAxiom(factory.getRDFSLabel(), termIRI,
+						factory.getOWLLiteral(term.getName())));
+
+				if (term.getComments() != null) {
+					OWLLiteral comment = factory.getOWLLiteral(term.getComments());
+					OWLAxiom axiom = factory.getOWLAnnotationAssertionAxiom(factory.getRDFSComment(), termIRI, comment);
+					exportContext.addAxiom(axiom);
+				}
+
+				Set<OWLClassExpression> intersectClasses = new HashSet<>();
+				Set<OWLClassExpression> unionClasses = new HashSet<>();
+
+				for (Relationship relationship : term.getRelationships()) {
+					if (relationship.getStatus().equals(APPROVED)) {
+						RelationshipType type = relationship.getType();
+						Term relatedTerm = relationship.getRelatedTerm();
+						IRI relatedTermIRI = iriProvider.getIRI(relatedTerm);
+						OWLClass relatedTermClass = factory.getOWLClass(relatedTermIRI);
+						exportContext.addRelationshipType(type);
+						if (relationship.isIntersection()) {
+							OWLClassExpression intersect = relatedTermClass;
+							if (!type.getRelationship().equals("is_a")) {
 								IRI relationshipIRI = getRelationshipIRI(type.getRelationship());
 								OWLObjectProperty objectProp = factory.getOWLObjectProperty(relationshipIRI);
-								OWLObjectSomeValuesFrom someValuesFrom = factory.getOWLObjectSomeValuesFrom(objectProp, relatedTermClass);
-								OWLAxiom axiom = factory.getOWLSubClassOfAxiom(termClass, someValuesFrom);
-								manager.addAxiom(onto, axiom);
+								intersect = factory.getOWLObjectSomeValuesFrom(objectProp, relatedTermClass);
 							}
+							intersectClasses.add(intersect);
+						} else if (type.getRelationship().equals("is_a")) {
+							OWLAxiom axiom = factory.getOWLSubClassOfAxiom(termClass, relatedTermClass);
+							exportContext.addAxiom(axiom);
+						} else if (type.getRelationship().equals("union_of")) {
+							unionClasses.add(relatedTermClass);
+						} else if (type.getRelationship().equals("disjoint_from")) {
+							OWLAxiom axiom = factory.getOWLDisjointClassesAxiom(termClass, relatedTermClass);
+							exportContext.addAxiom(axiom);
+						} else {
+							IRI relationshipIRI = getRelationshipIRI(type.getRelationship());
+							OWLObjectProperty objectProp = factory.getOWLObjectProperty(relationshipIRI);
+							OWLObjectSomeValuesFrom someValuesFrom = factory.getOWLObjectSomeValuesFrom(objectProp,
+									relatedTermClass);
+							OWLAxiom axiom = factory.getOWLSubClassOfAxiom(termClass, someValuesFrom);
+							exportContext.addAxiom(axiom);
 						}
 					}
-					
-					if(!intersectClasses.isEmpty()) {
-						OWLObjectIntersectionOf intersection = factory.getOWLObjectIntersectionOf(intersectClasses);		        
-				        OWLAxiom axiom = factory.getOWLEquivalentClassesAxiom(termClass, intersection);			        
-				        manager.addAxiom(onto, axiom);
-					}
-					
-					if(!unionClasses.isEmpty()) {
-						OWLObjectUnionOf unionOf = factory.getOWLObjectUnionOf(unionClasses);
-						OWLAxiom axiom = factory.getOWLEquivalentClassesAxiom(termClass, unionOf);
-						manager.addAxiom(onto, axiom);
-					}
-					
-					if(term.getStatus().equals(Status.OBSOLETE)) {
-						OWLAxiom axiom = factory.getOWLAnnotationAssertionAxiom(factory.getOWLDeprecated(),
-								termIRI, factory.getOWLLiteral(true));
-						manager.addAxiom(onto, axiom);
-					}
 				}
-			}
-		
-			for(RelationshipType type : relationshipTypes) {
-				if(!isBuiltIn(type) && type.getStatus().equals(Status.APPROVED)) {					
-					IRI relationshipIRI = getRelationshipIRI(type.getRelationship());
-					OWLObjectProperty objectProp = factory.getOWLObjectProperty(relationshipIRI);
-					RelationshipType inverse = type.getInverseOf();
-					RelationshipType transitiveOver = type.getTransitiveOver();			
-										
-					manager.addAxiom(onto, factory.getOWLDeclarationAxiom(objectProp));
-					manager.addAxiom(onto, factory.getOWLAnnotationAssertionAxiom(factory.getRDFSLabel(),
-							relationshipIRI, factory.getOWLLiteral(type.getRelationship().replace('_', ' '))));
-					
-					if(inverse != null) {
-						IRI inverseIRI = getRelationshipIRI(inverse.getRelationship());
-						OWLObjectProperty inverseObjectProperty = factory.getOWLObjectProperty(inverseIRI);
-						manager.addAxiom(onto, 
-									factory.getOWLInverseObjectPropertiesAxiom(objectProp, inverseObjectProperty));
-					}
-					
-					if(transitiveOver != null) {
-						IRI transitiveOverIRI = getRelationshipIRI(transitiveOver.getRelationship());
-						OWLObjectProperty transitiveOverObjectProperty = factory.getOWLObjectProperty(transitiveOverIRI);
-						List<OWLObjectProperty> chain = Arrays.asList(objectProp, transitiveOverObjectProperty);
-						OWLAxiom axiom = factory.getOWLSubPropertyChainOfAxiom(chain, objectProp);						
-						manager.addAxiom(onto, axiom);
-					}
-					
-					if(type.isCyclic()) {
-						logger.warning("Cyclic relationships are not supported by OWL: " + type.getRelationship());
-					}
 
-					/*
-					if(type.isReflexive()) {
-						manager.addAxiom(ont, factory.getOWLReflexiveObjectPropertyAxiom(objectProp));
-					}
-					*/
-					
-					if(type.isSymmetric()) {
-						manager.addAxiom(onto, factory.getOWLSymmetricObjectPropertyAxiom(objectProp));
-					}
-					
-					/*
-					if(type.isAntiSymmetric()) {
-						manager.addAxiom(ont, factory.getOWLASymmetricObjectPropertyAxiom(objectProp));
-					}
-					*/
-					
-					if(type.isTransitive()) {
-						manager.addAxiom(onto, factory.getOWLTransitiveObjectPropertyAxiom(objectProp));
-					}
+				if (!intersectClasses.isEmpty()) {
+					OWLObjectIntersectionOf intersection = factory.getOWLObjectIntersectionOf(intersectClasses);
+					OWLAxiom axiom = factory.getOWLEquivalentClassesAxiom(termClass, intersection);
+					exportContext.addAxiom(axiom);
+				}
+
+				if (!unionClasses.isEmpty()) {
+					OWLObjectUnionOf unionOf = factory.getOWLObjectUnionOf(unionClasses);
+					OWLAxiom axiom = factory.getOWLEquivalentClassesAxiom(termClass, unionOf);
+					exportContext.addAxiom(axiom);
+				}
+
+				if (term.getStatus().equals(OBSOLETE)) {
+					OWLAxiom axiom = factory.getOWLAnnotationAssertionAxiom(factory.getOWLDeprecated(), termIRI,
+							factory.getOWLLiteral(true));
+					exportContext.addAxiom(axiom);
 				}
 			}
-				        
-	        manager.saveOntology(onto, format, os);
-		} catch(Exception e) {
-			logger.log(Level.WARNING, "Failed to export " + ontology.getName() + " in OWL format" , e);
-			throw new RuntimeException(e);
+		}
+	}
+
+	private void exportRelationshipTypes(final OWLDataFactory factory, final ExportContext exportContext) {
+		for (RelationshipType type : exportContext.getRelationshipTypes()) {
+			if (!isBuiltIn(type) && type.getStatus().equals(Status.APPROVED)) {
+				IRI relationshipIRI = getRelationshipIRI(type.getRelationship());
+				OWLObjectProperty objectProp = factory.getOWLObjectProperty(relationshipIRI);
+
+				exportContext.addAxiom(factory.getOWLDeclarationAxiom(objectProp));
+				exportContext.addAxiom(factory.getOWLAnnotationAssertionAxiom(factory.getRDFSLabel(), relationshipIRI,
+						factory.getOWLLiteral(type.getRelationship().replace('_', ' '))));
+
+				exportRelationshipTypeFeatures(factory, exportContext, type, objectProp);
+			}
+		}
+	}
+
+	private void exportRelationshipTypeFeatures(final OWLDataFactory factory, final ExportContext exportContext,
+												final RelationshipType type, final OWLObjectProperty objectProp) {
+		RelationshipType inverse = type.getInverseOf();
+		RelationshipType transitiveOver = type.getTransitiveOver();
+		if (inverse != null) {
+			IRI inverseIRI = getRelationshipIRI(inverse.getRelationship());
+			OWLObjectProperty inverseObjectProperty = factory.getOWLObjectProperty(inverseIRI);
+			exportContext.addAxiom(factory.getOWLInverseObjectPropertiesAxiom(objectProp, inverseObjectProperty));
+		}
+
+		if (transitiveOver != null) {
+			IRI transitiveOverIRI = getRelationshipIRI(transitiveOver.getRelationship());
+			OWLObjectProperty transitiveOverObjectProperty = factory.getOWLObjectProperty(transitiveOverIRI);
+			List<OWLObjectProperty> chain = asList(objectProp, transitiveOverObjectProperty);
+			OWLAxiom axiom = factory.getOWLSubPropertyChainOfAxiom(chain, objectProp);
+			exportContext.addAxiom(axiom);
+		}
+
+		if (type.isCyclic()) {
+			logger.warning("Cyclic relationships are not supported by OWL: " + type.getRelationship());
+		}
+
+		/*
+		 * if(type.isReflexive()) { manager.addAxiom(ont,
+		 * factory.getOWLReflexiveObjectPropertyAxiom(objectProp)); }
+		 */
+
+		if (type.isSymmetric()) {
+			exportContext.addAxiom(factory.getOWLSymmetricObjectPropertyAxiom(objectProp));
+		}
+
+		/*
+		 * if(type.isAntiSymmetric()) { manager.addAxiom(ont,
+		 * factory.getOWLASymmetricObjectPropertyAxiom(objectProp)); }
+		 */
+
+		if (type.isTransitive()) {
+			exportContext.addAxiom(factory.getOWLTransitiveObjectPropertyAxiom(objectProp));
 		}
 	}
 }
