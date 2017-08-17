@@ -97,6 +97,7 @@ import org.semanticweb.owlapi.util.OWLObjectWalker;
 import org.semanticweb.owlapi.util.StructureWalker;
 
 import com.novartis.pcs.ontology.entity.AnnotationType;
+import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Term;
@@ -183,9 +184,10 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	private void fillSourceProperties(final OWLOntology owlOntology) {
 		OWLOntologyID ontologyID = owlOntology.getOntologyID();
 		String ontologyIRI = ontologyID.getOntologyIRI().toString();
-		context.getOntology().setSourceUri(ontologyIRI);
-		context.getOntology().setSourceRelease(ontologyID.getVersionIRI().toString());
-		context.getOntology().setSourceNamespace(ontologyIRI.endsWith("/") ? ontologyIRI : ontologyIRI + "#");
+		Ontology ontology = context.getOntology();
+		ontology.setSourceUri(ontologyIRI);
+		ontology.setSourceRelease(ontologyID.getVersionIRI().toString());
+		ontology.setSourceNamespace(ontologyIRI.endsWith("/") ? ontologyIRI : ontologyIRI + "#");
 	}
 
 	private Term createTerm(OWLClass owlClass) {

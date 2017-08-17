@@ -19,6 +19,7 @@ package com.novartis.pcs.ontology.service.export;
 
 import static com.novartis.pcs.ontology.entity.VersionedEntity.Status.APPROVED;
 import static com.novartis.pcs.ontology.entity.VersionedEntity.Status.OBSOLETE;
+import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.createIRI;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.escapeOBO;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.escapeQuote;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.getRelationshipIRI;
@@ -73,6 +74,7 @@ import org.semanticweb.owlapi.model.OWLOntologyFormat;
 import org.semanticweb.owlapi.model.OWLOntologyID;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
+import com.google.common.base.Strings;
 import com.novartis.pcs.ontology.dao.DatasourceDAOLocal;
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
 import com.novartis.pcs.ontology.dao.TermDAOLocal;
@@ -370,7 +372,8 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 			Collection<Datasource> xrefDatasources) {
 		try {
 
-			IRIProvider iriProvider = ontology.isInternal() ? new DefaultIRIProvider(ontology, baseURL)
+			IRIProvider iriProvider = ontology.isInternal() || ontology.getSourceFormat().startsWith("OBO")
+					? new DefaultIRIProvider(ontology, baseURL)
 					: new URLIRIProvider();
 
 			OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
@@ -392,9 +395,13 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 	}
 
 	private OWLOntology exportOntology(final Ontology ontology, final OWLOntologyManager manager,
-			final OWLDataFactory factory) throws OWLOntologyCreationException {
-		OWLOntologyID owlOntologyID = new OWLOntologyID(IRI.create(ontology.getSourceUri()),
-				IRI.create(ontology.getSourceRelease()));
+			final OWLDataFactory factory) throws OWLOntologyCreationException, URISyntaxException {
+
+		OWLOntologyID owlOntologyID = Strings.isNullOrEmpty(ontology.getSourceUri())
+				|| Strings.isNullOrEmpty(ontology.getSourceRelease())
+						? new OWLOntologyID(createIRI(baseURL.toURI(), ontology.getName()))
+						: new OWLOntologyID(IRI.create(ontology.getSourceUri()),
+								IRI.create(ontology.getSourceRelease()));
 		OWLOntology onto = manager.createOntology(owlOntologyID);
 
 		OWLAnnotation ontologyLabel = factory.getOWLAnnotation(factory.getRDFSLabel(),

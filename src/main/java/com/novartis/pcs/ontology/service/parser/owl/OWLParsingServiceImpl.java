@@ -1,5 +1,7 @@
 package com.novartis.pcs.ontology.service.parser.owl;
 
+import static java.util.logging.Level.INFO;
+
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,10 +15,10 @@ import java.util.logging.Logger;
 import javax.ejb.Local;
 import javax.ejb.Stateless;
 
-import com.novartis.pcs.ontology.entity.Relationship;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyFormat;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.util.OWLObjectVisitorExAdapter;
 import org.semanticweb.owlapi.util.OWLOntologyWalker;
@@ -25,12 +27,11 @@ import com.novartis.pcs.ontology.entity.AnnotationType;
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.Ontology;
+import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.service.parser.ParseContext;
-
-import static java.util.logging.Level.INFO;
 
 @Stateless
 @Local(OWLParsingServiceLocal.class)
@@ -60,6 +61,8 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 				context);
 		parsingStructureWalker.visit(owlOntology);
 
+		OWLOntologyFormat ontologyFormat = owlOntologyManager.getOntologyFormat(owlOntology);
+		context.getOntology().setSourceFormat(ontologyFormat.getClass().getSimpleName());
 		validateDuplicates(context);
 		Map<String, Term> terms2 = context.getTerms();
 		logger.log(Level.INFO, () -> "Terms count:" + terms2.values().size());

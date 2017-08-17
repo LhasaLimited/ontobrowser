@@ -1,6 +1,6 @@
 /**
  * Copyright © 2017 Lhasa Limited
- * File created: 16/08/2017 by Artur Polit
+ * File created: 17/08/2017 by Artur Polit
  * Creator : Artur Polit
  * Version : $$Id$$
  */
@@ -37,13 +37,15 @@ import com.novartis.pcs.ontology.service.importer.OntologyImportServiceLocal;
 
 /**
  * @author Artur Polit
- * @since 16/08/2017
+ * @since 17/08/2017
  */
 @RunWith(Arquillian.class)
 @Transactional(TransactionMode.ROLLBACK)
-public class OntologyExportServiceImplArqTestIT {
+public class OntologyExportOBOArqTestIT {
 
-	@EJB(beanName = "owlImportService")
+	private static final String BFO_TEST = "BFOTest";
+
+	@EJB(beanName = "oboImportService")
 	private OntologyImportServiceLocal importService;
 
 	@EJB
@@ -68,26 +70,24 @@ public class OntologyExportServiceImplArqTestIT {
 		return ShrinkWrap.create(WebArchive.class, "ontobrowser.war").addAsLibraries(testDeps)
 				.addPackages(true, "com.novartis.pcs.ontology")
 				.addPackages(false, "org.semanticweb.owlapi.util", "org.coode.owlapi.obo12.parser")
-				.addAsResource("META-INF/persistence-test.xml", "META-INF/persistence.xml")
-				.addAsResource("test-reference/test-reference.owl");
+				.addAsResource("META-INF/persistence-test.xml", "META-INF/persistence.xml").addAsResource("bfo.obo");
 	}
 
 	@Before
-	public void loadOntology() throws DuplicateEntityException, InvalidEntityException {
-		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/test-reference/test-reference.owl");
-		importService.importOntology("OntobrowserTest", ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
-
-		ontology = ontologyDAOLocal.loadByName("OntobrowserTest");
+	public void loadOBOOntology() throws DuplicateEntityException, InvalidEntityException {
+		InputStream bfoOwl = this.getClass().getResourceAsStream("/bfo.obo");
+		importService.importOntology(BFO_TEST, bfoOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
+		ontology = ontologyDAOLocal.loadByName(BFO_TEST);
 		assertThat(ontology, notNullValue());
 	}
 
 	@Test
-	public void shouldExportOwlClassWithSourceIRI() throws OntologyNotFoundException {
+	public void shouldExportOBOAsOWL()
+			throws DuplicateEntityException, InvalidEntityException, OntologyNotFoundException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		exportService.exportOntology("OntobrowserTest", baos, OntologyFormat.RDFXML);
+		exportService.exportOntology(BFO_TEST, baos, OntologyFormat.RDFXML);
 		String rdfXML = baos.toString();
-		assertThat(rdfXML, containsString("about=\"http://www.lhasalimited.org/ontobrowser.owl#OB_00001\""));
-
+		assertThat(rdfXML, containsString("rdf:about=\"http://localhost/ontobrowser/ontologies/BFOTest#BFO:0000001\""));
 	}
 
 }
