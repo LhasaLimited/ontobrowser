@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import com.novartis.pcs.ontology.entity.ControlledVocabulary;
@@ -33,6 +34,7 @@ import com.novartis.pcs.ontology.entity.CuratorAction;
 import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.DuplicateEntityException;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
+import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Synonym;
@@ -40,6 +42,8 @@ import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.VersionedEntity;
 import com.novartis.pcs.ontology.service.search.result.HTMLSearchResult;
 import com.novartis.pcs.ontology.service.search.result.InvalidQuerySyntaxException;
+
+import javax.xml.bind.ValidationException;
 
 /**
  * The client side stub for the RPC service.
@@ -119,4 +123,6 @@ public interface OntoBrowserService extends RemoteService {
 	public List<CuratorAction> loadCuratorActions();
 	
 	public void changePassword(String oldPassword, String newPassword) throws InvalidEntityException;
+
+	public Ontology addOntology(Ontology ontology) throws InvalidEntityException;
 }

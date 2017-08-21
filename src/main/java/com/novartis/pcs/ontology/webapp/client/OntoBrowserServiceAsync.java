@@ -30,6 +30,7 @@ import com.novartis.pcs.ontology.entity.ControlledVocabularyTermLink;
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.CuratorAction;
 import com.novartis.pcs.ontology.entity.Datasource;
+import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Synonym;
@@ -106,4 +107,6 @@ public interface OntoBrowserServiceAsync {
 	void delete(VersionedEntity entity, AsyncCallback<Void> callback);
 	void changePassword(String oldPassword, String newPassword,
 			AsyncCallback<Void> callback);
+
+	void addOntology(Ontology ontology, AsyncCallback<Void> callback);
 }

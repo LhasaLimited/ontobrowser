@@ -164,6 +164,11 @@ td div button {
 	height: 16px;
 }
 
+.dialog-tooltip {
+    font-size: 0.9em;
+    color: gray;
+}
+
 .dialog-error-icon {
 	color: #cd0a0a;
 	vertical-align: middle;

@@ -41,6 +41,7 @@ import com.novartis.pcs.ontology.entity.CuratorApprovalWeight.Entity;
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermEvent;
+import com.novartis.pcs.ontology.webapp.client.view.AddOntologyPopup;
 import com.novartis.pcs.ontology.webapp.client.view.AddRelationshipPopup;
 import com.novartis.pcs.ontology.webapp.client.view.AddSynonymPopup;
 import com.novartis.pcs.ontology.webapp.client.view.ApproveRejectPopup;
@@ -204,6 +205,7 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 			ApproveRejectPopup approveRejectPopup = new ApproveRejectPopup(service, eventBus, curator);
 			AddSynonymPopup addSynonymPopup = new AddSynonymPopup(service, eventBus);
 			AddRelationshipPopup addRelationshipPopup = new AddRelationshipPopup(service, eventBus);
+			AddOntologyPopup addOntologyPopup = new AddOntologyPopup(service);
 			
 			createTermPopup.setSynonymProvider(crossRefPopup);
 						
@@ -214,6 +216,7 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 			createPopupMenuItem(menu, "Create Child Term", createTermPopup);
 			createPopupMenuItem(menu, "Add Synonym", addSynonymPopup);
 			createPopupMenuItem(menu, "Add Relationship", addRelationshipPopup);
+			createPopupMenuItem(menu, "Add Ontology", addOntologyPopup);
 			
 			if(BigDecimal.ONE.equals(curator.getEntityApprovalWeight(Entity.TERM))) {
 				ReplaceTermPopup replaceTermPopup = new ReplaceTermPopup(service, eventBus);
