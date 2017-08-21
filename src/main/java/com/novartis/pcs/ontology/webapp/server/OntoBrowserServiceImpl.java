@@ -25,12 +25,15 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.bind.ValidationException;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.novartis.pcs.ontology.entity.ControlledVocabulary;
 import com.novartis.pcs.ontology.entity.ControlledVocabularyContext;
@@ -42,6 +45,7 @@ import com.novartis.pcs.ontology.entity.CuratorAction;
 import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.DuplicateEntityException;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
+import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Synonym;
@@ -49,6 +53,8 @@ import com.novartis.pcs.ontology.entity.Synonym.Type;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.VersionedEntity;
 import com.novartis.pcs.ontology.service.OntologyCuratorServiceLocal;
+import com.novartis.pcs.ontology.service.OntologyService;
+import com.novartis.pcs.ontology.service.OntologyServiceLocal;
 import com.novartis.pcs.ontology.service.OntologySynonymServiceLocal;
 import com.novartis.pcs.ontology.service.OntologyTermServiceLocal;
 import com.novartis.pcs.ontology.service.graph.OntologyGraphServiceLocal;
@@ -82,6 +88,9 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 	
 	@EJB
 	private OntologyGraphServiceLocal graphService;
+
+	@EJB
+	private OntologyServiceLocal ontologyService;
 			
 	private String getUsername() {
 		HttpServletRequest request = getThreadLocalRequest();
@@ -362,6 +371,12 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 			logger.info(username + " changing password");
 			curatorService.changePassword(username, oldPassword, newPassword);
 		}
+	}
+
+	@Override
+	public Ontology addOntology(final Ontology ontology) throws InvalidEntityException {
+		logger.log(Level.INFO, "addOntology [name={}]", ontology.getName());
+		return ontologyService.createOntology(ontology, getUsername());
 	}
 
 	private <T> List<T> asList(Collection<T> collection) {
