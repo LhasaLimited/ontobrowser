@@ -23,6 +23,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <arquillian-core-version>1.1.9.Final</arquillian-core-version>
     <arquillian-wildfly-container-version>8.2.1.Final</arquillian-wildfly-container-version>
+      <owlapi-version>3.5.6</owlapi-version>
   </properties>
 
   <dependencies>
@@ -101,17 +102,17 @@
     <dependency>
 	    <groupId>net.sourceforge.owlapi</groupId>
         <artifactId>owlapi-parsers</artifactId>
-        <version>3.5.6</version>
+        <version>${owlapi-version}</version>
     </dependency>
       <dependency>
           <groupId>net.sourceforge.owlapi</groupId>
           <artifactId>owlapi-oboformat</artifactId>
-          <version>3.5.6</version>
+          <version>${owlapi-version}</version>
       </dependency>
       <dependency>
           <groupId>net.sourceforge.owlapi</groupId>
           <artifactId>owlapi-apibinding</artifactId>
-          <version>3.5.6</version>
+          <version>${owlapi-version}</version>
     </dependency>
     <dependency>
     	<groupId>commons-beanutils</groupId>
@@ -238,9 +239,24 @@
             <configuration>
                 <jboss-home>C:\software\wildfly\wildfly-8.2.1.Final</jboss-home>
                 <java-opts>
+                    <java-opt>-agentpath:C:\software\jrebel\lib\jrebel64.dll</java-opt>
                   <java-opt>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8787</java-opt>
                 </java-opts>
             </configuration>
+        </plugin>
+        <plugin>
+            <groupId>org.zeroturnaround</groupId>
+            <artifactId>jrebel-maven-plugin</artifactId>
+            <version>1.1.7</version>
+            <executions>
+                <execution>
+                    <id>generate-rebel-xml</id>
+                    <phase>process-resources</phase>
+                    <goals>
+                        <goal>generate</goal>
+                    </goals>
+                </execution>
+            </executions>
         </plugin>
     </plugins>
   </build>
