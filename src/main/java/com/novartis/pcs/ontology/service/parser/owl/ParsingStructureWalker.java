@@ -186,7 +186,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		String ontologyIRI = ontologyID.getOntologyIRI().toString();
 		Ontology ontology = context.getOntology();
 		ontology.setSourceUri(ontologyIRI);
-		ontology.setSourceRelease(ontologyID.getVersionIRI().toString());
+		ontology.setSourceRelease(ontologyID.getVersionIRI() == null ? ontologyIRI : ontologyID.getVersionIRI().toString());
 		ontology.setSourceNamespace(ontologyIRI.endsWith("/") ? ontologyIRI : ontologyIRI + "#");
 	}
 
