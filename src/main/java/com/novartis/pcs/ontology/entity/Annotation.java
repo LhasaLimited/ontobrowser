@@ -64,6 +64,10 @@ public class Annotation extends VersionedEntity implements ReplaceableEntity<Ann
 	@JoinColumn(name = "REPLACED_BY")
 	private Annotation replacedBy;
 
+	@ManyToOne
+	@JoinColumn(name = "ONTOLOGY_ID")
+	private Ontology ontology;
+
 	public String getAnnotation() {
 		return annotation;
 	}
@@ -96,6 +100,14 @@ public class Annotation extends VersionedEntity implements ReplaceableEntity<Ann
 
 	public void setTerm(final Term term) {
 		this.term = term;
+	}
+
+	public Ontology getOntology() {
+		return ontology;
+	}
+
+	public void setOntology(final Ontology ontology) {
+		this.ontology = ontology;
 	}
 
 	@Override

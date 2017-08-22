@@ -114,7 +114,11 @@ public class Relationship extends VersionedEntity implements ReplaceableEntity<R
 	@ManyToOne(cascade={CascadeType.PERSIST})
 	@JoinColumn(name = "REPLACED_BY")
 	private Relationship replacedBy;
-	
+
+	@ManyToOne
+	@JoinColumn(name = "ONTOLOGY_ID")
+	private Ontology ontology;
+
 	@Transient
 	private boolean leaf;
 	
@@ -172,7 +176,15 @@ public class Relationship extends VersionedEntity implements ReplaceableEntity<R
 	public void setReplacedBy(Relationship replacedBy) {
 		this.replacedBy = replacedBy;
 	}
-	
+
+	public Ontology getOntology() {
+		return ontology;
+	}
+
+	public void setOntology(final Ontology ontology) {
+		this.ontology = ontology;
+	}
+
 	public boolean isLeaf() {
 		return leaf;
 	}

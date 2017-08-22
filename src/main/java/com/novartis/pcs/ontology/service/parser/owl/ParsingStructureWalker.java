@@ -199,6 +199,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	}
 	private AnnotationType createAnnotationType(String name) {
 		AnnotationType anAnnotationType = new AnnotationType(name, context.getCurator(), context.getVersion());
+		anAnnotationType.setOntology(context.getOntology());
 		context.approve(anAnnotationType);
 		return anAnnotationType;
 	}
@@ -206,6 +207,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	private RelationshipType createRelationshipType(String propertyFragment) {
 		RelationshipType relationshipType = new RelationshipType(propertyFragment, propertyFragment,
 				propertyFragment, context.getCurator(), context.getVersion());
+		relationshipType.setOntology(context.getOntology());
 		context.approve(relationshipType);
 		return relationshipType;
 	}

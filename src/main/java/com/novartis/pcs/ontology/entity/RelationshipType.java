@@ -74,7 +74,11 @@ public class RelationshipType extends VersionedEntity implements ReplaceableEnti
 	
 	@Column(name = "EDGE_COLOUR")
 	private String edgeColour;
-	
+
+	@ManyToOne
+	@JoinColumn(name = "ONTOLOGY_ID")
+	private Ontology ontology;
+
 	@Valid
 	@ManyToOne
 	@JoinColumn(name = "INVERSE_OF")
@@ -173,6 +177,14 @@ public class RelationshipType extends VersionedEntity implements ReplaceableEnti
 
 	public void setTransitiveOver(RelationshipType transitiveOver) {
 		this.transitiveOver = transitiveOver;
+	}
+
+	public Ontology getOntology() {
+		return ontology;
+	}
+
+	public void setOntology(final Ontology ontology) {
+		this.ontology = ontology;
 	}
 
 	@Override

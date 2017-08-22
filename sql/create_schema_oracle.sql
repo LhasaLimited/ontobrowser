@@ -698,3 +698,21 @@ ADD CONSTRAINT APPROVAL_WEIGHT_TABLE_CK CHECK(TABLE_NAME IN (
                                             'TERM_SYNONYM',
                                             'ANNOTATION_TYPE',
                                             'ANNOTATION'));
+                                            
+-- 20170822                                            
+ALTER TABLE TERM_RELATIONSHIP ADD ONTOLOGY_ID NUMBER(12) NULL
+                                        CONSTRAINT TERM_RELSHIP_ONTOLOGY_FK
+                                        REFERENCES ONTOLOGY;
+                                        
+ALTER TABLE ANNOTATION ADD ONTOLOGY_ID NUMBER(12) NULL
+                                        CONSTRAINT ANNOTATION_ONTOLOGY_FK
+                                        REFERENCES ONTOLOGY;
+                                        
+ALTER TABLE ANNOTATION_TYPE ADD ONTOLOGY_ID NUMBER(12) NULL
+                                        CONSTRAINT ANNT_TYPE_ONTOLOGY_FK
+                                        REFERENCES ONTOLOGY;
+
+ALTER TABLE RELATIONSHIP_TYPE ADD ONTOLOGY_ID NUMBER(12) NULL
+                                        CONSTRAINT REL_TYPE_ONTOLOGY_FK
+                                        REFERENCES ONTOLOGY;
+                                                                                        

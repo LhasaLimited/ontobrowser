@@ -31,6 +31,7 @@ public class TermAnnotationHandler implements OWLVisitorHandler {
 		AnnotationType annotationType = context.getAnnotationType(owlAnnotation.getProperty().getIRI().getShortForm());
 		String value = ApiHelper.getString(owlAnnotation);
 		Annotation annotation = new Annotation(value, annotationType, term, context.getCurator(), context.getVersion());
+		annotation.setOntology(context.getOntology());
 		context.approve(annotation);
 		term.getAnnotations().add(annotation);
 	}
