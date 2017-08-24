@@ -11,7 +11,6 @@ import static java.util.logging.Level.INFO;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +18,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermDeprecatedHandler;
+import org.semanticweb.owlapi.model.ClassExpressionType;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
@@ -84,6 +85,7 @@ import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyID;
+import org.semanticweb.owlapi.model.OWLPropertyRange;
 import org.semanticweb.owlapi.model.OWLReflexiveObjectPropertyAxiom;
 import org.semanticweb.owlapi.model.OWLSameIndividualAxiom;
 import org.semanticweb.owlapi.model.OWLSubAnnotationPropertyOfAxiom;
@@ -121,7 +123,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 	private final OWLParserContext context;
 	// indexes of entities
-	private final Map<String, Map<String, Set<String>>> relationshipMap = new HashMap<>();
+
 	private final Map<IRI, List<OWLAnnotation>> annotationsBySubject = new HashMap<>();
 
 	private final Set<OWLVisitorHandler> handlers = new LinkedHashSet<>();
@@ -138,7 +140,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		handlers.add(new TermReplacedByHandler());
 		handlers.add(new TermSynonymHandler());
 		handlers.add(new TermAnnotationHandler());
-
+		handlers.add(new TermDeprecatedHandler());
 		handlers.add(new RelationshipTypeNameHandler());
 		handlers.add(new AnnotationTypeNameHandler());
 
@@ -153,7 +155,10 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 		Set<OWLClass> owlClasses = owlOntology.getClassesInSignature();
 		for (OWLClass owlClass : owlClasses) {
-			context.putTerm(owlClass.getIRI().getRemainder().get(), createTerm(owlClass));
+			String fragment = owlClass.getIRI().getRemainder().get();
+			if (!context.hasTerm(fragment)) {
+				context.putTerm(fragment, createTerm(owlClass));
+			}
 		}
 		Set<OWLAnnotationProperty> annotationProps = owlOntology.getAnnotationPropertiesInSignature();
 		for (OWLAnnotationProperty annotationProp : annotationProps) {
@@ -249,6 +254,10 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	@Override
 	public void visit(OWLSubClassOfAxiom subClassAxiom) {
 		logger.log(FINE, "OWLSubClassOfAxiom:{0}", subClassAxiom.toString());
+		if(!subClassAxiom.getSuperClass().getClassExpressionType().equals(ClassExpressionType.OWL_CLASS)){
+			logger.log(INFO, "Only OWLClass is supported [classExpression={0}]", subClassAxiom.getSuperClass().toString());
+			return;
+		}
 		super.visit(subClassAxiom);
 		Term relatedTerm = context.termPop(); // do not inline, keep in
 		// order!
@@ -256,10 +265,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 		RelationshipType isARelationship = context.getRelationshipType("is_a");
 
-		Map<String, Set<String>> relatedTerms = relationshipMap.computeIfAbsent(term.getReferenceId(),
-				k -> new HashMap<>());
-		Set<String> relationshipTypesSet = relatedTerms.computeIfAbsent(relatedTerm.getReferenceId(),
-				id -> new HashSet<>());
+		Set<String> relationshipTypesSet = context.getRelationshipTypes(relatedTerm, term);
 
 		if (relationshipTypesSet.contains(isARelationship.getRelationship())) {
 			logger.log(INFO, "Duplicated relationship {0} {1} {2}", new String[]{term.getReferenceId(),
@@ -288,32 +294,32 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 	@Override
 	public void visit(IRI iri) {
-		logger.log(Level.INFO, "IRI:{0}", iri.toQuotedString());
+		logger.log(Level.FINE, "IRI:{0}", iri.toQuotedString());
 		context.setIri(iri);
 		super.visit(iri);
 	}
 
 	@Override
 	public void visit(OWLObjectSomeValuesFrom desc) {
-		logger.log(INFO, "OWLObjectSomeValuesFrom:{0}", desc.toString());
+		logger.log(FINE, "OWLObjectSomeValuesFrom:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLDataSomeValuesFrom desc) {
-		logger.log(INFO, "OWLDataSomeValuesFrom:{0}", desc.toString());
+		logger.log(FINE, "OWLDataSomeValuesFrom:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLObjectPropertyAssertionAxiom objectPropertyAxiom) {
-		logger.log(INFO, "OWLObjectPropertyAssertionAxiom:{0}", objectPropertyAxiom.toString());
+		logger.log(FINE, "OWLObjectPropertyAssertionAxiom:{0}", objectPropertyAxiom.toString());
 		super.visit(objectPropertyAxiom);
 	}
 
 	@Override
 	public void visit(OWLAnnotationAssertionAxiom axiom) {
-		logger.log(INFO, "OWLAnnotationAssertionAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLAnnotationAssertionAxiom:{0}", axiom.toString());
 
 		String referenceId = null;
 		if (axiom.getSubject() instanceof IRI) {
@@ -334,379 +340,379 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 	@Override
 	public void visit(OWLAnnotationProperty property) {
-		logger.log(INFO, "OWLAnnotationProperty:{0}", property.toString());
+		logger.log(FINE, "OWLAnnotationProperty:{0}", property.toString());
 		super.visit(property);
 	}
 
 	@Override
 	public void visit(OWLAnnotationPropertyDomainAxiom axiom) {
-		logger.log(INFO, "OWLAnnotationPropertyDomainAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLAnnotationPropertyDomainAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLAnnotationPropertyRangeAxiom axiom) {
-		logger.log(INFO, "OWLAnnotationPropertyRangeAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLAnnotationPropertyRangeAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLAnonymousIndividual individual) {
-		logger.log(INFO, "OWLAnonymousIndividual:{0}", individual.toString());
+		logger.log(FINE, "OWLAnonymousIndividual:{0}", individual.toString());
 		super.visit(individual);
 	}
 
 	@Override
 	public void visit(OWLAsymmetricObjectPropertyAxiom axiom) {
-		logger.log(INFO, "OWLAsymmetricObjectPropertyAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLAsymmetricObjectPropertyAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLClassAssertionAxiom axiom) {
-		logger.log(INFO, "OWLClassAssertionAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLClassAssertionAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLDataAllValuesFrom desc) {
-		logger.log(INFO, "OWLDataAllValuesFrom:{0}", desc.toString());
+		logger.log(FINE, "OWLDataAllValuesFrom:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLDataComplementOf node) {
-		logger.log(INFO, "OWLDataComplementOf:{0}", node.toString());
+		logger.log(FINE, "OWLDataComplementOf:{0}", node.toString());
 		super.visit(node);
 	}
 
 	@Override
 	public void visit(OWLDataExactCardinality desc) {
-		logger.log(INFO, "OWLDataExactCardinality:{0}", desc.toString());
+		logger.log(FINE, "OWLDataExactCardinality:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLDataHasValue desc) {
-		logger.log(INFO, "OWLDataHasValue:{0}", desc.toString());
+		logger.log(FINE, "OWLDataHasValue:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLDataIntersectionOf node) {
-		logger.log(INFO, "OWLDataIntersectionOf:{0}", node.toString());
+		logger.log(FINE, "OWLDataIntersectionOf:{0}", node.toString());
 		super.visit(node);
 	}
 
 	@Override
 	public void visit(OWLDataMaxCardinality desc) {
-		logger.log(INFO, "OWLDataMaxCardinality:{0}", desc.toString());
+		logger.log(FINE, "OWLDataMaxCardinality:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLDataMinCardinality desc) {
-		logger.log(INFO, "OWLDataMinCardinality:{0}", desc.toString());
+		logger.log(FINE, "OWLDataMinCardinality:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLDataOneOf node) {
-		logger.log(INFO, "OWLDataOneOf:{0}", node.toString());
+		logger.log(FINE, "OWLDataOneOf:{0}", node.toString());
 		super.visit(node);
 	}
 
 	@Override
 	public void visit(OWLDataProperty property) {
-		logger.log(INFO, "OWLDataProperty:{0}", property.toString());
+		logger.log(FINE, "OWLDataProperty:{0}", property.toString());
 		super.visit(property);
 	}
 
 	@Override
 	public void visit(OWLDataPropertyAssertionAxiom axiom) {
-		logger.log(INFO, "OWLDataPropertyAssertionAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLDataPropertyAssertionAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLDataPropertyDomainAxiom axiom) {
-		logger.log(INFO, "OWLDataPropertyDomainAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLDataPropertyDomainAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLDataPropertyRangeAxiom axiom) {
-		logger.log(INFO, "OWLDataPropertyRangeAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLDataPropertyRangeAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLDatatype node) {
-		logger.log(INFO, "OWLDatatype:{0}", node.toString());
+		logger.log(FINE, "OWLDatatype:{0}", node.toString());
 		super.visit(node);
 	}
 
 	@Override
 	public void visit(OWLDatatypeDefinitionAxiom axiom) {
-		logger.log(INFO, "OWLDatatypeDefinitionAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLDatatypeDefinitionAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLDatatypeRestriction node) {
-		logger.log(INFO, "OWLDatatypeRestriction:{0}", node.toString());
+		logger.log(FINE, "OWLDatatypeRestriction:{0}", node.toString());
 		super.visit(node);
 	}
 
 	@Override
 	public void visit(OWLDataUnionOf node) {
-		logger.log(INFO, "OWLDataUnionOf:{0}", node.toString());
+		logger.log(FINE, "OWLDataUnionOf:{0}", node.toString());
 		super.visit(node);
 	}
 
 	@Override
 	public void visit(OWLDeclarationAxiom axiom) {
-		logger.log(INFO, "OWLDeclarationAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLDeclarationAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLDifferentIndividualsAxiom axiom) {
-		logger.log(INFO, "OWLDifferentIndividualsAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLDifferentIndividualsAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLDisjointClassesAxiom axiom) {
-		logger.log(INFO, "OWLDisjointClassesAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLDisjointClassesAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLDisjointDataPropertiesAxiom axiom) {
-		logger.log(INFO, "OWLDisjointDataPropertiesAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLDisjointDataPropertiesAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLDisjointObjectPropertiesAxiom axiom) {
-		logger.log(INFO, "OWLDisjointObjectPropertiesAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLDisjointObjectPropertiesAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLDisjointUnionAxiom axiom) {
-		logger.log(INFO, "OWLDisjointUnionAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLDisjointUnionAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLEquivalentClassesAxiom axiom) {
-		logger.log(INFO, "OWLEquivalentClassesAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLEquivalentClassesAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLEquivalentDataPropertiesAxiom axiom) {
-		logger.log(INFO, "OWLEquivalentDataPropertiesAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLEquivalentDataPropertiesAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLEquivalentObjectPropertiesAxiom axiom) {
-		logger.log(INFO, "OWLEquivalentObjectPropertiesAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLEquivalentObjectPropertiesAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLFacetRestriction node) {
-		logger.log(INFO, "OWLFacetRestriction:{0}", node.toString());
+		logger.log(FINE, "OWLFacetRestriction:{0}", node.toString());
 		super.visit(node);
 	}
 
 	@Override
 	public void visit(OWLFunctionalDataPropertyAxiom axiom) {
-		logger.log(INFO, "axiom:{0}", axiom.toString());
+		logger.log(FINE, "axiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLFunctionalObjectPropertyAxiom axiom) {
-		logger.log(INFO, "OWLFunctionalObjectPropertyAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLFunctionalObjectPropertyAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLHasKeyAxiom axiom) {
-		logger.log(INFO, "OWLHasKeyAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLHasKeyAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLInverseFunctionalObjectPropertyAxiom axiom) {
-		logger.log(INFO, "OWLInverseFunctionalObjectPropertyAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLInverseFunctionalObjectPropertyAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLInverseObjectPropertiesAxiom axiom) {
-		logger.log(INFO, "OWLInverseObjectPropertiesAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLInverseObjectPropertiesAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLIrreflexiveObjectPropertyAxiom axiom) {
-		logger.log(INFO, "OWLIrreflexiveObjectPropertyAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLIrreflexiveObjectPropertyAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLLiteral literal) {
-		logger.log(INFO, "OWLLiteral:{0}", literal.toString());
+		logger.log(FINE, "OWLLiteral:{0}", literal.toString());
 		super.visit(literal);
 	}
 
 	@Override
 	public void visit(OWLNamedIndividual individual) {
-		logger.log(INFO, "OWLNamedIndividual:{0}", individual.toString());
+		logger.log(FINE, "OWLNamedIndividual:{0}", individual.toString());
 		super.visit(individual);
 	}
 
 	@Override
 	public void visit(OWLNegativeDataPropertyAssertionAxiom axiom) {
-		logger.log(INFO, "OWLNegativeDataPropertyAssertionAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLNegativeDataPropertyAssertionAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLNegativeObjectPropertyAssertionAxiom axiom) {
-		logger.log(INFO, "OWLNegativeObjectPropertyAssertionAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLNegativeObjectPropertyAssertionAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLObjectAllValuesFrom desc) {
-		logger.log(INFO, "OWLObjectAllValuesFrom:{0}", desc.toString());
+		logger.log(FINE, "OWLObjectAllValuesFrom:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLObjectComplementOf desc) {
-		logger.log(INFO, "OWLObjectComplementOf:{0}", desc.toString());
+		logger.log(FINE, "OWLObjectComplementOf:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLObjectExactCardinality desc) {
-		logger.log(INFO, "OWLObjectExactCardinality:{0}", desc.toString());
+		logger.log(FINE, "OWLObjectExactCardinality:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLObjectHasSelf desc) {
-		logger.log(INFO, "OWLObjectHasSelf:{0}", desc.toString());
+		logger.log(FINE, "OWLObjectHasSelf:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLObjectHasValue desc) {
-		logger.log(INFO, "OWLObjectHasValue:{0}", desc.toString());
+		logger.log(FINE, "OWLObjectHasValue:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLObjectIntersectionOf desc) {
-		logger.log(INFO, "OWLObjectIntersectionOf:{0}", desc.toString());
+		logger.log(FINE, "OWLObjectIntersectionOf:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLObjectInverseOf property) {
-		logger.log(INFO, "OWLObjectInverseOf:{0}", property.toString());
+		logger.log(FINE, "OWLObjectInverseOf:{0}", property.toString());
 		super.visit(property);
 	}
 
 	@Override
 	public void visit(OWLObjectMaxCardinality desc) {
-		logger.log(INFO, "OWLObjectMaxCardinality:{0}", desc.toString());
+		logger.log(FINE, "OWLObjectMaxCardinality:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLObjectMinCardinality desc) {
-		logger.log(INFO, "OWLObjectMinCardinality:{0}", desc.toString());
+		logger.log(FINE, "OWLObjectMinCardinality:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLObjectOneOf desc) {
-		logger.log(INFO, "OWLObjectOneOf:{0}", desc.toString());
+		logger.log(FINE, "OWLObjectOneOf:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLObjectPropertyDomainAxiom axiom) {
-		logger.log(INFO, "OWLObjectPropertyDomainAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLObjectPropertyDomainAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLObjectPropertyRangeAxiom axiom) {
-		logger.log(INFO, "OWLObjectPropertyRangeAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLObjectPropertyRangeAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLObjectUnionOf desc) {
-		logger.log(INFO, "OWLObjectUnionOf:{0}", desc.toString());
+		logger.log(FINE, "OWLObjectUnionOf:{0}", desc.toString());
 		super.visit(desc);
 	}
 
 	@Override
 	public void visit(OWLReflexiveObjectPropertyAxiom axiom) {
-		logger.log(INFO, "OWLReflexiveObjectPropertyAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLReflexiveObjectPropertyAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLSameIndividualAxiom axiom) {
-		logger.log(INFO, "OWLSameIndividualAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLSameIndividualAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLSubAnnotationPropertyOfAxiom axiom) {
-		logger.log(INFO, "OWLSubAnnotationPropertyOfAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLSubAnnotationPropertyOfAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLSubDataPropertyOfAxiom axiom) {
-		logger.log(INFO, "OWLSubDataPropertyOfAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLSubDataPropertyOfAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLSubObjectPropertyOfAxiom axiom) {
-		logger.log(INFO, "OWLSubObjectPropertyOfAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLSubObjectPropertyOfAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLSubPropertyChainOfAxiom axiom) {
-		logger.log(INFO, "OWLSubPropertyChainOfAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLSubPropertyChainOfAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLSymmetricObjectPropertyAxiom axiom) {
-		logger.log(INFO, "OWLSymmetricObjectPropertyAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLSymmetricObjectPropertyAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 
 	@Override
 	public void visit(OWLTransitiveObjectPropertyAxiom axiom) {
-		logger.log(INFO, "OWLTransitiveObjectPropertyAxiom:{0}", axiom.toString());
+		logger.log(FINE, "OWLTransitiveObjectPropertyAxiom:{0}", axiom.toString());
 		super.visit(axiom);
 	}
 

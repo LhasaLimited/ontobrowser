@@ -4,8 +4,12 @@ import static java.util.function.UnaryOperator.identity;
 
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,6 +23,7 @@ import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.entity.VersionedEntity;
+import org.semanticweb.owlapi.model.OWLClass;
 
 
 public class OWLParserContext {
@@ -38,15 +43,17 @@ public class OWLParserContext {
 	private Map<String, AnnotationType> annotationTypes;
 	private Map<String, Term> terms;
 
+	private final Map<String, Map<String, Set<String>>> relationshipMap = new HashMap<>();
+
 	public OWLParserContext(final Curator curator, final Version version, final Collection<Datasource> datasources, final Ontology ontology,
 							Collection<RelationshipType> relationshipTypes, final Collection<AnnotationType> annotationTypes, final Collection<Term> terms) {
 		this.curator = curator;
 		this.version = version;
 		this.ontology = ontology;
-		this.datasources = datasources.stream().collect(Collectors.toMap(Datasource::getAcronym, identity()));
-		this.relationshipTypes = relationshipTypes.stream().collect(Collectors.toMap(RelationshipType::getRelationship, identity()));
-		this.annotationTypes = annotationTypes.stream().collect(Collectors.toMap(AnnotationType::getPrefixedXmlType, Function.identity()));
-		this.terms = terms.stream().collect(Collectors.toMap(Term::getReferenceId, Function.identity()));
+		this.datasources = new LinkedHashMap<>(datasources.stream().collect(Collectors.toMap(Datasource::getAcronym, identity())));
+		this.relationshipTypes = new LinkedHashMap<>(relationshipTypes.stream().collect(Collectors.toMap(RelationshipType::getRelationship, identity())));
+		this.annotationTypes = new LinkedHashMap<>(annotationTypes.stream().collect(Collectors.toMap(AnnotationType::getPrefixedXmlType, Function.identity())));
+		this.terms = new LinkedHashMap<>(terms.stream().collect(Collectors.toMap(Term::getReferenceId, Function.identity())));
 
 	}
 
@@ -212,5 +219,13 @@ public class OWLParserContext {
 		} else {
 			statePush(ParserState.ANNOTATION);
 		}
+	}
+
+
+	public Set<String> getRelationshipTypes(final Term relatedTerm, final Term term) {
+		Map<String, Set<String>> relatedTerms = relationshipMap.computeIfAbsent(term.getReferenceId(),
+				k -> new HashMap<>());
+		return relatedTerms.computeIfAbsent(relatedTerm.getReferenceId(),
+				id -> new HashSet<>());
 	}
 }
