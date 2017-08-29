@@ -6,6 +6,7 @@ import static org.junit.Assert.assertThat;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -28,6 +29,7 @@ import org.junit.runner.RunWith;
 
 import com.novartis.pcs.ontology.dao.CuratorDAOLocal;
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
+import com.novartis.pcs.ontology.dao.RelationshipDAOLocal;
 import com.novartis.pcs.ontology.dao.TermDAOLocal;
 import com.novartis.pcs.ontology.entity.Annotation;
 import com.novartis.pcs.ontology.entity.CrossReference;
@@ -38,6 +40,7 @@ import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.service.OntologyTermServiceLocal;
 
 import junit.framework.AssertionFailedError;
 
@@ -59,7 +62,14 @@ public class OntologyImportServiceImplArq2TestIT {
 	private OntologyDAOLocal ontologyDAOLocal;
 
 	@EJB
+	private RelationshipDAOLocal relationshipDAO;
+
+	@EJB
 	private TermDAOLocal termDAO;
+
+	@EJB
+	private OntologyTermServiceLocal ontologyTermService;
+
 	private Ontology ontology;
 
 	@Deployment(name = "ontobrowser")
@@ -158,6 +168,22 @@ public class OntologyImportServiceImplArq2TestIT {
 		Annotation annotation = first.orElseThrow(AssertionFailedError::new);
 		assertThat(annotation.getAnnotation(), is("IAO_0000122"));
 		assertThat(annotation.getAnnotationType().getAnnotationType(), is("has curation status"));
+	}
+
+	@Test
+	public void shouldSelectRootTermsForOntology() {
+		Term thing = termDAO.loadByReferenceId("Thing");
+		Collection<Relationship> relationships = ontologyTermService.getRelationships(thing, "OntobrowserTest");
+		Optional<Relationship> topClassRelOpt = findRel(relationships, "OB_00010");
+		Relationship topClassRel = topClassRelOpt.orElseThrow(AssertionError::new);
+		assertThat(topClassRel.isLeaf(), is(Boolean.TRUE));
+		Optional<Relationship> parentClassRelOpt = findRel(relationships, ROOT_IRI);
+		Relationship parentClassRel = parentClassRelOpt.orElseThrow(AssertionError::new);
+		assertThat(parentClassRel.isLeaf(), is(Boolean.FALSE));
+	}
+
+	private Optional<Relationship> findRel(final Collection<Relationship> relationships, final String referenceId) {
+		return relationships.stream().filter(r -> r.getTerm().getReferenceId().equals(referenceId)).findFirst();
 	}
 
 }

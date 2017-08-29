@@ -85,7 +85,6 @@ import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyID;
-import org.semanticweb.owlapi.model.OWLPropertyRange;
 import org.semanticweb.owlapi.model.OWLReflexiveObjectPropertyAxiom;
 import org.semanticweb.owlapi.model.OWLSameIndividualAxiom;
 import org.semanticweb.owlapi.model.OWLSubAnnotationPropertyOfAxiom;
@@ -183,7 +182,6 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		super.visit(owlOntology);
 		context.statePop();
 
-		addRootRelationships();
 	}
 
 	private void fillSourceProperties(final OWLOntology owlOntology) {
@@ -215,18 +213,6 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		relationshipType.setOntology(context.getOntology());
 		context.approve(relationshipType);
 		return relationshipType;
-	}
-
-
-
-	private void addRootRelationships() {
-		Map<String, Term> terms = context.getTerms();
-		Term thing = context.getTerm("Thing");
-		terms.forEach((termName, term) -> {
-			if (term.getRelationships().isEmpty() && !term.equals(thing)) {
-				createRelationship(thing, term, context.getRelationshipType("is_a"));
-			}
-		});
 	}
 
 	@Override
@@ -272,14 +258,15 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 					relatedTerm.getReferenceId(), isARelationship.getRelationship()});
 		} else {
 			relationshipTypesSet.add(isARelationship.getRelationship());
-			Relationship relationship = createRelationship(relatedTerm, term, isARelationship);
+			Relationship relationship = createRelationship(relatedTerm, term, isARelationship, context.getOntology());
 			term.getRelationships().add(relationship);
 		}
 	}
 
-	private Relationship createRelationship(final Term relatedTerm, final Term term, final RelationshipType relationshipType) {
+	private Relationship createRelationship(final Term relatedTerm, final Term term, final RelationshipType relationshipType, final Ontology ontology) {
 		// added to term in constructor
 		Relationship relationship = new Relationship(term, relatedTerm, relationshipType, context.getCurator(), context.getVersion());
+		relationship.setOntology(ontology);
 		context.approve(relationship);
 		return relationship;
 	}

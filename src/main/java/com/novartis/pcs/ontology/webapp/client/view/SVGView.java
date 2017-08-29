@@ -67,10 +67,10 @@ public class SVGView extends OntoBrowserView implements ViewTermHandler, ClickHa
 	@Override
 	public void onViewTerm(ViewTermEvent event) {
 		final Term term = event.getTerm();
-		final Ontology ontology = term.getOntology();
+		final Ontology ontology = event.getOntology();
 						
 		if(!ontology.isCodelist()) {			
-			service.loadSVG(term.getReferenceId(), new AsyncCallback<String>() {
+			service.loadSVG(term.getReferenceId(), ontology.getName(), new AsyncCallback<String>() {
 				public void onFailure(Throwable caught) {
 					GWT.log("Failed to load SVG", caught);
 					ErrorView.instance().onUncaughtException(caught);

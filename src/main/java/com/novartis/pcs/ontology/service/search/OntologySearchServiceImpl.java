@@ -194,7 +194,7 @@ public class OntologySearchServiceImpl implements
 				throw new RuntimeException(msg);
 			}
 			
-			logger.info("Deleting term from search index: " + term);
+			logger.fine("Deleting term from search index: " + term);
 			writer.deleteDocuments(id);
 		} catch (SystemException e) {
 			String msg = "Failed to enlist Lucene index writer XA resouce in transaction";
@@ -223,7 +223,7 @@ public class OntologySearchServiceImpl implements
 				throw new RuntimeException(msg);
 			}
 			
-			logger.info("Deleting term from search index: " + term);
+			logger.fine("Deleting term from search index: " + term);
 			writer.deleteDocuments(id);		
 			if(StatusChecker.isValid(term)) {
 				Collection<Document> docs = createDocuments(term);

@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
@@ -51,6 +53,9 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 	@EJB
 	private OntologyDAOLocal ontologyDAO;
 
+	@PersistenceContext(unitName = "ontobrowser")
+	protected EntityManager entityManager;
+
 	private class MyOWLOntologyWalker extends OWLOntologyWalker {
 		MyOWLOntologyWalker(OWLOntology owlOntology) {
 			super(Collections.singleton(owlOntology));
@@ -67,30 +72,47 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		final OWLOntologyManager owlOntologyManager = OWLManager.createOWLOntologyManager();
 		OWLOntology owlOntology = owlOntologyManager.loadOntologyFromOntologyDocument(inputStream);
 
+		Map<String, Ontology> ontologyMap = new HashMap<>();
 		final OWLParserContext context = new OWLParserContext(curator, version, datasources, mainOntology,
 				relationshipTypes, annotationTypes, terms);
 		List<OWLOntology> sortedImportsClosure = owlOntologyManager.getSortedImportsClosure(owlOntology);
 
-		for (OWLOntology importedOwlOntology : Lists.reverse(sortedImportsClosure)) {
-			String importedName = importedOwlOntology.getOntologyID().getOntologyIRI().getRemainder().get();
+		List<OWLOntology> reversed = Lists.reverse(sortedImportsClosure);
+		for (OWLOntology importedOwlOntology : reversed) {
+			String importedName = getImportedName(importedOwlOntology);
 			Ontology ontology = ontologyDAO.loadByName(importedName, true);
 			if (ontology == null) {
-				ontology = new Ontology(importedName, curator, version);
-				ontology.setStatus(VersionedEntity.Status.APPROVED);
-				ontology.setApprovedVersion(version);
-				ontology.setInternal(false);
+				if(reversed.lastIndexOf(importedOwlOntology) == reversed.size() - 1 ){
+					ontology = mainOntology;
+				} else {
+					ontology = new Ontology(importedName, curator, version);
+					ontology.setStatus(VersionedEntity.Status.APPROVED);
+					ontology.setApprovedVersion(version);
+					ontology.setInternal(false);
+				}
 			}
 			try {
 				ontologyDAO.save(ontology);
+				ontology = ontologyDAO.loadByName(ontology.getName());
+				ontologyMap.put(importedName, ontology);
 			} catch (InvalidEntityException e) {
 				throw new RuntimeException("Ontology saving exception");
 			}
+
+
 			context.setOntology(ontology);
 			OWLOntologyWalker owlObjectWalker = new MyOWLOntologyWalker(importedOwlOntology);
 			ParsingStructureWalker parsingStructureWalker = new ParsingStructureWalker(owlObjectWalker, context);
 			parsingStructureWalker.visit(importedOwlOntology);
 		}
 
+		for (OWLOntology importedOwlOntology : reversed) {
+			Ontology ontology = ontologyMap.get(getImportedName(importedOwlOntology));
+			Set<OWLOntology> directImports = importedOwlOntology.getDirectImports();
+			Set<Ontology> imported = directImports.stream().map(o -> ontologyMap.get(getImportedName(o))).collect(Collectors.toSet());
+			ontology.setImportedOntologies(imported);
+			entityManager.merge(ontology);
+		}
 		OWLOntologyFormat ontologyFormat = owlOntologyManager.getOntologyFormat(owlOntology);
 		context.getOntology().setSourceFormat(ontologyFormat.getClass().getSimpleName());
 		Boolean validated = validateDuplicates(context);
@@ -103,6 +125,10 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		logger.log(Level.INFO, "The End!");
 		return new ParseContextImpl(terms2.values(), context.getDatasources(), context.getRelationshipTypes(),
 				context.getAnnotationTypes());
+	}
+
+	private String getImportedName(final OWLOntology importedOwlOntology) {
+		return importedOwlOntology.getOntologyID().getOntologyIRI().getRemainder().get();
 	}
 
 	private Boolean validateDuplicates(OWLParserContext context) {

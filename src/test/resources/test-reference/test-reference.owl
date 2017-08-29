@@ -31,28 +31,28 @@
         <AnnotationProperty abbreviatedIRI="obo:IAO_0000115"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty abbreviatedIRI="obo:IAO_0000114"/>
+        <Class IRI="#OB_00002"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty abbreviatedIRI="oboInOwl:hasNarrowSynonym"/>
-    </Declaration>
-    <Declaration>
-        <Class IRI="#OB_00016"/>
+        <Class IRI="#OB_00001"/>
     </Declaration>
     <Declaration>
         <Class IRI="#OB_00015"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#OB_00003"/>
-    </Declaration>
-    <Declaration>
         <Class IRI="#OB_00014"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#OB_00002"/>
+        <Class IRI="#OB_00003"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#OB_00001"/>
+        <AnnotationProperty abbreviatedIRI="obo:IAO_0000114"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#OB_00016"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty abbreviatedIRI="oboInOwl:hasNarrowSynonym"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasDbXref"/>
@@ -62,6 +62,9 @@
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasRelatedSynonym"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#OB_0010"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasExactSynonym"/>
@@ -200,6 +203,11 @@
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <IRI>#OB_00016</IRI>
         <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay_kit_4</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
+        <IRI>#OB_0010</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">top class</Literal>
     </AnnotationAssertion>
 </Ontology>
 

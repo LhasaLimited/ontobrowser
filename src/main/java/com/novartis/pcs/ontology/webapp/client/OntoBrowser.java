@@ -18,6 +18,7 @@ limitations under the License.
 package com.novartis.pcs.ontology.webapp.client;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.core.client.EntryPoint;
@@ -65,6 +66,8 @@ import com.novartis.pcs.ontology.webapp.client.view.TermSynonymsView;
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
+	public static final String PARAM_ONTOLOGY = "ontology=";
+	public static final String PARAM_TERM = "term=";
 	private final EventBus eventBus = new SimpleEventBus();
 	
 	/**
@@ -74,7 +77,8 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 			GWT.create(OntoBrowserService.class);
 	
 	private final MenuBar menuBar = new MenuBar();
-	
+
+	public final List<Ontology> ontologies = new ArrayList<>();
 	/**
 	 * This is the entry point method.
 	 */
@@ -83,32 +87,24 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 		GWT.setUncaughtExceptionHandler(ErrorView.instance());
 		History.addValueChangeHandler(this);
 		layoutViews();
-		
-		final String historyToken = History.getToken();
-		if(historyToken != null && historyToken.length() > 0) {
-			History.fireCurrentHistoryState();
-		}
-		
-		service.loadRootTerms(new AsyncCallback<List<Term>>() {			
+
+		service.loadOntologies(new AsyncCallback<List<Ontology>>() {
+
 			@Override
-			public void onSuccess(List<Term> terms) {
-				createOntologyMenu(terms);
-								
-				// If the application starts with no history token,
-				// redirect to a new initial state.
-				if(!terms.isEmpty() && 
-						(historyToken == null || historyToken.length() == 0)) {
-					History.newItem(terms.get(0).getReferenceId());
-				}
+			public void onSuccess(final List<Ontology> ontologies) {
+				createOntologyMenu(ontologies);
+				OntoBrowser.this.ontologies.clear();
+				OntoBrowser.this.ontologies.addAll(ontologies);
+				checkHistoryToken();
 			}
-			
+
 			@Override
-			public void onFailure(Throwable caught) {
+			public void onFailure(final Throwable caught) {
 				GWT.log("Failed to load root terms", caught);
 				ErrorView.instance().onUncaughtException(caught);
 			}
+
 		});
-				
 		service.loadCurrentCurator(new AsyncCallback<Curator>() {			
 			@Override
 			public void onSuccess(Curator curator) {
@@ -124,28 +120,39 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 			}
 		});
 	}
-	
+
+	private void checkHistoryToken() {
+		final String historyToken = History.getToken();
+		if(historyToken != null && historyToken.length() > 0) {
+			History.fireCurrentHistoryState();
+		}
+	}
+
 	@Override
 	public void onValueChange(ValueChangeEvent<String> event) {
 		final String historyToken = event.getValue();
 		if(historyToken != null && historyToken.length() > 0) {
 			GWT.log("History token: " + historyToken);
-			service.loadTerm(historyToken, new AsyncCallback<Term>() {
-				public void onFailure(Throwable caught) {
-					GWT.log("Failed to load term: " + historyToken, caught);
-					ErrorView.instance().onUncaughtException(caught);
-				}
+			int semicolonIndex = historyToken.indexOf(';');
+			String ontologyName;
+			String referenceId = null;
+			if(semicolonIndex > -1){
+				ontologyName = historyToken.substring(historyToken.indexOf('=')+1, semicolonIndex);
+				referenceId = historyToken.substring(historyToken.lastIndexOf('=')+1);
+			} else {
+				ontologyName = historyToken.substring(historyToken.indexOf('=')+1);
+			}
 
-				public void onSuccess(Term term) {
-					if(term != null) {
-						GWT.log(term.getAnnotations().toString());
-						eventBus.fireEvent(new ViewTermEvent(term));						
-					}
-				}
-			});
+			final String finalOntologyName = ontologyName;
+			Ontology ontology = ontologies.stream().filter(o -> o.getName().equals(finalOntologyName)).findFirst().get();
+			if (referenceId == null) {
+				service.loadRootTermFor(ontologyName, new TermAsyncCallback(referenceId, ontology));
+			} else {
+				service.loadTerm(referenceId, new TermAsyncCallback(referenceId, ontology));
+			}
 		}
 	}
-	
+
 	private void layoutViews() {
 		TermDetailsView termView = new TermDetailsView(eventBus, service);
 		TermSynonymsView synonymsView = new TermSynonymsView(eventBus, service);
@@ -179,24 +186,37 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 				
 		RootLayoutPanel.get().add(layoutPanel);
 	}
-		
-	private void createOntologyMenu(List<Term> terms) {
+
+	private void createOntologyMenu(List<Ontology> ontologies) {
 		MenuBar menu = new MenuBar(true);
 		menu.setAnimationEnabled(true);
-		
-		for(final Term term : terms) {
-			Ontology ontology = term.getOntology();
+
+		for (final Ontology ontology : ontologies) {
 			if(!ontology.isCodelist()) {
-				menu.addItem(ontology.getName(), new Command() {
-					public void execute() {
-						History.newItem(term.getReferenceId());
-					}
-				});
+				menu.addItem(ontology.getName(), (Command) () -> History.newItem(PARAM_ONTOLOGY + ontology.getName()));
 			}
 		}
-				
+
 		menuBar.insertItem(new MenuItem("Ontology", menu), 0);
 	}
+
+	// private void createOntologyMenu(List<Term> terms) {
+	// MenuBar menu = new MenuBar(true);
+	// menu.setAnimationEnabled(true);
+	//
+	// for(final Term referenceId : terms) {
+	// Ontology ontology = referenceId.getOntology();
+	// if(!ontology.isCodelist()) {
+	// menu.addItem(ontology.getName(), new Command() {
+	// public void execute() {
+	// History.newItem(referenceId.getReferenceId());
+	// }
+	// });
+	// }
+	// }
+	//
+	// menuBar.insertItem(new MenuItem("Ontology", menu), 0);
+	// }
 	
 	private void createPopups(Curator curator) {
 		if(curator != null) {					
@@ -240,10 +260,28 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 	}
 	
 	private void createPopupMenuItem(MenuBar menu, final String text, final OntoBrowserPopup popup) {
-		menu.addItem(text, new Command() {
-			public void execute() {
-				popup.show();
+		menu.addItem(text, (Command) () -> popup.show());
+	}
+
+	private class TermAsyncCallback implements AsyncCallback<Term> {
+		private final String referenceId;
+		private final Ontology ontology;
+
+		public TermAsyncCallback(final String referenceId, final Ontology ontology) {
+			this.referenceId = referenceId;
+			this.ontology = ontology;
+		}
+
+		public void onFailure(Throwable caught) {
+			GWT.log("Failed to load term: " + referenceId, caught);
+			ErrorView.instance().onUncaughtException(caught);
+		}
+
+		public void onSuccess(Term term) {
+			if (term != null) {
+				GWT.log(term.getAnnotations().toString());
+				eventBus.fireEvent(new ViewTermEvent(term, ontology));
 			}
-		});
+		}
 	}
 }

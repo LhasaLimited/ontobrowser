@@ -28,7 +28,7 @@ public class TermAnnotationHandler implements OWLVisitorHandler {
 	@Override
 	public void handleAnnotation(final OWLParserContext context, final OWLAnnotation owlAnnotation) {
 		Term term = context.termPeek();
-		AnnotationType annotationType = context.getAnnotationType(owlAnnotation.getProperty().getIRI().getShortForm());
+		AnnotationType annotationType = context.getAnnotationType(owlAnnotation.getProperty().getIRI().getRemainder().get());
 		String value = ApiHelper.getString(owlAnnotation);
 		Annotation annotation = new Annotation(value, annotationType, term, context.getCurator(), context.getVersion());
 		annotation.setOntology(context.getOntology());

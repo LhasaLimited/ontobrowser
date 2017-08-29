@@ -91,7 +91,7 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 	public static final String QUERY_BY_REF_ID = "Term.loadByReferenceId";
 	public static final String QUERY_BY_NAME = "Term.loadByName";
 	public static final String QUERY_SUBTERMS = "Term.loadSubTermsByReferenceId";
-	
+
 	@NotNull
 	@Valid
 	@ManyToOne(optional=false)

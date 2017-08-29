@@ -32,6 +32,7 @@ import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 import com.novartis.pcs.ontology.service.search.result.HTMLSearchResult;
 import com.novartis.pcs.ontology.service.search.result.InvalidQuerySyntaxException;
+import com.novartis.pcs.ontology.webapp.client.OntoBrowser;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 import com.novartis.pcs.ontology.webapp.client.event.SearchEvent;
 import com.novartis.pcs.ontology.webapp.client.event.SearchHandler;
@@ -95,9 +96,11 @@ public class SearchResultsView extends OntoBrowserView
 							if(filterByOntology == null 
 									|| filterByOntology.equals(result.getOntology())) {
 								ListItem li = new ListItem();
+								String historyToken = OntoBrowser.PARAM_ONTOLOGY + result.getOntology() + ';' + OntoBrowser.PARAM_TERM +
+										result.getReferenceId();
 								InlineHyperlink hyperlink = new InlineHyperlink(
-										SafeHtmlUtils.fromTrustedString(result.getHtml()), 
-										result.getReferenceId());
+										SafeHtmlUtils.fromTrustedString(result.getHtml()),
+										historyToken);
 								li.add(hyperlink);
 								
 								if(filterByOntology == null) {

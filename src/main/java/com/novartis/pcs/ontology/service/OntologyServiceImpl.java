@@ -15,6 +15,7 @@ import com.novartis.pcs.ontology.entity.VersionedEntity;
 import javax.ejb.Local;
 import javax.ejb.Stateless;
 import java.text.MessageFormat;
+import java.util.List;
 
 /**
  * @author Artur Polit
@@ -43,6 +44,11 @@ public class OntologyServiceImpl extends OntologyService implements OntologyServ
 		ontology.setStatus(VersionedEntity.Status.APPROVED);
 		ontology.setApprovedVersion(version);
 		ontologyDAO.save(ontology);
+	}
+
+	@Override
+	public List<Ontology> loadAll() {
+		return ontologyDAO.loadAll();
 	}
 }
 /* ---------------------------------------------------------------------*

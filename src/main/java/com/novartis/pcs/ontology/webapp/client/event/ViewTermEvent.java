@@ -18,16 +18,25 @@ limitations under the License.
 package com.novartis.pcs.ontology.webapp.client.event;
 
 import com.google.web.bindery.event.shared.Event;
+import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Term;
 
 
 public class ViewTermEvent extends Event<ViewTermHandler> {
 	public static Type<ViewTermHandler> TYPE = new Type<ViewTermHandler>();	
 	public final Term term;
-	
+	private final Ontology ontology;
+
+	public ViewTermEvent(Term term, Ontology ontology) {
+		super();
+		this.term = term;
+		this.ontology = ontology;
+	}
+
 	public ViewTermEvent(Term term) {
 		super();
 		this.term = term;
+		this.ontology = null;
 	}
 
 	@Override
@@ -37,6 +46,10 @@ public class ViewTermEvent extends Event<ViewTermHandler> {
 	
 	public Term getTerm() {
 		return term;
+	}
+
+	public Ontology getOntology() {
+		return ontology;
 	}
 
 	@Override

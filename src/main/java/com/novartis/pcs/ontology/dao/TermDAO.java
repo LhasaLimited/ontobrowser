@@ -128,7 +128,18 @@ public class TermDAO extends VersionedEntityDAO<Term>
 			throw new EntityNotFoundException("Failed to load term with reference id: " + referenceId);
 		}
 	}
-	
+
+	@Override
+	public Term loadByOntology(final String ontology, final boolean loadLazyAssociations) {
+//		Query query = entityManager.createNamedQuery(Term.QUERY_HIERARCHY_ONTOLOGY);
+//		query.setParameter("ontology", ontology);
+//
+//		List<Term> list = query.getResultList();
+//		Term term = list.isEmpty() ? null : list.get(0);
+		Term term = loadByReferenceId("Thing");
+		return loadLazyAssociations ? loadLazyAssociations(term) : term;
+	}
+
 	@Override
 	public Term loadByName(String name, Ontology ontology) {
 		return loadByName(name, ontology, false);

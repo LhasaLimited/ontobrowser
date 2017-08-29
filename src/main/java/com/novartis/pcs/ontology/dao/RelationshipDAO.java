@@ -64,22 +64,16 @@ public class RelationshipDAO extends VersionedEntityDAO<Relationship>
     
 	@Override
 	@SuppressWarnings("unchecked")
-	public Collection<Relationship> loadHierarchy(long termId) {
+	public Collection<Relationship> loadHierarchy(long termId, final String ontologyId) {
 		if(isOracle()) {
 			// Oracle database hierarchical query implementation.
 			Query query = entityManager.createNamedQuery(Relationship.QUERY_HIERARCHY);
 			// Setting cache hint causes exception due to hibernate bug (https://hibernate.atlassian.net/browse/HHH-9111)
 	       	//query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 			query.setParameter("termId", termId);
+			query.setParameter("ontology_name", ontologyId);
 			List<Object[]> rows = query.getResultList();
-			List<Relationship> relationships = new ArrayList<Relationship>(rows.size());
-			for(Object[] row : rows) {
-				Relationship relationship = (Relationship)row[0];
-				Number leaf = (Number)row[1];
-				relationship.setLeaf(leaf.intValue() != 0);
-				relationships.add(relationship);
-			}
-			return relationships;
+			return mapRelationships(rows);
 		} else {
 			// non-Oracle implementation which loads all relationships (from second level cache)
 			List<Relationship> all = loadAll();
@@ -120,7 +114,31 @@ public class RelationshipDAO extends VersionedEntityDAO<Relationship>
 			return new ArrayList<Relationship>(hierarchy);
 		}
 	}
-	
+
+	@Override
+	public List<Object[]> loadHierarchy(final String ontologyName) {
+		if (isOracle()) {
+			Query query = entityManager.createNamedQuery(Relationship.QUERY_HIERARCHY_ONTOLOGY);
+			// Setting cache hint causes exception due to hibernate bug (https://hibernate.atlassian.net/browse/HHH-9111)
+			//query.setHint("org.hibernate.cacheable", Boolean.TRUE);
+			query.setParameter("ontology_name", ontologyName);
+			return (List<Object[]>) query.getResultList();
+		} else {
+			throw new RuntimeException("Not yet implemented");
+		}
+	}
+
+	private Collection<Relationship> mapRelationships(final List<Object[]> rows) {
+		List<Relationship> relationships = new ArrayList<>(rows.size());
+		for(Object[] row : rows) {
+			Relationship relationship = (Relationship)row[0];
+			Number leaf = (Number)row[1];
+			relationship.setLeaf(leaf.intValue() != 0);
+			relationships.add(relationship);
+		}
+		return relationships;
+	}
+
 	private void addToList(Map<Term, List<Relationship>> map, Term term, Relationship relationship) {
 		List<Relationship> list = map.get(term);
 		if(list == null) {

@@ -47,7 +47,7 @@ public interface OntoBrowserServiceAsync {
 	void loadCurrentCurator(AsyncCallback<Curator> callback);
 	void loadTerm(String referenceId, AsyncCallback<Term> asyncCallback);
 	void loadOntologyTerms(String ontology, AsyncCallback<List<Term>> callback);
-	void loadSVG(String referenceId, AsyncCallback<String> asyncCallback);
+	void loadSVG(String referenceId, String ontologyName, AsyncCallback<String> asyncCallback);
 	void search(String pattern, boolean includeSynonyms, AsyncCallback<List<HTMLSearchResult>> callback);
 	void loadAllRelationshipTypes(AsyncCallback<List<RelationshipType>> callback);
 	void loadLastCreatedTerms(int max, AsyncCallback<List<Term>> callback);
@@ -109,4 +109,7 @@ public interface OntoBrowserServiceAsync {
 			AsyncCallback<Void> callback);
 
 	void addOntology(Ontology ontology, AsyncCallback<Void> callback);
+	void loadOntologies(AsyncCallback<List<Ontology>> callback);
+	void loadRootTermFor(String ontologyName, AsyncCallback<Term> callback);
+
 }

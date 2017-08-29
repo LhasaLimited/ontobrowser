@@ -158,18 +158,14 @@ public class OWLParserContext {
 	}
 
 
-	public AnnotationType getAnnotationType(final String shortForm) {
-		return annotationTypes.get(shortForm);
+	public AnnotationType getAnnotationType(final String propertyFragment) {
+		return annotationTypes.get(propertyFragment);
 	}
 
 	public boolean hasAnnotationType(final String propertyFragment) {
 		return annotationTypes.containsKey(propertyFragment);
 	}
 
-
-	public void addAnnotationType(final AnnotationType annotationType) {
-		annotationTypes.put(annotationType.getPrefixedXmlType(), annotationType);
-	}
 
 	public Collection<AnnotationType> getAnnotationTypes() {
 		return annotationTypes.values();

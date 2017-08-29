@@ -144,10 +144,15 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 	public Term loadTerm(String referenceId) {
 		return termService.loadByReferenceId(referenceId);
 	}
-		
+
 	@Override
-	public String loadSVG(String referenceId) {
-		return graphService.createGraph(referenceId);
+	public Term loadRootTermFor(final String ontologyName) {
+		return termService.loadByOntology(ontologyName);
+	}
+
+	@Override
+	public String loadSVG(String referenceId, final String ontologyName) {
+		return graphService.createGraph(referenceId, ontologyName);
 	}
 	
 	@Override
@@ -374,6 +379,11 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 	public void addOntology(final Ontology ontology) throws InvalidEntityException {
 		logger.log(Level.INFO, "addOntology [name={}]", ontology.getName());
 		ontologyService.createOntology(ontology, getUsername());
+	}
+
+	@Override
+	public List<Ontology> loadOntologies(){
+		return ontologyService.loadAll();
 	}
 
 	private <T> List<T> asList(Collection<T> collection) {

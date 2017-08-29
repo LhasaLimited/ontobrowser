@@ -18,6 +18,7 @@ limitations under the License.
 package com.novartis.pcs.ontology.entity;
 
 import java.util.Date;
+import java.util.Set;
 
 import javax.persistence.AssociationOverride;
 import javax.persistence.AttributeOverride;
@@ -25,9 +26,11 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.QueryHint;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -93,6 +96,12 @@ public class Ontology extends VersionedEntity implements ReplaceableEntity<Ontol
 	@ManyToOne(cascade={CascadeType.PERSIST})
 	@JoinColumn(name = "REPLACED_BY")
 	private Ontology replacedBy;
+
+	@OneToMany(cascade={CascadeType.ALL})
+	@JoinTable(name = "ONTOLOGY_IMPORTED",
+			joinColumns = @JoinColumn(name = "ONTOLOGY_ID"),
+			inverseJoinColumns = @JoinColumn(name = "IMPORTED_ONTOLOGY_ID"))
+	private Set<Ontology> importedOntologies;
 	
 	protected Ontology() {
 	}
@@ -188,6 +197,14 @@ public class Ontology extends VersionedEntity implements ReplaceableEntity<Ontol
 	
 	public void setCodelist(boolean codelist) {
 		this.codelist = codelist;
+	}
+
+	public Set<Ontology> getImportedOntologies() {
+		return importedOntologies;
+	}
+
+	public void setImportedOntologies(final Set<Ontology> importedOntologies) {
+		this.importedOntologies = importedOntologies;
 	}
 
 	@Override

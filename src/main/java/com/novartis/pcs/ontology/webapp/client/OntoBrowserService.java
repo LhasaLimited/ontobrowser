@@ -51,7 +51,7 @@ public interface OntoBrowserService extends RemoteService {
 	public List<Term> loadRootTerms();
 	public Term loadTerm(String id);
 	public List<Term> loadOntologyTerms(String ontology);
-	public String loadSVG(String id);
+	public String loadSVG(String id, final String ontologyName);
 	public List<RelationshipType> loadAllRelationshipTypes();
 	public List<Term> loadLastCreatedTerms(int max);
 	
@@ -122,4 +122,7 @@ public interface OntoBrowserService extends RemoteService {
 	public void changePassword(String oldPassword, String newPassword) throws InvalidEntityException;
 
 	public void addOntology(Ontology ontology) throws InvalidEntityException;
+
+	List<Ontology> loadOntologies();
+	Term loadRootTermFor(String ontologyName);
 }

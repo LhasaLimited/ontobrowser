@@ -18,7 +18,9 @@ limitations under the License.
 package com.novartis.pcs.ontology.service;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import javax.ejb.EJB;
@@ -43,6 +45,7 @@ import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.Version;
+import com.novartis.pcs.ontology.entity.VersionedEntity;
 import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
 import com.novartis.pcs.ontology.service.search.OntologySearchServiceListener;
 import com.novartis.pcs.ontology.service.search.OntologySearchServiceLocal;
@@ -95,8 +98,13 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
     public Term loadByReferenceId(String referenceId) {
     	return termDAO.loadByReferenceId(referenceId.trim(), true);
     }
-    
-    @Override
+
+	@Override
+	public Term loadByOntology(final String ontologyName) {
+		return termDAO.loadByOntology(ontologyName.trim(), true);
+	}
+
+	@Override
     public Collection<RelationshipType> loadAllRelationshipTypes() {
     	Collection<RelationshipType> types = relationshipTypeDAO.loadAll();
     	StatusChecker.removeInvalid(types);
@@ -129,7 +137,7 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 		}
 		
 		Relationship relationship = new Relationship(term, relatedTerm, type, curator, version);
-		
+		relationship.setOntology(term.getOntology());
 		return term;
 	}
 
@@ -523,5 +531,32 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 				Integer.toString(value), 7, "0"));
 		
 		return referenceId.toString();
+	}
+
+	@Override
+	public Collection<Relationship> getRelationships(final Term term, final String ontologyName) {
+		Collection<Relationship> hierarchy;
+		if (term.getReferenceId().equals("Thing")) {
+			hierarchy = toHierarchy(relationshipDAO.loadHierarchy(ontologyName));
+		} else {
+			hierarchy = relationshipDAO.loadHierarchy(term.getId(), ontologyName);
+		}
+		return hierarchy;
+	}
+
+	private Collection<Relationship> toHierarchy(final List<Object[]> objects) {
+		List<Relationship> relationships = new ArrayList<>();
+		for (Object[] object : objects) {
+			final Term term = termDAO.load(((Number) object[0]).longValue());
+			final Term relatedTerm = termDAO.load(((Number) object[1]).longValue());
+			final RelationshipType type = relationshipTypeDAO.load(((Number) object[2]).longValue());
+			final boolean isLeaf = ((Number) object[3]).intValue() == 0;
+			Relationship relationship = new Relationship(term, relatedTerm, type, null, null);
+			term.getRelationships().remove(relationship);
+			relationship.setStatus(VersionedEntity.Status.APPROVED);
+			relationship.setLeaf(isLeaf);
+			relationships.add(relationship);
+		}
+		return relationships;
 	}
 }

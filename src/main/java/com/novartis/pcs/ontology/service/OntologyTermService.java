@@ -88,4 +88,8 @@ public interface OntologyTermService {
 	
 	public void deleteRelationship(long relationshipId, String curatorUsername)
 			throws InvalidEntityException;
+
+	Term loadByOntology(String ontologyName);
+
+	Collection<Relationship> getRelationships(Term term, String ontologyName);
 }

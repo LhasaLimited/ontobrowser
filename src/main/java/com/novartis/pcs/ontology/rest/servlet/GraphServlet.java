@@ -57,8 +57,9 @@ public class GraphServlet extends HttpServlet {
 		String mediaType = getExpectedMediaType(request);
 				
 		if(pathInfo != null && pathInfo.length() > 1) {	
-			String termRefId = pathInfo.substring(1);					
-			graph(termRefId, mediaType, orientation, callback, response);
+			String termRefId = pathInfo.substring(1);
+			String ontologyName = "bao_complete.owl";
+			graph(termRefId, mediaType, orientation, callback, response, ontologyName); //TODO add param!
 		} else {
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			response.setContentLength(0);
@@ -121,8 +122,8 @@ public class GraphServlet extends HttpServlet {
 		return mediaType;
 	}
 			
-	private void graph(String termRefId, String mediaType, String orientation, 
-			String callback, HttpServletResponse response) {
+	private void graph(String termRefId, String mediaType, String orientation,
+					   String callback, HttpServletResponse response, final String ontologyId) {
 		GraphOrientation graphOrientation = GraphOrientation.TB;
 		
 		if(orientation != null) {
@@ -142,7 +143,7 @@ public class GraphServlet extends HttpServlet {
 		}
 			
 		try {
-			String content = graphService.createGraph(termRefId, graphOrientation);
+			String content = graphService.createGraph(termRefId, ontologyId, graphOrientation);
 			// JSONP support
 			if(callback != null) {
 				StringBuilder builder = new StringBuilder(

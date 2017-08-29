@@ -722,4 +722,9 @@ ALTER TABLE ONTOLOGY MODIFY REFERENCE_ID_PREFIX NULL;
 ALTER TABLE ONTOLOGY MODIFY REFERENCE_ID_VALUE NULL;
 ALTER TABLE ONTOLOGY MODIFY ONTOLOGY_NAME VARCHAR(128);
 ALTER TABLE ONTOLOGY DISABLE CONSTRAINT ONTOLOGY_REF_ID_PREFIX_UNIQUE;
-                                                                                        
+                                                                           
+CREATE TABLE ONTOLOGY_IMPORTED (
+  ONTOLOGY_ID NUMBER(12) NOT NULL CONSTRAINT ONT_IMP_PARENT_FK REFERENCES ONTOLOGY(ONTOLOGY_ID),
+  IMPORTED_ONTOLOGY_ID NUMBER(12) NOT NULL CONSTRAINT ONT_IMP_CHILD_FK REFERENCES ONTOLOGY(ONTOLOGY_ID)
+);                                                                           
+                                                                    

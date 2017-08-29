@@ -42,4 +42,6 @@ public interface TermDAOLocal extends VersionedDAO<Term> {
 	public Term loadByName(String name, Ontology ontology);
 	
 	public Term loadByName(String name, Ontology ontology, boolean loadLazyAssociations);
+
+	Term loadByOntology(String ontology, boolean loadLazyAssociations);
 }

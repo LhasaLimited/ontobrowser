@@ -33,9 +33,11 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityNotFoundException;
 
 import com.novartis.pcs.ontology.dao.RelationshipDAOLocal;
+import com.novartis.pcs.ontology.dao.RelationshipTypeDAOLocal;
 import com.novartis.pcs.ontology.dao.TermDAOLocal;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.service.OntologyTermServiceLocal;
 import com.novartis.pcs.ontology.service.util.StatusChecker;
 import com.novartis.pcs.ontology.service.util.TermNameComparator;
 
@@ -51,9 +53,15 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 	
 	@EJB
 	private RelationshipDAOLocal relationshipDAO;
-	
+
+	@EJB
+	private RelationshipTypeDAOLocal relationshipTypeDAO;
+
 	@EJB
 	private DOTProcessLocal process;
+
+	@EJB
+	private OntologyTermServiceLocal ontologyTermService;
 		
     /**
      * Default constructor. 
@@ -62,15 +70,15 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
     }
     		
 	@Override
-	public String createGraph(String termRefId) {
-		return createGraph(termRefId, GraphOrientation.TB);
+	public String createGraph(String termRefId, String ontologyName) {
+		return createGraph(termRefId, ontologyName, GraphOrientation.TB);
 	}
 	
 	@Override
-	public String createGraph(String termRefId, GraphOrientation orientation) {
+	public String createGraph(String termRefId, final String ontologyName, GraphOrientation orientation) {
 		try {
 			Term term = termDAO.loadByReferenceId(termRefId);
-			String dot = createDOT(term, orientation);
+			String dot = createDOT(term, ontologyName, orientation);
 			return process.submit(dot);
 		} catch(EntityNotFoundException e) {
 			String msg = "Failed to create graph for term " 
@@ -85,10 +93,10 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 		}
 	}
 	
-	private String createDOT(Term term, GraphOrientation orientation) throws IOException {
+	private String createDOT(Term term, final String ontologyName, GraphOrientation orientation) throws IOException {
 		StringBuilder dot = new StringBuilder(2048);
-		Collection<Relationship> hierarchy = relationshipDAO.loadHierarchy(term.getId());
-			
+		Collection<Relationship> hierarchy = ontologyTermService.getRelationships(term, ontologyName);
+
 		Collection<Term> terms = new LinkedHashSet<Term>();
 		terms.add(term); // for case where term is the top of the tree and hierarchy is empty		
 		for (Relationship relationship : hierarchy) {
@@ -113,7 +121,7 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 		Collections.sort((List<Term>)terms, new TermNameComparator());
 		for (Term t : terms) {						
 			dot.append("\t\"").append(escape(t.getReferenceId()))
-					.append("\" [URL=\"#").append(t.getReferenceId())
+					.append("\" [URL=\"#ontology=").append(ontologyName).append(";term=").append(t.getReferenceId())
 					.append("\", label=\"").append(escape(t.getName())).append("\"");
 			
 			if(t.equals(term)) {
@@ -159,7 +167,7 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 		
 		return dot.toString();
 	}
-	
+
 	private String escape(String s) {
 		return s.replace("\"", "\\\"");
 	}

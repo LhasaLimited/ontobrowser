@@ -20,8 +20,8 @@ package com.novartis.pcs.ontology.service.graph;
 
 public interface OntologyGraphService {
 	
-	public String createGraph(String termRefId);
+	public String createGraph(String termRefId, final String ontologyName);
 	
-	public String createGraph(String termRefId, GraphOrientation orientation);
+	public String createGraph(String termRefId, final String ontologyName, GraphOrientation orientation);
 
 }

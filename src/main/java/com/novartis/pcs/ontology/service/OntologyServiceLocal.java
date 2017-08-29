@@ -10,6 +10,7 @@ import com.novartis.pcs.ontology.entity.InvalidEntityException;
 import com.novartis.pcs.ontology.entity.Ontology;
 
 import javax.ejb.Local;
+import java.util.List;
 
 /**
  * @author Artur Polit
@@ -19,6 +20,8 @@ import javax.ejb.Local;
 public interface OntologyServiceLocal {
 
 	void createOntology(Ontology ontology, final String username) throws InvalidEntityException;
+
+	List<Ontology> loadAll();
 }
 /* ---------------------------------------------------------------------*
  * This software is the confidential and proprietary

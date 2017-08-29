@@ -119,7 +119,7 @@ public abstract class OntologyImportServiceBase extends OntologyService
         for (Term term : terms) {
             if (!names.add(term.getName().toLowerCase())) {
                 logger.warning("Duplicated term:" + term.getName());
-                term.setName(term.getReferenceId()+":"+term.getName());
+                term.setName(term.getReferenceId() + ":" + term.getName());
                 // throw new DuplicateEntityException(term, "Duplicate term: " +
                 // term.getName());
             }
