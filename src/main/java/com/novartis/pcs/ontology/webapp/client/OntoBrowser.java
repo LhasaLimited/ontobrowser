@@ -136,15 +136,9 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 		final String historyToken = event.getValue();
 		if(historyToken != null && historyToken.length() > 0) {
 			GWT.log("History token: " + historyToken);
-			int semicolonIndex = historyToken.indexOf(';');
-			String ontologyName;
-			String referenceId = null;
-			if(semicolonIndex > -1){
-				ontologyName = historyToken.substring(historyToken.indexOf('=')+1, semicolonIndex);
-				referenceId = historyToken.substring(historyToken.lastIndexOf('=')+1);
-			} else {
-				ontologyName = historyToken.substring(historyToken.indexOf('=')+1);
-			}
+			PathExtractor pathExtractor = new PathExtractor(historyToken, ';').invoke();
+			String ontologyName = pathExtractor.getOntologyName();
+			String referenceId = pathExtractor.getReferenceId();
 
 			final String finalOntologyName = ontologyName;
 			Optional<Ontology> ontologyOpt = ontologies.stream().filter(o -> o.getName().equals(finalOntologyName))
@@ -296,4 +290,5 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 			}
 		}
 	}
+
 }

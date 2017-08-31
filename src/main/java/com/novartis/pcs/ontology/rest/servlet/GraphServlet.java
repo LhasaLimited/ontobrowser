@@ -33,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 
 import com.novartis.pcs.ontology.service.graph.GraphOrientation;
 import com.novartis.pcs.ontology.service.graph.OntologyGraphServiceLocal;
+import com.novartis.pcs.ontology.webapp.client.PathExtractor;
 
 /**
  * A simple graph service
@@ -56,10 +57,10 @@ public class GraphServlet extends HttpServlet {
 		String callback = StringUtils.trimToNull(request.getParameter("callback"));
 		String mediaType = getExpectedMediaType(request);
 				
-		if(pathInfo != null && pathInfo.length() > 1) {	
-			String termRefId = pathInfo.substring(1);
-			String ontologyName = "bao_complete.owl";
-			graph(termRefId, mediaType, orientation, callback, response, ontologyName); //TODO add param!
+		if (pathInfo != null && pathInfo.length() > 1) {
+			PathExtractor pathExtractor = new PathExtractor(pathInfo.substring(1), '/').invoke();
+			graph(pathExtractor.getReferenceId(), mediaType, orientation, callback, response,
+					pathExtractor.getOntologyName()); // TODO add param!
 		} else {
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			response.setContentLength(0);
@@ -162,6 +163,8 @@ public class GraphServlet extends HttpServlet {
 			response.setHeader("Access-Control-Allow-Origin", "*");
 			response.setContentType(mediaType + ";charset=utf-8");
 			response.setHeader("Cache-Control", "public, max-age=0");
+			String fileName = (ontologyId + "_" + termRefId).replaceAll("\\W+", "_") + ".svg";
+			response.setHeader("Content-disposition", "attachment;filename=" + fileName);
 			response.getOutputStream().write(contentBytes);
 		} catch(EntityNotFoundException e) {
 			log("Failed to find term with reference id: " + termRefId, e);

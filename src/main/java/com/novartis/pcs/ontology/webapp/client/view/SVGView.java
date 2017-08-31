@@ -20,6 +20,7 @@ package com.novartis.pcs.ontology.webapp.client.view;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.shared.EventBus;
@@ -29,6 +30,7 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.LayoutPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.impl.HyperlinkImpl;
 import com.novartis.pcs.ontology.entity.Ontology;
@@ -38,13 +40,17 @@ import com.novartis.pcs.ontology.webapp.client.event.ViewTermEvent;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermHandler;
 
 public class SVGView extends OntoBrowserView implements ViewTermHandler, ClickHandler {
+	public static final String HTML = "<a href=\"graphs/$path$\" target=\"_blank\">"
+			+ "<img src=\"images/download.svg\" width=\"24\" height=\"24\" " + "style=\"\" /></a>";
 	private static HyperlinkImpl impl = GWT.create(HyperlinkImpl.class);
 	// need scroll panel for DockLayout otherwise exceptions are raised on resize
+	private final LayoutPanel topPanel = new LayoutPanel();
 	private final ScrollPanel panel = new ScrollPanel();	
 	private final HTML svgContainer = new HTML();
+	private final HTML iconContainer = new HTML();
 
 	private int fixedDocumentSpace;
-	
+
 	public SVGView(EventBus eventBus, OntoBrowserServiceAsync service) {
 		super(eventBus,service);
 				
@@ -52,9 +58,13 @@ public class SVGView extends OntoBrowserView implements ViewTermHandler, ClickHa
 			panel.getElement().setId("svgPanel");
 			//svgContainer.getElement().getStyle().setOverflow(Overflow.AUTO);
 			svgContainer.addClickHandler(this);
-			
+
 			panel.add(svgContainer);
-			initWidget(panel);
+			topPanel.add(panel);
+			topPanel.add(iconContainer);
+			topPanel.setWidgetRightWidth(iconContainer, 10, Style.Unit.PX, 24, Style.Unit.PX);
+			topPanel.setWidgetTopHeight(iconContainer, 10, Style.Unit.PX, 24, Style.Unit.PX);
+			initWidget(topPanel);
 			addStyleName("padded-border");
 			eventBus.addHandler(ViewTermEvent.TYPE, this);
 		} else {
@@ -81,6 +91,8 @@ public class SVGView extends OntoBrowserView implements ViewTermHandler, ClickHa
 					Element panelElement = panel.getElement();
 					panelElement.setScrollLeft(0);
 					panelElement.setScrollTop(0);
+					String replacement = "ontology=" + ontology.getName() + "/term=" + term.getReferenceId();
+					iconContainer.setHTML(HTML.replace("$path$", replacement));
 					element.setInnerHTML(svg);
 	
 					if(panelElement.getScrollWidth() > element.getClientWidth()
@@ -98,7 +110,7 @@ public class SVGView extends OntoBrowserView implements ViewTermHandler, ClickHa
 		Element element = Element.as(nativeEvent.getEventTarget());
 		String href = null;
 		for(Element parent = element; 
-				!svgContainer.getElement().equals(parent); 
+				!svgContainer.getElement().equals(parent);
 				parent = parent.getParentElement()) {
 			if("a".equalsIgnoreCase(parent.getNodeName())) {
 				href = parent.getAttribute("xlink:href");
