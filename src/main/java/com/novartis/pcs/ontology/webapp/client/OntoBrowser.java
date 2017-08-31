@@ -19,7 +19,10 @@ package com.novartis.pcs.ontology.webapp.client;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
@@ -144,11 +147,16 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 			}
 
 			final String finalOntologyName = ontologyName;
-			Ontology ontology = ontologies.stream().filter(o -> o.getName().equals(finalOntologyName)).findFirst().get();
-			if (referenceId == null) {
-				service.loadRootTermFor(ontologyName, new TermAsyncCallback(referenceId, ontology));
-			} else {
-				service.loadTerm(referenceId, new TermAsyncCallback(referenceId, ontology));
+			Optional<Ontology> ontologyOpt = ontologies.stream().filter(o -> o.getName().equals(finalOntologyName))
+					.findFirst();
+
+			if (ontologyOpt.isPresent()) {
+				Ontology ontology = ontologyOpt.get();
+				if (referenceId == null) {
+					service.loadRootTermFor(ontologyName, new TermAsyncCallback(null, ontology));
+				} else {
+					service.loadTerm(referenceId, ontologyName, new TermAsyncCallback(referenceId, ontology));
+				}
 			}
 		}
 	}
@@ -192,32 +200,36 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 		menu.setAnimationEnabled(true);
 
 		for (final Ontology ontology : ontologies) {
-			if(!ontology.isCodelist()) {
-				menu.addItem(ontology.getName(), (Command) () -> History.newItem(PARAM_ONTOLOGY + ontology.getName()));
+			if (!ontology.isCodelist() && ontology.getImportedBy().isEmpty()) {
+				if (ontology.getImportedOntologies().isEmpty()) {
+					menu.addItem(ontology.getName(), getCommand(ontology));
+				} else {
+					MenuBar importedBar = new MenuBar(true);
+					menu.addItem(ontology.getName() + " Set", importedBar);
+					Set<Ontology> shown = new HashSet<>();
+					importedBar.addItem(ontology.getName(), getCommand(ontology));
+					addImportedItems(ontology, shown, importedBar);
+				}
 			}
 		}
 
 		menuBar.insertItem(new MenuItem("Ontology", menu), 0);
 	}
 
-	// private void createOntologyMenu(List<Term> terms) {
-	// MenuBar menu = new MenuBar(true);
-	// menu.setAnimationEnabled(true);
-	//
-	// for(final Term referenceId : terms) {
-	// Ontology ontology = referenceId.getOntology();
-	// if(!ontology.isCodelist()) {
-	// menu.addItem(ontology.getName(), new Command() {
-	// public void execute() {
-	// History.newItem(referenceId.getReferenceId());
-	// }
-	// });
-	// }
-	// }
-	//
-	// menuBar.insertItem(new MenuItem("Ontology", menu), 0);
-	// }
-	
+	private Command getCommand(final Ontology ontology) {
+		return () -> History.newItem(PARAM_ONTOLOGY + ontology.getName());
+	}
+
+	private void addImportedItems(final Ontology ontology, final Set<Ontology> shown, final MenuBar importedBar) {
+		for (Ontology imported : ontology.getImportedOntologies()) {
+			if (!shown.contains(imported)) {
+				importedBar.addItem(imported.getName(), getCommand(imported));
+				shown.add(imported);
+				addImportedItems(imported, shown, importedBar);
+			}
+		}
+	}
+
 	private void createPopups(Curator curator) {
 		if(curator != null) {					
 			CreateChildTermPopup createTermPopup = new CreateChildTermPopup(service, eventBus);

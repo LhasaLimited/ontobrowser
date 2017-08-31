@@ -172,7 +172,7 @@ public class OntologyImportServiceImplArq2TestIT {
 
 	@Test
 	public void shouldSelectRootTermsForOntology() {
-		Term thing = termDAO.loadByReferenceId("Thing");
+		Term thing = termDAO.loadByReferenceId("Thing", "OWL");
 		Collection<Relationship> relationships = ontologyTermService.getRelationships(thing, "OntobrowserTest");
 		Optional<Relationship> topClassRelOpt = findRel(relationships, "OB_00010");
 		Relationship topClassRel = topClassRelOpt.orElseThrow(AssertionError::new);

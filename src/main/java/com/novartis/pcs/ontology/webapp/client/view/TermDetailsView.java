@@ -18,6 +18,7 @@ limitations under the License.
 package com.novartis.pcs.ontology.webapp.client.view;
 
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.ui.Anchor;
@@ -128,7 +129,10 @@ public class TermDetailsView extends OntoBrowserView
 		tabPanel.getTabBar().setTabText(1, "Annotations (" + annotations.size() + ")");
 
 		int row = 0;
-		for (Annotation annotation : annotations) {
+		TreeSet<Annotation> sorted = new TreeSet<>((o1, o2) -> o1.getAnnotationType().getAnnotationType()
+				.compareToIgnoreCase(o2.getAnnotationType().getAnnotationType()));
+		sorted.addAll(annotations);
+		for (Annotation annotation : sorted) {
 			AnnotationType annotationType = annotation.getAnnotationType();
 			annotationGrid.setText(row, 0, annotationType.getLabel());
 			annotationGrid.setText(row, 1, annotation.getAnnotation());

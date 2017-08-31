@@ -95,8 +95,8 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 	}
 
 	@Override
-    public Term loadByReferenceId(String referenceId) {
-    	return termDAO.loadByReferenceId(referenceId.trim(), true);
+	public Term loadByReferenceId(String referenceId, final String ontologyName) {
+		return termDAO.loadByReferenceId(referenceId.trim(), ontologyName, true);
     }
 
 	@Override
@@ -115,13 +115,13 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 	@SuppressWarnings({ "unchecked", "unused" })
 	@Interceptors({OntologySearchServiceListener.class})
 	public Term addRelationship(String termRefId,
-			String relatedTermRefId, String relationshipType,
-			String curatorUsername) throws DuplicateEntityException, InvalidEntityException {
+			String relatedTermRefId, String relationshipType, String curatorUsername, final String ontologyName)
+			throws DuplicateEntityException, InvalidEntityException {
 		Curator curator = curatorDAO.loadByUsername(curatorUsername);
 		Version version = lastUnpublishedVersion(curator);
 		RelationshipType type = relationshipTypeDAO.loadByRelationship(relationshipType);
-		Term term = termDAO.loadByReferenceId(termRefId, true);
-		Term relatedTerm = termDAO.loadByReferenceId(relatedTermRefId);
+		Term term = termDAO.loadByReferenceId(termRefId, ontologyName, true);
+		Term relatedTerm = termDAO.loadByReferenceId(relatedTermRefId, ontologyName);
 				
 		if(curator == null || !curator.isActive()) {
 			throw new InvalidEntityException(curator, "Curator is invalid/inactive");
@@ -150,7 +150,7 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 			String curatorUsername) throws DuplicateEntityException, InvalidEntityException {
 		Curator curator = curatorDAO.loadByUsername(curatorUsername);
 		Version version = lastUnpublishedVersion(curator);
-		Term term = termDAO.loadByReferenceId(termRefId, true);
+		Term term = termDAO.loadByReferenceId(termRefId, null, true);
 		vocabTerm = vocabTermDAO.load(vocabTerm.getId());
 						
 		if(curator == null || !curator.isActive()) {
@@ -205,7 +205,7 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 			throws DuplicateEntityException, InvalidEntityException {
 		Curator curator = curatorDAO.loadByUsername(curatorUsername);
 		Version version = lastUnpublishedVersion(curator);
-		Term term = termDAO.loadByReferenceId(termRefId, true);
+		Term term = termDAO.loadByReferenceId(termRefId, null, true);
 		Collection<Synonym> duplicates = synonymDAO.loadBySynonym(synonym);
 		Datasource datasource = null;
 				
@@ -310,7 +310,7 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 		}
 		
 		if(relatedTermRefId != null) {
-			Term relatedTerm = termDAO.loadByReferenceId(relatedTermRefId);
+			Term relatedTerm = termDAO.loadByReferenceId(relatedTermRefId, ontologyName);
 			RelationshipType type = relationshipTypeDAO.loadByRelationship(relationshipType);
 			
 			StatusChecker.validate(type, relatedTerm);

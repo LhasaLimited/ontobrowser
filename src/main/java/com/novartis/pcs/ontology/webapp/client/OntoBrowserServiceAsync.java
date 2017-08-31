@@ -45,7 +45,8 @@ import com.novartis.pcs.ontology.service.search.result.HTMLSearchResult;
 public interface OntoBrowserServiceAsync {
 	void loadRootTerms(AsyncCallback<List<Term>> callback);
 	void loadCurrentCurator(AsyncCallback<Curator> callback);
-	void loadTerm(String referenceId, AsyncCallback<Term> asyncCallback);
+
+	void loadTerm(String referenceId, final String ontologyName, AsyncCallback<Term> asyncCallback);
 	void loadOntologyTerms(String ontology, AsyncCallback<List<Term>> callback);
 	void loadSVG(String referenceId, String ontologyName, AsyncCallback<String> asyncCallback);
 	void search(String pattern, boolean includeSynonyms, AsyncCallback<List<HTMLSearchResult>> callback);
@@ -64,7 +65,7 @@ public interface OntoBrowserServiceAsync {
 			Synonym.Type type,
 			AsyncCallback<Term> callback);
 	void addRelationship(String termRefId, String relatedTermRefId,
-			String relationship, AsyncCallback<Term> callback);
+			String relationship, final String ontologyName, AsyncCallback<Term> callback);
 	void loadPublicDatasources(AsyncCallback<List<Datasource>> callback);
 	void loadControlledVocabularies(
 			AsyncCallback<List<ControlledVocabulary>> callback);

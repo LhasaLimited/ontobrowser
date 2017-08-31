@@ -107,7 +107,8 @@ import javax.validation.constraints.NotNull;
 						" AND t.ontology_id IN" +
 						"  ( SELECT * FROM imported_hierarchy" +
 						"  )" +
-						" AND subquery.term_id IS NULL")
+						" AND subquery.related_term_id IS NULL or"
+						+ " subquery.related_term_id = (select term_id from term where reference_id = 'Thing')")
 })
 public class Relationship extends VersionedEntity implements ReplaceableEntity<Relationship> {
 	private static final long serialVersionUID = 1L;

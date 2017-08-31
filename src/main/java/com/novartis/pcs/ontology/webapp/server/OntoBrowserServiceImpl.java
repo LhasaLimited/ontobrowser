@@ -141,8 +141,8 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 	}
 
 	@Override
-	public Term loadTerm(String referenceId) {
-		return termService.loadByReferenceId(referenceId);
+	public Term loadTerm(String referenceId, final String ontologyName) {
+		return termService.loadByReferenceId(referenceId, ontologyName);
 	}
 
 	@Override
@@ -214,13 +214,13 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 	
 	@Override
 	public Term addRelationship(String termRefId, String relatedTermRefId,
-			String relationship) throws DuplicateEntityException, InvalidEntityException {
+			String relationship, final String ontologyName) throws DuplicateEntityException, InvalidEntityException {
 		String username = getUsername();
 		
 		logger.info(username + " adding relationship: " 
 				+ termRefId + " " + relationship + " " + relatedTermRefId);
 		
-		return termService.addRelationship(termRefId, relatedTermRefId, relationship, username);
+		return termService.addRelationship(termRefId, relatedTermRefId, relationship, username, ontologyName);
 	}
 	
 	@Override

@@ -16,8 +16,9 @@ limitations under the License.
 
 */
 package com.novartis.pcs.ontology.dao;
+
 import java.util.Collection;
-import java.util.EnumSet;
+import java.util.Set;
 
 import javax.ejb.Local;
 
@@ -33,11 +34,11 @@ public interface TermDAOLocal extends VersionedDAO<Term> {
 	
 	public Collection<Term> loadAll(Ontology ontology);
 	
-	public Collection<Term> loadSubTermsByReferenceId(String referenceId, EnumSet<Status> status);
+	public Collection<Term> loadSubTermsByReferenceId(String referenceId, Set<Status> status);
 	
-	public Term loadByReferenceId(String referenceId);
+	public Term loadByReferenceId(String referenceId, final String ontologyName);
 	
-	public Term loadByReferenceId(String referenceId, boolean loadLazyAssociations);
+	public Term loadByReferenceId(String referenceId, final String ontologyName, boolean loadLazyAssociations);
 	
 	public Term loadByName(String name, Ontology ontology);
 	

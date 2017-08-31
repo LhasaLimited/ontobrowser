@@ -19,21 +19,19 @@ package com.novartis.pcs.ontology.dao;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceUnitUtil;
-import javax.persistence.PersistenceUtil;
 import javax.persistence.Query;
 
 import com.novartis.pcs.ontology.entity.Ontology;
@@ -49,15 +47,22 @@ import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
 @Remote({TermDAORemote.class})
 public class TermDAO extends VersionedEntityDAO<Term> 
 	implements TermDAOLocal, TermDAORemote {
-	
+
 	// Only required for non-Oracle implementation
 	@EJB
 	private RelationshipDAOLocal relationshipDAO;
-	
+
+	private Term thing;
+
     public TermDAO() {
         super();
     }
-    
+
+	@PostConstruct
+	public void postConstruct() {
+		thing = load(1, true);
+	}
+
     @Override
     @SuppressWarnings("unchecked")
     public Collection<Term> loadRoots() {
@@ -75,7 +80,7 @@ public class TermDAO extends VersionedEntityDAO<Term>
     
     @Override
     @SuppressWarnings("unchecked")
-    public Collection<Term> loadSubTermsByReferenceId(String referenceId, EnumSet<Status> status) {
+	public Collection<Term> loadSubTermsByReferenceId(String referenceId, Set<Status> status) {
     	if(isOracle()) {
 	    	// Oracle database hierarchical query implementation. Comment out for non-Oracle databases.
 	    	Query query = entityManager.createNamedQuery(Term.QUERY_SUBTERMS);
@@ -113,15 +118,19 @@ public class TermDAO extends VersionedEntityDAO<Term>
 	}
 
 	@Override
-	public Term loadByReferenceId(String referenceId) {
-		return loadByReferenceId(referenceId, false);
+	public Term loadByReferenceId(String referenceId, final String ontologyName) {
+		return loadByReferenceId(referenceId, ontologyName, false);
 	}
 	
 	@Override
-	public Term loadByReferenceId(String referenceId, boolean loadLazyAssociations) {
+	public Term loadByReferenceId(String referenceId, final String ontologyName, boolean loadLazyAssociations) {
+		if (thing.getReferenceId().equalsIgnoreCase(referenceId)) {
+			return thing;
+		}
 		try {
 			Query query = entityManager.createNamedQuery(Term.QUERY_BY_REF_ID);
 			query.setParameter("referenceId", referenceId.toUpperCase());
+			query.setParameter("ontology_name", ontologyName);
 			Term term = (Term)query.getSingleResult();
 			return loadLazyAssociations ? loadLazyAssociations(term) : term;
 		} catch (NoResultException e) {
@@ -131,12 +140,7 @@ public class TermDAO extends VersionedEntityDAO<Term>
 
 	@Override
 	public Term loadByOntology(final String ontology, final boolean loadLazyAssociations) {
-//		Query query = entityManager.createNamedQuery(Term.QUERY_HIERARCHY_ONTOLOGY);
-//		query.setParameter("ontology", ontology);
-//
-//		List<Term> list = query.getResultList();
-//		Term term = list.isEmpty() ? null : list.get(0);
-		Term term = loadByReferenceId("Thing");
+		Term term = loadByReferenceId("Thing", "OWL");
 		return loadLazyAssociations ? loadLazyAssociations(term) : term;
 	}
 
@@ -165,6 +169,7 @@ public class TermDAO extends VersionedEntityDAO<Term>
 	@Override
 	protected Term loadLazyAssociations(Term term) {
 		if(term != null) {
+			// lazy init may require an optimization
 			term.getCrossReferences().size();
 			term.getRelationships().size();
 			term.getSynonyms().size();

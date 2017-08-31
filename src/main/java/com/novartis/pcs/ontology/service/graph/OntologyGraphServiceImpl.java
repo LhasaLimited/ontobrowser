@@ -77,7 +77,7 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 	@Override
 	public String createGraph(String termRefId, final String ontologyName, GraphOrientation orientation) {
 		try {
-			Term term = termDAO.loadByReferenceId(termRefId);
+			Term term = termDAO.loadByReferenceId(termRefId, ontologyName);
 			String dot = createDOT(term, ontologyName, orientation);
 			return process.submit(dot);
 		} catch(EntityNotFoundException e) {

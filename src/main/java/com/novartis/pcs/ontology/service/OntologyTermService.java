@@ -35,7 +35,7 @@ public interface OntologyTermService {
 	
 	public Collection<Term> loadLastCreated(int max);
 	
-	public Term loadByReferenceId(String referenceId);
+	public Term loadByReferenceId(String referenceId, final String ontologyName);
 	
 	public Collection<RelationshipType> loadAllRelationshipTypes();
 	
@@ -69,7 +69,7 @@ public interface OntologyTermService {
 			throws DuplicateEntityException, InvalidEntityException;
 	
 	public Term addRelationship(String termRefId, String relatedTermRefId,
-			String relationshipType, String curatorUsername) 
+			String relationshipType, String curatorUsername, final String ontologyName)
 			throws DuplicateEntityException, InvalidEntityException;
 	
 	public Term updateTerm(long termId, String definition, String url, 

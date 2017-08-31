@@ -178,7 +178,7 @@ public class TermsServlet extends HttpServlet {
 		
 	private void serialize(String referenceId, HttpServletResponse response) {
 		try {
-			Term term = termDAO.loadByReferenceId(referenceId, true);
+			Term term = termDAO.loadByReferenceId(referenceId, null, true);
 						
 			response.setStatus(HttpServletResponse.SC_OK);
 			response.setHeader("Access-Control-Allow-Origin", "*");

@@ -25,6 +25,7 @@ import javax.persistence.AttributeOverride;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
@@ -66,7 +67,7 @@ public class Ontology extends VersionedEntity implements ReplaceableEntity<Ontol
 	
 	@Column(name = "IS_INTERNAL", nullable = false)
 	private boolean internal;
-	
+
 	@Column(name = "SOURCE_NAMESPACE")
 	private String sourceNamespace;
 	
@@ -97,12 +98,18 @@ public class Ontology extends VersionedEntity implements ReplaceableEntity<Ontol
 	@JoinColumn(name = "REPLACED_BY")
 	private Ontology replacedBy;
 
-	@OneToMany(cascade={CascadeType.ALL})
+	@OneToMany(cascade={CascadeType.ALL}, fetch = FetchType.EAGER)
 	@JoinTable(name = "ONTOLOGY_IMPORTED",
 			joinColumns = @JoinColumn(name = "ONTOLOGY_ID"),
 			inverseJoinColumns = @JoinColumn(name = "IMPORTED_ONTOLOGY_ID"))
 	private Set<Ontology> importedOntologies;
-	
+
+	@OneToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "ONTOLOGY_IMPORTED",
+			joinColumns =  @JoinColumn(name = "IMPORTED_ONTOLOGY_ID"),
+			inverseJoinColumns = @JoinColumn(name = "ONTOLOGY_ID"))
+	private Set<Ontology> importedBy;
+
 	protected Ontology() {
 	}
 
@@ -205,6 +212,14 @@ public class Ontology extends VersionedEntity implements ReplaceableEntity<Ontol
 
 	public void setImportedOntologies(final Set<Ontology> importedOntologies) {
 		this.importedOntologies = importedOntologies;
+	}
+
+	public Set<Ontology> getImportedBy() {
+		return importedBy;
+	}
+
+	public void setImportedBy(final Set<Ontology> importedBy) {
+		this.importedBy = importedBy;
 	}
 
 	@Override

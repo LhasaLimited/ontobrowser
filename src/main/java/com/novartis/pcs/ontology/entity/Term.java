@@ -62,9 +62,6 @@ import com.novartis.pcs.ontology.entity.util.UrlParser;
 			query="select t from Term as t"
 				+ " where t.ontology = :ontology",
 			hints={ @QueryHint(name="org.hibernate.cacheable", value="true") }),
-		@NamedQuery(name=Term.QUERY_BY_REF_ID,
-				query="select t from Term as t where upper(t.referenceId) = :referenceId",
-				hints={ @QueryHint(name="org.hibernate.cacheable", value="true") }),
 		@NamedQuery(name=Term.QUERY_BY_NAME,
 				query="select t from Term as t"
 					+ " where lower(t.name) = :name"
@@ -81,7 +78,11 @@ import com.novartis.pcs.ontology.entity.util.UrlParser;
 					+ " AND status IN (:status)"
 					+ " CONNECT BY NOCYCLE PRIOR term_id = related_term_id"
 					+ " AND status IN (:status))",
-				resultClass=Term.class)
+				resultClass = Term.class),
+		@NamedNativeQuery(name = Term.QUERY_BY_REF_ID, query = Relationship.QUERY_IMPORTED_HIERARCHY
+				+ "select * from TERM t where upper(t.reference_id) = :referenceId and t.ontology_id in "
+				+ "(select * from imported_hierarchy)", hints = {
+						@QueryHint(name = "org.hibernate.cacheable", value = "true") }, resultClass = Term.class),
 })
 public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 	private static final long serialVersionUID = 1L;

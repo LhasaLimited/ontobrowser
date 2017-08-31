@@ -59,7 +59,7 @@ public abstract class OntologyImportServiceBase extends OntologyService
             terms = termDAO.loadAll(ontology);
         }
 
-		terms.add(termDAO.loadByReferenceId("Thing"));
+		terms.add(termDAO.loadByReferenceId("Thing", ontologyName));
         // According to spec OBO files are UTF-8 encoded
         ParseContext context = parse(is, curator, version, ontology, terms);
         saveParsed(ontology, version, context);

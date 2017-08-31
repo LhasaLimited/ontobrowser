@@ -49,7 +49,8 @@ import com.novartis.pcs.ontology.service.search.result.InvalidQuerySyntaxExcepti
 public interface OntoBrowserService extends RemoteService {
 	public Curator loadCurrentCurator();
 	public List<Term> loadRootTerms();
-	public Term loadTerm(String id);
+
+	public Term loadTerm(String id, final String ontologyName);
 	public List<Term> loadOntologyTerms(String ontology);
 	public String loadSVG(String id, final String ontologyName);
 	public List<RelationshipType> loadAllRelationshipTypes();
@@ -72,7 +73,9 @@ public interface OntoBrowserService extends RemoteService {
 	public Term addSynonyms(String termRefId, 
 			Collection<ControlledVocabularyTerm> terms, Synonym.Type type)
 			throws DuplicateEntityException, InvalidEntityException;
-	public Term addRelationship(String termRefId, String relatedTermRefId, String relationship)
+
+	public Term addRelationship(String termRefId, String relatedTermRefId, String relationship,
+			final String ontologyName)
 			throws DuplicateEntityException, InvalidEntityException;
 	
 	public List<Datasource> loadPublicDatasources();

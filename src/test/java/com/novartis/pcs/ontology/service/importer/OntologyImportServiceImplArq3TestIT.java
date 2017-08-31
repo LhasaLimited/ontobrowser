@@ -41,6 +41,7 @@ public class OntologyImportServiceImplArq3TestIT {
 
 	private static final String ROOT_NAME = "assay bioassay component";
 	private static final String ROOT_IRI = "OB_00001";
+	public static final String ONTOLOGY_NAME = "bao_complete.owl";
 	Logger logger = Logger.getLogger(getClass().getName());
 
 	@EJB(beanName = "owlImportService")
@@ -69,15 +70,15 @@ public class OntologyImportServiceImplArq3TestIT {
 				.addPackages(true, "com.novartis.pcs.ontology")
 				.addPackages(false, "org.semanticweb.owlapi.util", "org.coode.owlapi.obo12.parser")
 				.addAsResource("META-INF/persistence-test.xml", "META-INF/persistence.xml")
-				.addAsResource("bao_complete.owl");
+				.addAsResource(ONTOLOGY_NAME);
 	}
 
 	@Before
 	public void loadOntology() throws DuplicateEntityException, InvalidEntityException {
 		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/bao_complete.owl");
-		importService.importOntology("bao_complete.owl", ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
+		importService.importOntology(ONTOLOGY_NAME, ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
 
-		ontology = ontologyDAOLocal.loadByName("bao_complete.owl");
+		ontology = ontologyDAOLocal.loadByName(ONTOLOGY_NAME);
 		assertThat(ontology, notNullValue());
 	}
 
@@ -94,7 +95,7 @@ public class OntologyImportServiceImplArq3TestIT {
 
 	@Test
 	public void shouldLoadTermHierarchy() {
-		Term assayBioAssayComponent = termDAO.loadByReferenceId("BAO_0003112");
+		Term assayBioAssayComponent = termDAO.loadByReferenceId("BAO_0003112", ONTOLOGY_NAME);
 		Collection<Relationship> relationships = relationshipDAO.loadHierarchy(assayBioAssayComponent.getId(),
 				"bao_vocabulary_assay.owl");
 		assertThat(relationships.size(), is(6));

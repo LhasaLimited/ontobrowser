@@ -181,7 +181,7 @@ public class AddRelationshipPopup implements OntoBrowserPopup, ViewTermHandler, 
 			service.addRelationship(currentTerm.getReferenceId(),
 					relatedTerm.getReferenceId(),
 					typeDropBox.getValue(typeDropBox.getSelectedIndex()),
-					new AsyncCallback<Term>() {
+					currentTerm.getOntology().getName(), new AsyncCallback<Term>() {
 				public void onFailure(Throwable caught) {
 					GWT.log("Failed to create new child term", caught);
 					errorLabel.setText(caught.getMessage());
