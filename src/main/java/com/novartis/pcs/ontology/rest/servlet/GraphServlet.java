@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.novartis.pcs.ontology.webapp.client.OntoParams;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -58,9 +59,9 @@ public class GraphServlet extends HttpServlet {
 		String mediaType = getExpectedMediaType(request);
 				
 		if (pathInfo != null && pathInfo.length() > 1) {
-			PathExtractor pathExtractor = new PathExtractor(pathInfo.substring(1), '/').invoke();
-			graph(pathExtractor.getReferenceId(), mediaType, orientation, callback, response,
-					pathExtractor.getOntologyName()); // TODO add param!
+			OntoParams pathExtractor = new PathExtractor(pathInfo.substring(1), "\\/").invoke();
+			graph(pathExtractor, mediaType, orientation, callback, response
+			);
 		} else {
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			response.setContentLength(0);
@@ -123,8 +124,8 @@ public class GraphServlet extends HttpServlet {
 		return mediaType;
 	}
 			
-	private void graph(String termRefId, String mediaType, String orientation,
-					   String callback, HttpServletResponse response, final String ontologyId) {
+	private void graph(final OntoParams params, String mediaType, String orientation,
+					   String callback, HttpServletResponse response) {
 		GraphOrientation graphOrientation = GraphOrientation.TB;
 		
 		if(orientation != null) {
@@ -144,7 +145,7 @@ public class GraphServlet extends HttpServlet {
 		}
 			
 		try {
-			String content = graphService.createGraph(termRefId, ontologyId, graphOrientation);
+			String content = graphService.createGraph(params.getReferenceId(), params.getOntologyName(), graphOrientation, params.isDeep());
 			// JSONP support
 			if(callback != null) {
 				StringBuilder builder = new StringBuilder(
@@ -163,15 +164,15 @@ public class GraphServlet extends HttpServlet {
 			response.setHeader("Access-Control-Allow-Origin", "*");
 			response.setContentType(mediaType + ";charset=utf-8");
 			response.setHeader("Cache-Control", "public, max-age=0");
-			String fileName = (ontologyId + "_" + termRefId).replaceAll("\\W+", "_") + ".svg";
+			String fileName = (params.getOntologyName() + "_" + params.getReferenceId()).replaceAll("\\W+", "_") + ".svg";
 			response.setHeader("Content-disposition", "attachment;filename=" + fileName);
 			response.getOutputStream().write(contentBytes);
 		} catch(EntityNotFoundException e) {
-			log("Failed to find term with reference id: " + termRefId, e);
+			log("Failed to find term with reference id: " + params.getReferenceId(), e);
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			response.setContentLength(0);
 		} catch(Exception e) {
-			log("Failed to create graph for term " + termRefId, e);
+			log("Failed to create graph for term " + params.getReferenceId(), e);
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			response.setContentLength(0);
 		} 

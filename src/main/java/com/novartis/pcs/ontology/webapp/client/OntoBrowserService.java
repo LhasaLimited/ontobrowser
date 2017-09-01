@@ -53,6 +53,7 @@ public interface OntoBrowserService extends RemoteService {
 	public Term loadTerm(String id, final String ontologyName);
 	public List<Term> loadOntologyTerms(String ontology);
 	public String loadSVG(String id, final String ontologyName);
+	public String loadSVGDeep(String id, final String ontologyName);
 	public List<RelationshipType> loadAllRelationshipTypes();
 	public List<Term> loadLastCreatedTerms(int max);
 	

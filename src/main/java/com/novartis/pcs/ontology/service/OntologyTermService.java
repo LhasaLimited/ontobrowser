@@ -91,5 +91,5 @@ public interface OntologyTermService {
 
 	Term loadByOntology(String ontologyName);
 
-	Collection<Relationship> getRelationships(Term term, String ontologyName);
+	Collection<Relationship> getRelationships(Term term, String ontologyName, final boolean deep);
 }

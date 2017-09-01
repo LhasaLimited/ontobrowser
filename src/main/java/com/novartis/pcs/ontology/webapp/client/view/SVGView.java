@@ -29,9 +29,11 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.LayoutPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.ToggleButton;
 import com.google.gwt.user.client.ui.impl.HyperlinkImpl;
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Term;
@@ -48,22 +50,44 @@ public class SVGView extends OntoBrowserView implements ViewTermHandler, ClickHa
 	private final ScrollPanel panel = new ScrollPanel();	
 	private final HTML svgContainer = new HTML();
 	private final HTML iconContainer = new HTML();
-
-	private int fixedDocumentSpace;
+	private final Image treeImage = new Image("images/tree.svg");
+	private final Image treeFoldImage = new Image("images/tree-folded.svg");
+	private Term term;
+	private Ontology ontology;
+	private boolean deepToggled = false;
 
 	public SVGView(EventBus eventBus, OntoBrowserServiceAsync service) {
 		super(eventBus,service);
 				
 		if(supportsSVG()) {
 			panel.getElement().setId("svgPanel");
-			//svgContainer.getElement().getStyle().setOverflow(Overflow.AUTO);
 			svgContainer.addClickHandler(this);
+
+			treeImage.setSize("28px", "28px");
+			treeFoldImage.setSize("28px", "28px");
+			final ToggleButton toggleButton = new ToggleButton(treeFoldImage, treeImage);
+			toggleButton.setStyleName("emptyStyle");
+
+			toggleButton.addClickHandler(event -> {
+				deepToggled = !deepToggled;
+				if (deepToggled) {
+					loadSvgDeep();
+				} else {
+					loadSvg();
+				}
+			});
 
 			panel.add(svgContainer);
 			topPanel.add(panel);
 			topPanel.add(iconContainer);
-			topPanel.setWidgetRightWidth(iconContainer, 10, Style.Unit.PX, 24, Style.Unit.PX);
+			topPanel.add(toggleButton);
+
+			topPanel.setWidgetRightWidth(iconContainer, 20, Style.Unit.PX, 24, Style.Unit.PX);
 			topPanel.setWidgetTopHeight(iconContainer, 10, Style.Unit.PX, 24, Style.Unit.PX);
+
+			topPanel.setWidgetRightWidth(toggleButton, 54, Style.Unit.PX, 28, Style.Unit.PX);
+			topPanel.setWidgetTopHeight(toggleButton, 8, Style.Unit.PX, 28, Style.Unit.PX);
+
 			initWidget(topPanel);
 			addStyleName("padded-border");
 			eventBus.addHandler(ViewTermEvent.TYPE, this);
@@ -76,34 +100,60 @@ public class SVGView extends OntoBrowserView implements ViewTermHandler, ClickHa
 
 	@Override
 	public void onViewTerm(ViewTermEvent event) {
-		final Term term = event.getTerm();
-		final Ontology ontology = event.getOntology();
+		term = event.getTerm();
+		ontology = event.getOntology();
 						
-		if(!ontology.isCodelist()) {			
-			service.loadSVG(term.getReferenceId(), ontology.getName(), new AsyncCallback<String>() {
-				public void onFailure(Throwable caught) {
-					GWT.log("Failed to load SVG", caught);
-					ErrorView.instance().onUncaughtException(caught);
-				}
-	
-				public void onSuccess(String svg) {
-					Element element = svgContainer.getElement();
-					Element panelElement = panel.getElement();
-					panelElement.setScrollLeft(0);
-					panelElement.setScrollTop(0);
-					String replacement = "ontology=" + ontology.getName() + "/term=" + term.getReferenceId();
-					iconContainer.setHTML(HTML.replace("$path$", replacement));
-					element.setInnerHTML(svg);
-	
-					if(panelElement.getScrollWidth() > element.getClientWidth()
-							|| panelElement.getScrollHeight() > element.getClientHeight()) {
-						scrollSVG(term.getReferenceId());
-					}
-				}
-			});
+		if (!ontology.isCodelist()) {
+			if (deepToggled) {
+				loadSvgDeep();
+			} else {
+				loadSvg();
+			}
 		}
 	}
-	
+
+	private void loadSvg() {
+		service.loadSVG(term.getReferenceId(), ontology.getName(), new AsyncCallback<String>() {
+			public void onFailure(Throwable caught) {
+				GWT.log("Failed to load SVG", caught);
+				ErrorView.instance().onUncaughtException(caught);
+			}
+
+			public void onSuccess(String svg) {
+				appendSvg(svg);
+			}
+		});
+	}
+
+	private void loadSvgDeep() {
+		service.loadSVGDeep(term.getReferenceId(), ontology.getName(), new AsyncCallback<String>() {
+			public void onFailure(Throwable caught) {
+				GWT.log("Failed to load SVG", caught);
+				ErrorView.instance().onUncaughtException(caught);
+			}
+
+			public void onSuccess(String svg) {
+				appendSvg(svg);
+			}
+		});
+	}
+
+	private void appendSvg(final String svg) {
+		Element element = svgContainer.getElement();
+		Element panelElement = panel.getElement();
+		panelElement.setScrollLeft(0);
+		panelElement.setScrollTop(0);
+		String replacement = "ontology=" + ontology.getName() + "/term=" + term.getReferenceId() + "/deep="
+				+ deepToggled;
+		iconContainer.setHTML(HTML.replace("$path$", replacement));
+		element.setInnerHTML(svg);
+
+		if (panelElement.getScrollWidth() > element.getClientWidth()
+				|| panelElement.getScrollHeight() > element.getClientHeight()) {
+			scrollSVG(term.getReferenceId());
+		}
+	}
+
 	@Override
 	public void onClick(ClickEvent event) {
 		NativeEvent nativeEvent = event.getNativeEvent();

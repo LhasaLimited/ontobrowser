@@ -97,7 +97,7 @@ public class OntologyImportServiceImplArq3TestIT {
 	public void shouldLoadTermHierarchy() {
 		Term assayBioAssayComponent = termDAO.loadByReferenceId("BAO_0003112", ONTOLOGY_NAME);
 		Collection<Relationship> relationships = relationshipDAO.loadHierarchy(assayBioAssayComponent.getId(),
-				"bao_vocabulary_assay.owl");
+				"bao_vocabulary_assay.owl", false);
 		assertThat(relationships.size(), is(6));
 		Set<String> termNames = relationships.stream().map(r -> r.getTerm().getName()).collect(Collectors.toSet());
 		assertThat(termNames, is(ImmutableSet.of("bioassay", "bioassay specification", "bioassay type",

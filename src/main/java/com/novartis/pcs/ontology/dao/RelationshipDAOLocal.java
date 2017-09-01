@@ -31,7 +31,7 @@ public interface RelationshipDAOLocal extends VersionedDAO<Relationship> {
 	
 	public Collection<Relationship> loadByRelatedTermRefId(String termRefId);
 	
-	public Collection<Relationship> loadHierarchy(long termId, final String ontologyId);
+	public Collection<Relationship> loadHierarchy(long termId, final String ontologyId, final boolean deep);
 
-	List<Object[]> loadHierarchy(String ontologyName);
+	List<Object[]> loadHierarchy(String ontologyName, final boolean deep);
 }

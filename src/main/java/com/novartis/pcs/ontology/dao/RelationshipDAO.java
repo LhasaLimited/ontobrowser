@@ -64,7 +64,7 @@ public class RelationshipDAO extends VersionedEntityDAO<Relationship>
     
 	@Override
 	@SuppressWarnings("unchecked")
-	public Collection<Relationship> loadHierarchy(long termId, final String ontologyId) {
+	public Collection<Relationship> loadHierarchy(long termId, final String ontologyId, final boolean deep) {
 		if(isOracle()) {
 			// Oracle database hierarchical query implementation.
 			Query query = entityManager.createNamedQuery(Relationship.QUERY_HIERARCHY);
@@ -72,6 +72,7 @@ public class RelationshipDAO extends VersionedEntityDAO<Relationship>
 	       	//query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 			query.setParameter("termId", termId);
 			query.setParameter("ontology_name", ontologyId);
+			query.setParameter("deep", deep ? 1 : 0);
 			List<Object[]> rows = query.getResultList();
 			return mapRelationships(rows);
 		} else {
@@ -116,12 +117,13 @@ public class RelationshipDAO extends VersionedEntityDAO<Relationship>
 	}
 
 	@Override
-	public List<Object[]> loadHierarchy(final String ontologyName) {
+	public List<Object[]> loadHierarchy(final String ontologyName, final boolean deep) {
 		if (isOracle()) {
 			Query query = entityManager.createNamedQuery(Relationship.QUERY_HIERARCHY_ONTOLOGY);
 			// Setting cache hint causes exception due to hibernate bug (https://hibernate.atlassian.net/browse/HHH-9111)
 			//query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 			query.setParameter("ontology_name", ontologyName);
+//			query.setParameter("deep", deep ? 1 : 0);
 			return (List<Object[]>) query.getResultList();
 		} else {
 			throw new RuntimeException("Not yet implemented");

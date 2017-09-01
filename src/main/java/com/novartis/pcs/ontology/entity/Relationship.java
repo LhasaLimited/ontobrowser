@@ -75,14 +75,14 @@ import javax.validation.constraints.NotNull;
 					+ " UNION ALL"
 					+ " SELECT r.*, CONNECT_BY_ISLEAF" 
 					+ " FROM term_relationship r"
-					+ " WHERE LEVEL = 1"
+					+ " WHERE (LEVEL = 1 OR 1 = :deep)"
 					+ " AND r.ontology_id in (select * from imported_hierarchy)"
 					+ " AND r.status IN ('PENDING','APPROVED')"
 					+ " START WITH r.related_term_id = :termId"
 					+ " AND r.status IN ('PENDING','APPROVED')"
 					+ " CONNECT BY NOCYCLE PRIOR r.term_id = r.related_term_id"
 					+ " AND r.status IN ('PENDING','APPROVED')"
-					+ " AND LEVEL <= 2)",
+					+ " AND ( LEVEL <= 2 OR 1 = :deep))",
 				resultSetMapping="RelationshipHierarchy"),
 		@NamedNativeQuery(name=Relationship.QUERY_HIERARCHY_ONTOLOGY,
 				query= Relationship.QUERY_IMPORTED_HIERARCHY +

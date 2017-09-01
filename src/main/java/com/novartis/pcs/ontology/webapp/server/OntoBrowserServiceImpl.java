@@ -54,6 +54,7 @@ import com.novartis.pcs.ontology.service.OntologyCuratorServiceLocal;
 import com.novartis.pcs.ontology.service.OntologyServiceLocal;
 import com.novartis.pcs.ontology.service.OntologySynonymServiceLocal;
 import com.novartis.pcs.ontology.service.OntologyTermServiceLocal;
+import com.novartis.pcs.ontology.service.graph.GraphOrientation;
 import com.novartis.pcs.ontology.service.graph.OntologyGraphServiceLocal;
 import com.novartis.pcs.ontology.service.search.OntologySearchServiceLocal;
 import com.novartis.pcs.ontology.service.search.result.HTMLSearchResult;
@@ -153,6 +154,11 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 	@Override
 	public String loadSVG(String referenceId, final String ontologyName) {
 		return graphService.createGraph(referenceId, ontologyName);
+	}
+
+	@Override
+	public String loadSVGDeep(String referenceId, final String ontologyName) {
+		return graphService.createGraph(referenceId, ontologyName, GraphOrientation.LR, true);
 	}
 	
 	@Override

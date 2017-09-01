@@ -534,12 +534,12 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 	}
 
 	@Override
-	public Collection<Relationship> getRelationships(final Term term, final String ontologyName) {
+	public Collection<Relationship> getRelationships(final Term term, final String ontologyName, final boolean deep) {
 		Collection<Relationship> hierarchy;
 		if (term.getReferenceId().equals("Thing")) {
-			hierarchy = toHierarchy(relationshipDAO.loadHierarchy(ontologyName));
+			hierarchy = toHierarchy(relationshipDAO.loadHierarchy(ontologyName, deep));
 		} else {
-			hierarchy = relationshipDAO.loadHierarchy(term.getId(), ontologyName);
+			hierarchy = relationshipDAO.loadHierarchy(term.getId(), ontologyName, deep);
 		}
 		return hierarchy;
 	}

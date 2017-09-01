@@ -113,4 +113,5 @@ public interface OntoBrowserServiceAsync {
 	void loadOntologies(AsyncCallback<List<Ontology>> callback);
 	void loadRootTermFor(String ontologyName, AsyncCallback<Term> callback);
 
+	void loadSVGDeep(String referenceId, String name, AsyncCallback<String> callback);
 }

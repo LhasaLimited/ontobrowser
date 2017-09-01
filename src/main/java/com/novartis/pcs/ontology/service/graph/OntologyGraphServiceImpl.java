@@ -71,14 +71,14 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
     		
 	@Override
 	public String createGraph(String termRefId, String ontologyName) {
-		return createGraph(termRefId, ontologyName, GraphOrientation.TB);
+		return createGraph(termRefId, ontologyName, GraphOrientation.TB, false);
 	}
 	
 	@Override
-	public String createGraph(String termRefId, final String ontologyName, GraphOrientation orientation) {
+	public String createGraph(String termRefId, final String ontologyName, GraphOrientation orientation, final boolean deep) {
 		try {
 			Term term = termDAO.loadByReferenceId(termRefId, ontologyName);
-			String dot = createDOT(term, ontologyName, orientation);
+			String dot = createDOT(term, ontologyName, orientation, deep);
 			return process.submit(dot);
 		} catch(EntityNotFoundException e) {
 			String msg = "Failed to create graph for term " 
@@ -93,20 +93,10 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 		}
 	}
 	
-	private String createDOT(Term term, final String ontologyName, GraphOrientation orientation) throws IOException {
+	private String createDOT(Term term, final String ontologyName, GraphOrientation orientation, final boolean deep) throws IOException {
 		StringBuilder dot = new StringBuilder(2048);
-		Collection<Relationship> hierarchy = ontologyTermService.getRelationships(term, ontologyName);
-
-		Collection<Term> terms = new LinkedHashSet<Term>();
-		terms.add(term); // for case where term is the top of the tree and hierarchy is empty		
-		for (Relationship relationship : hierarchy) {
-			if(StatusChecker.isValid(relationship) 
-					&& StatusChecker.isValid(relationship.getTerm())
-					&& StatusChecker.isValid(relationship.getRelatedTerm())) {
-				terms.add(relationship.getTerm());
-				terms.add(relationship.getRelatedTerm());
-			}
-		}
+		Collection<Relationship> hierarchy = ontologyTermService.getRelationships(term, ontologyName, deep);
+		Collection<Term> terms = collectTerms(term, hierarchy);
 				
 		dot.append("digraph \"").append(escape(term.getName())).append("\" {").append(EOL);
 		dot.append("\tgraph [rankdir=")
@@ -148,7 +138,7 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 					.append("\" [edgetooltip=\"").append(escape(type))
 					.append("\", color=\"").append(color).append("\"];").append(EOL);
 				
-				if(term.equals(relationship.getRelatedTerm()) && !relationship.isLeaf()) {
+				if(!deep && term.equals(relationship.getRelatedTerm()) && !relationship.isLeaf()) {
 					String grandChildColour = "#000000";				
 					String grandChildId = "invisible" + (++invisibleCount);
 					
@@ -166,6 +156,20 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 		dot.append("}").append(EOL);
 		
 		return dot.toString();
+	}
+
+	private Collection<Term> collectTerms(final Term term, final Collection<Relationship> hierarchy) {
+		Collection<Term> terms = new LinkedHashSet<>();
+		terms.add(term); // for case where term is the top of the tree and hierarchy is empty
+		for (Relationship relationship : hierarchy) {
+			if(StatusChecker.isValid(relationship)
+					&& StatusChecker.isValid(relationship.getTerm())
+					&& StatusChecker.isValid(relationship.getRelatedTerm())) {
+				terms.add(relationship.getTerm());
+				terms.add(relationship.getRelatedTerm());
+			}
+		}
+		return terms;
 	}
 
 	private String escape(String s) {
