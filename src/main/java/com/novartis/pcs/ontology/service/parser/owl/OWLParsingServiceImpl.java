@@ -4,7 +4,6 @@ import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,15 +32,10 @@ import org.semanticweb.owlapi.util.OWLObjectVisitorExAdapter;
 import org.semanticweb.owlapi.util.OWLOntologyWalker;
 
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
-import com.novartis.pcs.ontology.entity.AnnotationType;
-import com.novartis.pcs.ontology.entity.Curator;
-import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
-import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Term;
-import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.entity.VersionedEntity;
 import com.novartis.pcs.ontology.service.parser.ParseContext;
 
@@ -64,17 +58,13 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 	}
 
 	@Override
-	public ParseContext parseOWLontology(InputStream inputStream, Collection<RelationshipType> relationshipTypes,
-			Collection<Datasource> datasources, Curator curator, Version version, Ontology mainOntology,
-			final Collection<AnnotationType> annotationTypes, final Collection<Term> terms)
+	public ParseContext parseOWLontology(InputStream inputStream, Ontology mainOntology, final OWLParserContext context)
 			throws OWLOntologyCreationException {
 
 		final OWLOntologyManager owlOntologyManager = OWLManager.createOWLOntologyManager();
 		OWLOntology owlOntology = owlOntologyManager.loadOntologyFromOntologyDocument(inputStream);
 
 		Map<String, Ontology> ontologyMap = new HashMap<>();
-		final OWLParserContext context = new OWLParserContext(curator, version, datasources, mainOntology,
-				relationshipTypes, annotationTypes, terms);
 		List<OWLOntology> sortedImportsClosure = owlOntologyManager.getSortedImportsClosure(owlOntology);
 
 		List<OWLOntology> reversed = Lists.reverse(sortedImportsClosure);
@@ -85,9 +75,9 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 				if(reversed.lastIndexOf(importedOwlOntology) == reversed.size() - 1 ){
 					ontology = mainOntology;
 				} else {
-					ontology = new Ontology(importedName, curator, version);
+					ontology = new Ontology(importedName, context.getCurator(), context.getVersion());
 					ontology.setStatus(VersionedEntity.Status.APPROVED);
-					ontology.setApprovedVersion(version);
+					ontology.setApprovedVersion(context.getVersion());
 					ontology.setInternal(false);
 				}
 			}

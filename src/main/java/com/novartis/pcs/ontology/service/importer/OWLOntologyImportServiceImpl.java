@@ -27,6 +27,7 @@ import javax.ejb.Local;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
 
+import com.novartis.pcs.ontology.service.parser.owl.OWLParserContext;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 import com.novartis.pcs.ontology.dao.AnnotationTypeDAOLocal;
@@ -71,8 +72,9 @@ public class OWLOntologyImportServiceImpl extends OntologyImportServiceBase {
             Collection<Datasource> datasources = datasourceDAO.loadAll();
             Collection<AnnotationType> annotationTypes = annotationTypeDAO.loadAll();
 
-            context = owlParsingService.parseOWLontology(is, relationshipTypes, datasources, curator, version,
-					ontology, annotationTypes, terms);
+			OWLParserContext parserContext = new OWLParserContext(curator, version, datasources, ontology,
+					relationshipTypes, annotationTypes, terms);
+			context = owlParsingService.parseOWLontology(is, ontology, parserContext);
 
         } catch (OWLOntologyCreationException e) {
             logger.log(Level.WARNING, "IO exception: ", e);
