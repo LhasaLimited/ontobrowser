@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ejb.EJB;
 import javax.ejb.Local;
@@ -537,11 +539,35 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 	public Collection<Relationship> getRelationships(final Term term, final String ontologyName, final boolean deep) {
 		Collection<Relationship> hierarchy;
 		if (term.getReferenceId().equals("Thing")) {
-			hierarchy = toHierarchy(relationshipDAO.loadHierarchy(ontologyName, deep));
+			hierarchy = addVirtual(relationshipDAO.loadHierarchy(ontologyName, deep), deep);
 		} else {
-			hierarchy = relationshipDAO.loadHierarchy(term.getId(), ontologyName, deep);
+			hierarchy = addVirtual(relationshipDAO.loadHierarchy(term.getId(), ontologyName, deep), true);
 		}
 		return hierarchy;
+	}
+
+	/**
+	 * Adds virtual relationships from Term without Relationships to the Thing term
+	 */
+	private Collection<Relationship> addVirtual(final Collection<Relationship> relationships, final boolean deep) {
+		List<Term> rootTerms = relationships.stream()
+				.flatMap(relationship -> Stream.of(relationship.getTerm(), relationship.getRelatedTerm())).distinct()
+				.filter(t -> t.getRelationships().isEmpty()).collect(Collectors.toList());
+		Term thing = termDAO.loadByReferenceId("Thing", "OWL");
+		RelationshipType isA = relationshipTypeDAO.loadByRelationship("is_a");
+		List<Relationship> virtualRelationships = rootTerms.stream().map(term -> {
+			Relationship relationship = new Relationship(term, thing, isA, null, null);
+			term.getRelationships().remove(relationship);
+			relationship.setStatus(Status.APPROVED);
+			relationship.setLeaf(false); // obliczyć
+			return relationship;
+		}).collect(Collectors.toList());
+		if (deep) {
+			relationships.addAll(virtualRelationships);
+			return relationships;
+		} else {
+			return virtualRelationships;
+		}
 	}
 
 	private Collection<Relationship> toHierarchy(final List<Object[]> objects) {

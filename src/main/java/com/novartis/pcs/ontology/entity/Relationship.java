@@ -86,29 +86,45 @@ import javax.validation.constraints.NotNull;
 				resultSetMapping="RelationshipHierarchy"),
 		@NamedNativeQuery(name=Relationship.QUERY_HIERARCHY_ONTOLOGY,
 				query= Relationship.QUERY_IMPORTED_HIERARCHY +
-						"SELECT" +
-						"  t.TERM_ID AS TERM_ID," +
-						"  (SELECT term_id FROM term WHERE reference_id = 'Thing'" +
-						"  ) AS RELATED_TERM_ID ," +
-						"  (SELECT RELATIONSHIP_TYPE_ID" +
-						"  FROM RELATIONSHIP_TYPE" +
-						"  WHERE Relationship_Type.Relationship_Type = 'is_a'" +
-						"  ) AS RELATIONSHIP_TYPE_ID," +
-						"  (select count(1) from term_relationship tr where tr.related_term_id = t.term_id and tr.ontology_id in (select * from "
-						+ "imported_hierarchy))  AS CONNECT_BY_ISLEAF" +
-						" FROM term t" +
-						" LEFT OUTER JOIN" +
-						"  (SELECT *" +
-						"  FROM term_relationship tr" +
-						"  WHERE tr.status    IN ('PENDING','APPROVED')" +
-						"  AND tr.ontology_id IN ( SELECT * FROM imported_hierarchy) ) subquery" +
-						" ON t.term_id       = subquery.term_id" +
-						" WHERE t.status    IN ('PENDING','APPROVED')" +
-						" AND t.ontology_id IN" +
-						"  ( SELECT * FROM imported_hierarchy" +
-						"  )" +
-						" AND subquery.related_term_id IS NULL or"
-						+ " subquery.related_term_id = (select term_id from term where reference_id = 'Thing')")
+						// @formatter:off
+						" SELECT DISTINCT *" +
+						" FROM" +
+						"  (SELECT r.*," +
+						"    CONNECT_BY_ISLEAF" +
+						"  FROM term_relationship r" +
+						"  WHERE " +
+						"  r.status                   IN ('PENDING','APPROVED')" +
+						"    START WITH r.related_term_id IN" +  // start with terms not present in term_relationship.term_id
+						"    (SELECT t.term_id" +
+						"    FROM term t" +
+						"    LEFT OUTER JOIN" +
+						"      (SELECT *" +
+						"      FROM term_relationship tr" +
+						"      WHERE tr.status    IN ('PENDING','APPROVED')" +
+						"      AND tr.ontology_id IN" +
+						"        ( SELECT * FROM imported_hierarchy" +
+						"        )" +
+						"      ) subquery" +
+						"    ON t.term_id       = subquery.term_id" +
+						"    WHERE t.status    IN ('PENDING','APPROVED')" +
+						"    AND t.ontology_id IN" +
+						"      ( SELECT * FROM imported_hierarchy" +
+						"      )" +
+						"    AND subquery.related_term_id IS NULL" +
+						"    OR subquery.related_term_id   =" +
+						"      (SELECT term_id FROM term WHERE reference_id = 'Thing'" + // which may have relationship with THING
+						"      )" +
+						"    )" +
+						"  AND r.status                        IN ('PENDING','APPROVED')" +
+						"    CONNECT BY NOCYCLE PRIOR r.term_id = r.related_term_id" +
+						"  AND r.ontology_id                   IN" +
+						"    (SELECT * FROM imported_hierarchy" +
+						"    )" +
+						"  AND r.status IN ('PENDING','APPROVED')" +
+						"  AND ( LEVEL <= 0 OR 1 = :deep)" +
+						"  )" ,
+						// @formatter:on
+				resultSetMapping="RelationshipHierarchy")
 })
 public class Relationship extends VersionedEntity implements ReplaceableEntity<Relationship> {
 	private static final long serialVersionUID = 1L;

@@ -117,14 +117,14 @@ public class RelationshipDAO extends VersionedEntityDAO<Relationship>
 	}
 
 	@Override
-	public List<Object[]> loadHierarchy(final String ontologyName, final boolean deep) {
+	public Collection<Relationship> loadHierarchy(final String ontologyName, final boolean deep) {
 		if (isOracle()) {
 			Query query = entityManager.createNamedQuery(Relationship.QUERY_HIERARCHY_ONTOLOGY);
 			// Setting cache hint causes exception due to hibernate bug (https://hibernate.atlassian.net/browse/HHH-9111)
 			//query.setHint("org.hibernate.cacheable", Boolean.TRUE);
 			query.setParameter("ontology_name", ontologyName);
-//			query.setParameter("deep", deep ? 1 : 0);
-			return (List<Object[]>) query.getResultList();
+			query.setParameter("deep", deep ? 1 : 0);
+			return mapRelationships(query.getResultList());
 		} else {
 			throw new RuntimeException("Not yet implemented");
 		}

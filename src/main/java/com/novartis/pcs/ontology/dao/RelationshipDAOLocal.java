@@ -16,8 +16,8 @@ limitations under the License.
 
 */
 package com.novartis.pcs.ontology.dao;
+
 import java.util.Collection;
-import java.util.List;
 
 import javax.ejb.Local;
 
@@ -27,11 +27,11 @@ import com.novartis.pcs.ontology.entity.Relationship;
 @Local
 public interface RelationshipDAOLocal extends VersionedDAO<Relationship> {
 	
-	public Collection<Relationship> loadByRelatedTermId(long termId);
-	
-	public Collection<Relationship> loadByRelatedTermRefId(String termRefId);
-	
-	public Collection<Relationship> loadHierarchy(long termId, final String ontologyId, final boolean deep);
+	Collection<Relationship> loadByRelatedTermId(long termId);
 
-	List<Object[]> loadHierarchy(String ontologyName, final boolean deep);
+	Collection<Relationship> loadByRelatedTermRefId(String termRefId);
+
+	Collection<Relationship> loadHierarchy(long termId, final String ontologyId, final boolean deep);
+
+	Collection<Relationship> loadHierarchy(String ontologyName, final boolean deep);
 }
