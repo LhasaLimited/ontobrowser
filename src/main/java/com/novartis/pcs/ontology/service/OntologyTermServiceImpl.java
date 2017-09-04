@@ -20,10 +20,10 @@ package com.novartis.pcs.ontology.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ejb.EJB;
 import javax.ejb.Local;
@@ -540,8 +540,12 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 		Collection<Relationship> hierarchy;
 		if (term.getReferenceId().equals("Thing")) {
 			hierarchy = addVirtual(relationshipDAO.loadHierarchy(ontologyName, deep), deep);
+			List<Term> independentTerms = termDAO.loadIndependentTerms(ontologyName);
+			hierarchy.addAll(createRelationshipsToThing(independentTerms, true));
 		} else {
-			hierarchy = addVirtual(relationshipDAO.loadHierarchy(term.getId(), ontologyName, deep), true);
+			Collection<Relationship> relationships = relationshipDAO.loadHierarchy(term.getId(), ontologyName, deep);
+			hierarchy = relationships.isEmpty() ? createRelationshipsToThing(Collections.singletonList(term), false)
+					: addVirtual(relationships, true);
 		}
 		return hierarchy;
 	}
@@ -551,23 +555,28 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 	 */
 	private Collection<Relationship> addVirtual(final Collection<Relationship> relationships, final boolean deep) {
 		List<Term> rootTerms = relationships.stream()
-				.flatMap(relationship -> Stream.of(relationship.getTerm(), relationship.getRelatedTerm())).distinct()
+				.map(Relationship::getRelatedTerm).distinct()
 				.filter(t -> t.getRelationships().isEmpty()).collect(Collectors.toList());
-		Term thing = termDAO.loadByReferenceId("Thing", "OWL");
-		RelationshipType isA = relationshipTypeDAO.loadByRelationship("is_a");
-		List<Relationship> virtualRelationships = rootTerms.stream().map(term -> {
-			Relationship relationship = new Relationship(term, thing, isA, null, null);
-			term.getRelationships().remove(relationship);
-			relationship.setStatus(Status.APPROVED);
-			relationship.setLeaf(false); // obliczyć
-			return relationship;
-		}).collect(Collectors.toList());
+		// as those terms comes from relationships, they are not leafs
+		List<Relationship> virtualRelationships = createRelationshipsToThing(rootTerms, false);
 		if (deep) {
 			relationships.addAll(virtualRelationships);
 			return relationships;
 		} else {
 			return virtualRelationships;
 		}
+	}
+
+	private List<Relationship> createRelationshipsToThing(final List<Term> rootTerms, final boolean leaf) {
+		Term thing = termDAO.loadByReferenceId("Thing", "OWL");
+		RelationshipType isA = relationshipTypeDAO.loadByRelationship("is_a");
+		return rootTerms.stream().map(term -> {
+			Relationship relationship = new Relationship(term, thing, isA, null, null);
+			term.getRelationships().remove(relationship);
+			relationship.setStatus(Status.APPROVED);
+			relationship.setLeaf(leaf); // obliczyć
+			return relationship;
+		}).collect(Collectors.toList());
 	}
 
 	private Collection<Relationship> toHierarchy(final List<Object[]> objects) {

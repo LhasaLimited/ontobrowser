@@ -165,7 +165,14 @@ public class TermDAO extends VersionedEntityDAO<Term>
 		Term term = list.isEmpty() ? null : list.get(0);
 		return loadLazyAssociations ? loadLazyAssociations(term) : term;
 	}
-	
+
+	@Override
+	public List<Term> loadIndependentTerms(final String ontology) {
+		Query query = entityManager.createNamedQuery(Term.QUERY_NOT_RELATED);
+		query.setParameter("ontology_name", ontology);
+		return (List<Term>) query.getResultList();
+	}
+
 	@Override
 	protected Term loadLazyAssociations(Term term) {
 		if(term != null) {

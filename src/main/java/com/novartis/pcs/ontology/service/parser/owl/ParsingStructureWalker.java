@@ -8,6 +8,7 @@ package com.novartis.pcs.ontology.service.parser.owl;
 
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
+import static org.semanticweb.owlapi.vocab.OWLRDFVocabulary.OWL_THING;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +19,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.novartis.pcs.ontology.service.parser.owl.handlers.TermDeprecatedHandler;
 import org.semanticweb.owlapi.model.ClassExpressionType;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
@@ -109,6 +109,7 @@ import com.novartis.pcs.ontology.service.parser.owl.handlers.TermAnnotationHandl
 import com.novartis.pcs.ontology.service.parser.owl.handlers.TermCommentHandler;
 import com.novartis.pcs.ontology.service.parser.owl.handlers.TermCrossReferenceHandler;
 import com.novartis.pcs.ontology.service.parser.owl.handlers.TermDefinitionHandler;
+import com.novartis.pcs.ontology.service.parser.owl.handlers.TermDeprecatedHandler;
 import com.novartis.pcs.ontology.service.parser.owl.handlers.TermLabelHandler;
 import com.novartis.pcs.ontology.service.parser.owl.handlers.TermReplacedByHandler;
 import com.novartis.pcs.ontology.service.parser.owl.handlers.TermSynonymHandler;
@@ -256,6 +257,9 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		if (relationshipTypesSet.contains(isARelationship.getRelationship())) {
 			logger.log(INFO, "Duplicated relationship {0} {1} {2}", new String[]{term.getReferenceId(),
 					relatedTerm.getReferenceId(), isARelationship.getRelationship()});
+		} else if (relatedTerm.getReferenceId().equalsIgnoreCase(OWL_THING.getShortForm())) {
+			logger.log(INFO, "Subclass to Thing dropped for {0} to {1]",
+					new String[] { term.getReferenceId(), relatedTerm.getReferenceId() });
 		} else {
 			relationshipTypesSet.add(isARelationship.getRelationship());
 			Relationship relationship = createRelationship(relatedTerm, term, isARelationship, context.getOntology());

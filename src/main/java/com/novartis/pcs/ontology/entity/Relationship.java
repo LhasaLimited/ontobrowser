@@ -111,9 +111,6 @@ import javax.validation.constraints.NotNull;
 						"      ( SELECT * FROM imported_hierarchy" +
 						"      )" +
 						"    AND subquery.related_term_id IS NULL" +
-						"    OR subquery.related_term_id   =" +
-						"      (SELECT term_id FROM term WHERE reference_id = 'Thing'" + // which may have relationship with THING
-						"      )" +
 						"    )" +
 						"  AND r.status                        IN ('PENDING','APPROVED')" +
 						"    CONNECT BY NOCYCLE PRIOR r.term_id = r.related_term_id" +
@@ -137,7 +134,8 @@ public class Relationship extends VersionedEntity implements ReplaceableEntity<R
 	public static final String QUERY_IMPORTED_HIERARCHY = "WITH imported_hierarchy AS" +
 			" ( select distinct oi.Imported_Ontology_Id from ontology o join ontology_imported oi on o.ontology_id = oi.ontology_id" +
 			" start with o.ontology_name = :ontology_name" +
-			" connect by prior Oi.Imported_Ontology_Id = O.Ontology_Id " +
+			" connect by prior Oi.Imported_Ontology_Id = O.Ontology_Id"
+			+
 			" UNION select ontology_id from ontology where ontology_name = :ontology_name)";
 
 	@NotNull

@@ -83,7 +83,12 @@ import com.novartis.pcs.ontology.entity.util.UrlParser;
 				+ "select * from TERM t where upper(t.reference_id) = :referenceId and t.ontology_id in "
 				+ "(select * from imported_hierarchy)", hints = {
 						@QueryHint(name = "org.hibernate.cacheable", value = "true") }, resultClass = Term.class),
-})
+		@NamedNativeQuery(name = Term.QUERY_NOT_RELATED, query = Relationship.QUERY_IMPORTED_HIERARCHY
+				+ " select * from term t" + "    where" + "    t.ontology_id in (select * from imported_hierarchy) "
+				+ "    and not exists " + "    (select Tr.term_relationship_id from term_relationship tr "
+				+ "    where tr.term_id = t.term_id or tr.related_term_id = t.term_id"
+				+ "	  and tr.ontology_id in (select * from imported_hierarchy))"
+				+ " and t.reference_id != 'Thing'", resultClass = Term.class) })
 public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 	private static final long serialVersionUID = 1L;
 	
@@ -92,6 +97,9 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 	public static final String QUERY_BY_REF_ID = "Term.loadByReferenceId";
 	public static final String QUERY_BY_NAME = "Term.loadByName";
 	public static final String QUERY_SUBTERMS = "Term.loadSubTermsByReferenceId";
+
+	/** Terms without relationships - virtual children of owl:Thing */
+	public static final String QUERY_NOT_RELATED = "Term.loadNonRelated";
 
 	@NotNull
 	@Valid
