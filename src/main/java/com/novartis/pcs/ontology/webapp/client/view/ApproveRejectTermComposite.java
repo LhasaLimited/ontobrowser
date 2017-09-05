@@ -29,6 +29,7 @@ import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.service.util.StatusChecker;
+import com.novartis.pcs.ontology.webapp.client.OntoBrowser;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 import com.novartis.pcs.ontology.webapp.client.event.RelationshipDeletedEvent;
 import com.novartis.pcs.ontology.webapp.client.event.SynonymDeletedEvent;
@@ -54,7 +55,7 @@ public class ApproveRejectTermComposite extends ApproveRejectComposite<Term> {
 
 		@Override
 		public InlineHyperlink getValue(Term term) {
-			return new InlineHyperlink(term.getName(), term.getReferenceId());
+			return new InlineHyperlink(term.getName(), OntoBrowser.historyTokenFor(term));
 		}
 
 		@Override

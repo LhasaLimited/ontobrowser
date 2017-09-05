@@ -43,6 +43,7 @@ import com.novartis.pcs.ontology.entity.InvalidEntityException;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.service.util.StatusChecker;
+import com.novartis.pcs.ontology.webapp.client.OntoBrowser;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 import com.novartis.pcs.ontology.webapp.client.event.EntityDeletedEvent;
 import com.novartis.pcs.ontology.webapp.client.event.EntityDeletedHandler;
@@ -64,7 +65,7 @@ public class RelatedTermsView extends OntoBrowserView implements ViewTermHandler
 		@Override
 		public InlineHyperlink getValue(Relationship relationship) {
 			Term term = relationship.getRelatedTerm();
-			return new InlineHyperlink(term.getName(), term.getReferenceId()); 
+			return new InlineHyperlink(term.getName(), OntoBrowser.historyTokenFor(term));
 		}
 	};
 	

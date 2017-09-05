@@ -38,6 +38,7 @@ import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.webapp.client.OntoBrowser;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermEvent;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermHandler;
@@ -66,7 +67,7 @@ public class CodeListView extends OntoBrowserView implements ViewTermHandler {
 			public void onSelectionChange(SelectionChangeEvent event) {
 				Term selected = selection.getSelectedObject();
 				if(selected != null) {
-					History.newItem(selected.getReferenceId());
+					History.newItem(OntoBrowser.historyTokenFor(selected));
 				}
 			}
 		});

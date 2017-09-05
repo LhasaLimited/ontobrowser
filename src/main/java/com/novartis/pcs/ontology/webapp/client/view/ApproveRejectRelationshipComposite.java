@@ -28,6 +28,7 @@ import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.CuratorApprovalWeight.Entity;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.webapp.client.OntoBrowser;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 import com.novartis.pcs.ontology.webapp.client.event.RelationshipDeletedEvent;
 import com.novartis.pcs.ontology.webapp.client.event.RelationshipUpdatedEvent;
@@ -52,7 +53,7 @@ public class ApproveRejectRelationshipComposite extends ApproveRejectComposite<R
 		@Override
 		public InlineHyperlink getValue(Relationship relationship) {
 			Term term = relationship.getTerm();
-			return new InlineHyperlink(term.getName(), term.getReferenceId());
+			return new InlineHyperlink(term.getName(), OntoBrowser.historyTokenFor(term));
 		}
 
 		@Override
@@ -82,7 +83,7 @@ public class ApproveRejectRelationshipComposite extends ApproveRejectComposite<R
 		@Override
 		public InlineHyperlink getValue(Relationship relationship) {
 			Term term = relationship.getRelatedTerm();
-			return new InlineHyperlink(term.getName(), term.getReferenceId());
+			return new InlineHyperlink(term.getName(), OntoBrowser.historyTokenFor(term));
 		}
 
 		@Override

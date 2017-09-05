@@ -59,6 +59,7 @@ import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.service.util.DatasourceAcronymComparator;
+import com.novartis.pcs.ontology.webapp.client.OntoBrowser;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermEvent;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermHandler;
@@ -314,7 +315,7 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 				}
 	
 				public void onSuccess(Term term) {
-					History.newItem(term.getReferenceId(), false);
+					History.newItem(OntoBrowser.historyTokenFor(term), false);
 					eventBus.fireEvent(new ViewTermEvent(term));
 					nameField.setValue(null);
 					nameError.setText(null);
@@ -337,7 +338,7 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 			});
 		}
 	}
-	
+
 	private void addRelationshipTypes() {
 		service.loadAllRelationshipTypes(new AsyncCallback<List<RelationshipType>>() {
 			public void onFailure(Throwable caught) {

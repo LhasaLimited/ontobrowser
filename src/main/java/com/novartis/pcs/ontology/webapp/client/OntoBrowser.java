@@ -82,6 +82,11 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 	private final MenuBar menuBar = new MenuBar();
 
 	public final List<Ontology> ontologies = new ArrayList<>();
+
+	public static final String historyTokenFor(final Term term) {
+		return OntoBrowser.PARAM_ONTOLOGY  + term.getOntology().getName() + ";"+ PARAM_TERM + term.getReferenceId();
+	}
+
 	/**
 	 * This is the entry point method.
 	 */

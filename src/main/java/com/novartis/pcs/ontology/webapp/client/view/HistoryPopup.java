@@ -60,6 +60,7 @@ import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.VersionedEntity;
+import com.novartis.pcs.ontology.webapp.client.OntoBrowser;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 
 public class HistoryPopup implements OntoBrowserPopup, AsyncCallback<List<CuratorAction>>, KeyDownHandler {
@@ -126,7 +127,7 @@ public class HistoryPopup implements OntoBrowserPopup, AsyncCallback<List<Curato
 			Term term = getTerm(action.getEntity());
 			
 			return term != null ? 
-					new InlineHyperlink(term.getName(), term.getReferenceId()) : null;
+					new InlineHyperlink(term.getName(), OntoBrowser.historyTokenFor(term)) : null;
 		}
 
 		@Override

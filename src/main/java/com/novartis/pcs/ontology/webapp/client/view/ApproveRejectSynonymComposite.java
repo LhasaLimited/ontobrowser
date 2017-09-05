@@ -32,6 +32,7 @@ import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.CuratorApprovalWeight.Entity;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.webapp.client.OntoBrowser;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 import com.novartis.pcs.ontology.webapp.client.event.SynonymDeletedEvent;
 import com.novartis.pcs.ontology.webapp.client.event.SynonymUpdatedEvent;
@@ -55,7 +56,7 @@ public class ApproveRejectSynonymComposite extends ApproveRejectComposite<Synony
 		@Override
 		public InlineHyperlink getValue(Synonym synonym) {
 			Term term = synonym.getTerm();
-			return new InlineHyperlink(term.getName(), term.getReferenceId());
+			return new InlineHyperlink(term.getName(), OntoBrowser.historyTokenFor(term));
 		}
 
 		@Override
