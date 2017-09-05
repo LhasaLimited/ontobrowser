@@ -110,7 +110,7 @@ class PorterStemmer
     case 'a': case 'e': case 'i': case 'o': case 'u':
       return false;
     case 'y':
-      return (i==k0) ? true : !cons(i-1);
+      return (i == k0) || !cons(i - 1);
     default:
       return true;
     }

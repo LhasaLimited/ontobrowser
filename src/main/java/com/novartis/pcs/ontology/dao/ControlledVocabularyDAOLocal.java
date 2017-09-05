@@ -26,6 +26,6 @@ import com.novartis.pcs.ontology.entity.ControlledVocabulary;
 @Local
 public interface ControlledVocabularyDAOLocal extends DAO<ControlledVocabulary> {
 	
-	public Collection<ControlledVocabulary> loadByUnmappedTerms();
+	Collection<ControlledVocabulary> loadByUnmappedTerms();
 
 }

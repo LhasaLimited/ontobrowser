@@ -19,6 +19,6 @@ package com.novartis.pcs.ontology.webapp.client.view;
 
 public interface OntoBrowserPopup {
 	
-	public void show();
+	void show();
 
 }

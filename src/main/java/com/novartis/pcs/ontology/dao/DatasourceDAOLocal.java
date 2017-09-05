@@ -24,6 +24,6 @@ import com.novartis.pcs.ontology.entity.Datasource;
 @Local
 public interface DatasourceDAOLocal extends DAO<Datasource> {
 	
-	public Datasource loadByAcronym(String acronym);
+	Datasource loadByAcronym(String acronym);
 
 }

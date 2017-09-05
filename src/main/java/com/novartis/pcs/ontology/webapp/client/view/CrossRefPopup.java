@@ -116,8 +116,8 @@ public class CrossRefPopup implements OntoBrowserPopup, ViewTermHandler,
 		public int compare(ControlledVocabularyTerm term1, ControlledVocabularyTerm term2) {
 			return term1 == term2 ? 0 : term1.getName().compareToIgnoreCase(term2.getName());
 		}
-	};
-	
+	}
+
 	public static class ContextColumn extends ComparableTextColumn<ControlledVocabularyTerm> 
 			implements Comparator<ControlledVocabularyTerm> {
 		@Override
@@ -125,8 +125,8 @@ public class CrossRefPopup implements OntoBrowserPopup, ViewTermHandler,
 			ControlledVocabularyContext context = term.getControlledVocabulary().getContext(); 
 			return context != null ? context.toString() : null;
 		}
-	};
-		
+	}
+
 	public static class SourceColumn extends ComparableTextColumn<ControlledVocabularyTerm> 
 			implements Comparator<ControlledVocabularyTerm> {
 		@Override
@@ -134,7 +134,8 @@ public class CrossRefPopup implements OntoBrowserPopup, ViewTermHandler,
 			Datasource datasource = term.getControlledVocabulary().getDatasource(); 
 			return datasource != null ? datasource.getAcronym() : null;
 		}
-	};
+	}
+
 	/*
 	public static class ReferenceIdColumn extends ComparableTextColumn<ControlledVocabularyTerm> 
 			implements Comparator<ControlledVocabularyTerm> {
@@ -168,7 +169,8 @@ public class CrossRefPopup implements OntoBrowserPopup, ViewTermHandler,
 			
 			return usage1 == usage2 ? 0 : usage1 < usage2 ? -1 : 1;
 		}
-	};
+	}
+
 	/*
 	public static class TypeColumn extends
 			TextColumn<ControlledVocabularyTerm> implements
@@ -672,7 +674,7 @@ public class CrossRefPopup implements OntoBrowserPopup, ViewTermHandler,
 			table.setColumnWidth(checkColumn, 16, Unit.PX);
 			
 			table.setSelectionModel(selection,
-		    		DefaultSelectionEventManager.<ControlledVocabularyTerm> createCheckboxManager(0));
+		    		DefaultSelectionEventManager.createCheckboxManager(0));
 	    } else {
 	    	table.setSelectionModel(new NoSelectionModel<ControlledVocabularyTerm>(keyProvider));
 	    }

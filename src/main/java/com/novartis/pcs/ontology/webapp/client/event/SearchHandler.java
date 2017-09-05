@@ -21,6 +21,6 @@ import com.google.gwt.event.shared.EventHandler;
 
 public interface SearchHandler extends EventHandler {
 	
-	public void onSearch(SearchEvent event);
+	void onSearch(SearchEvent event);
 
 }

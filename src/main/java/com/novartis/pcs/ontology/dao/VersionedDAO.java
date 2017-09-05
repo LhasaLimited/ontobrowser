@@ -24,6 +24,6 @@ import com.novartis.pcs.ontology.entity.VersionedEntity;
 import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
 
 public interface VersionedDAO<T extends VersionedEntity> extends DAO<T> {
-	public List<T> loadByStatus(EnumSet<Status> status);
+	List<T> loadByStatus(EnumSet<Status> status);
 
 }

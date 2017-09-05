@@ -21,6 +21,6 @@ import com.novartis.pcs.ontology.entity.Curator;
 
 public interface CuratorCriteria {
 	
-	public boolean verify(Curator curator);
+	boolean verify(Curator curator);
 
 }

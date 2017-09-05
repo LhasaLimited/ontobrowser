@@ -21,7 +21,7 @@ import org.apache.lucene.index.IndexWriter;
 
 
 public interface LuceneTransactionListener {
-	public void afterCommit();
+	void afterCommit();
 	
-	public void afterRollback(IndexWriter writer);
+	void afterRollback(IndexWriter writer);
 }

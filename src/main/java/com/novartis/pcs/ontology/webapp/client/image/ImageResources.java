@@ -22,20 +22,20 @@ import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.ImageResource;
 
 public interface ImageResources extends ClientBundle {
-	public final ImageResources INSTANCE = GWT.create(ImageResources.class);
+	ImageResources INSTANCE = GWT.create(ImageResources.class);
 	
 	@Source("search_small_off.png")
-	public ImageResource searchIcon();
+	ImageResource searchIcon();
 	
 	@Source("add_small_off.png")
-	public ImageResource addIcon();
+	ImageResource addIcon();
 	
 	@Source("edit_small_off.png")
-	public ImageResource editIcon();
+	ImageResource editIcon();
 	
 	@Source("delete_small_off.png")
-	public ImageResource deleteIcon();
+	ImageResource deleteIcon();
 	
 	@Source("spinner.gif")
-	public ImageResource spinner();
+	ImageResource spinner();
 }

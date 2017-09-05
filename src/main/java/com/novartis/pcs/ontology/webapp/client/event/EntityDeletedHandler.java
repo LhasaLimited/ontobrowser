@@ -22,6 +22,6 @@ import com.novartis.pcs.ontology.entity.VersionedEntity;
 
 public interface EntityDeletedHandler<T extends VersionedEntity> extends EventHandler {
 	
-	public void onEntityDeleted(EntityDeletedEvent<T> event);
+	void onEntityDeleted(EntityDeletedEvent<T> event);
 
 }

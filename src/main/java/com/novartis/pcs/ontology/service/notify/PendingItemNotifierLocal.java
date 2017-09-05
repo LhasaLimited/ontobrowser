@@ -22,6 +22,6 @@ import javax.ejb.Local;
 @Local
 public interface PendingItemNotifierLocal {
 	
-	public void notifyCurators();
+	void notifyCurators();
 
 }

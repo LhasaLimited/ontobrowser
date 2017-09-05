@@ -24,6 +24,6 @@ import com.novartis.pcs.ontology.entity.Curator;
 @Local
 public interface CuratorDAOLocal extends DAO<Curator> {
 	
-	public Curator loadByUsername(String username);
+	Curator loadByUsername(String username);
 
 }

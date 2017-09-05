@@ -40,8 +40,8 @@ public class ApproveRejectRelationshipComposite extends ApproveRejectComposite<R
 		public String getValue(Relationship relationship) {
 			return relationship.getTerm().getOntology().getName();
 		}
-	};
-	
+	}
+
 	private static class TermColumn extends
 			Column<Relationship, InlineHyperlink> implements
 			Comparator<Relationship> {
@@ -63,14 +63,14 @@ public class ApproveRejectRelationshipComposite extends ApproveRejectComposite<R
 			return term1 == term2 ? 0 : term1.getName().compareToIgnoreCase(
 					term2.getName());
 		}
-	};
+	}
 
 	private static class RelationshipColumn extends TextColumn<Relationship> {
 		@Override
 		public String getValue(Relationship relationship) {
 			return relationship.getType().getRelationship();
 		}
-	};
+	}
 
 	private static class RelatedTermColumn extends
 			Column<Relationship, InlineHyperlink> implements
@@ -93,8 +93,8 @@ public class ApproveRejectRelationshipComposite extends ApproveRejectComposite<R
 			return term1 == term2 ? 0 : term1.getName().compareToIgnoreCase(
 					term2.getName());
 		}
-	};
-		
+	}
+
 	public ApproveRejectRelationshipComposite(OntoBrowserServiceAsync service,
 			EventBus eventBus, Curator curator, BusyIndicatorHandler busyIndicatorHandler) {
 		super(Entity.TERM_RELATIONSHIP, service, eventBus, curator, busyIndicatorHandler, 

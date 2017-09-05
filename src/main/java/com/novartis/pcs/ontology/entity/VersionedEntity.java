@@ -51,8 +51,8 @@ import com.novartis.pcs.ontology.dao.VersionedEntityValidator;
 public abstract class VersionedEntity extends CreatableEntity {
 	private static final long serialVersionUID = 1L;
 	
-	public enum Status {PENDING, APPROVED, REJECTED, OBSOLETE};	
-	
+	public enum Status {PENDING, APPROVED, REJECTED, OBSOLETE}
+
 	@NotNull
 	@Valid
 	@ManyToOne(optional=false)

@@ -90,7 +90,7 @@ public class OntologyImportServiceImplTestIT {
 	}
 
 	private void compareTable(IDataSet actualDataSet, IDataSet expectedDataSet, String tableName, String sortColumn, List<String> ignoredColumns)
-			throws DataSetException, DatabaseUnitException {
+			throws DatabaseUnitException {
 		List<String> allIgnored = new ArrayList<String>(baseIgnoredColumns);
 		allIgnored.addAll(ignoredColumns);
 		ITable actualTermTable = new SortedTable(actualDataSet.getTable(tableName), new String[] { sortColumn });

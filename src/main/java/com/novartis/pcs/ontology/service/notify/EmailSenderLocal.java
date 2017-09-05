@@ -22,8 +22,8 @@ import javax.ejb.Local;
 @Local
 public interface EmailSenderLocal {
 
-	public void send(String subject, String body);
+	void send(String subject, String body);
 	
-	public void send(String subject, String body, CuratorCriteria criteria);
+	void send(String subject, String body, CuratorCriteria criteria);
 	
 }

@@ -30,43 +30,43 @@ import com.novartis.pcs.ontology.entity.VersionedEntity;
 
 public interface OntologyCuratorService {
 	
-	public Curator loadByUsername(String username);
+	Curator loadByUsername(String username);
 	
-	public Collection<Term> loadPendingTerms();
+	Collection<Term> loadPendingTerms();
 
-	public Collection<Synonym> loadPendingSynonyms();
+	Collection<Synonym> loadPendingSynonyms();
 
-	public Collection<Relationship> loadPendingRelationships();
+	Collection<Relationship> loadPendingRelationships();
 	
-	public Term approveTerm(long termId, String comments, String curatorUsername) throws InvalidEntityException;
+	Term approveTerm(long termId, String comments, String curatorUsername) throws InvalidEntityException;
 	
-	public Term rejectTerm(long termId, String comments, String curatorUsername) throws InvalidEntityException;
+	Term rejectTerm(long termId, String comments, String curatorUsername) throws InvalidEntityException;
 	
-	public Synonym approveSynonym(long synonymId, String comments, String curatorUsername) throws InvalidEntityException;
+	Synonym approveSynonym(long synonymId, String comments, String curatorUsername) throws InvalidEntityException;
 	
-	public Synonym rejectSynonym(long synonymId, String comments, String curatorUsername) throws InvalidEntityException;
+	Synonym rejectSynonym(long synonymId, String comments, String curatorUsername) throws InvalidEntityException;
 	
-	public Relationship approveRelationship(long relationshipId, 
-			String comments, String curatorUsername) throws InvalidEntityException;
+	Relationship approveRelationship(long relationshipId,
+									 String comments, String curatorUsername) throws InvalidEntityException;
 	
-	public Relationship rejectRelationship(long relationshipId, 
-			String comments, String curatorUsername) throws InvalidEntityException;
+	Relationship rejectRelationship(long relationshipId,
+									String comments, String curatorUsername) throws InvalidEntityException;
 	
-	public <T extends VersionedEntity> Set<T> approve(Set<T> pending, String comments, String curatorUsername) throws InvalidEntityException;
+	<T extends VersionedEntity> Set<T> approve(Set<T> pending, String comments, String curatorUsername) throws InvalidEntityException;
 	
-	public <T extends VersionedEntity> Set<T> reject(Set<T> pending, String comments, String curatorUsername) throws InvalidEntityException;
+	<T extends VersionedEntity> Set<T> reject(Set<T> pending, String comments, String curatorUsername) throws InvalidEntityException;
 	
-	public Relationship obsoleteRelationship(long relationshipId, long replacementRelationshipId,
-			String comments, String curatorUsername) throws InvalidEntityException;
+	Relationship obsoleteRelationship(long relationshipId, long replacementRelationshipId,
+									  String comments, String curatorUsername) throws InvalidEntityException;
 	
-	public Synonym obsoleteSynonym(long synonymId, long replacementSynonymId, String comments, 
-			String curatorUsername) throws InvalidEntityException;
+	Synonym obsoleteSynonym(long synonymId, long replacementSynonymId, String comments,
+							String curatorUsername) throws InvalidEntityException;
 	
-	public Term obsoleteTerm(long termId, long replacementTermId, String comments, 
-			String curatorUsername) throws InvalidEntityException;
+	Term obsoleteTerm(long termId, long replacementTermId, String comments,
+					  String curatorUsername) throws InvalidEntityException;
 	
-	public Collection<CuratorAction> loadCuratorActions();
+	Collection<CuratorAction> loadCuratorActions();
 	
-	public void changePassword(String curator, String oldPassword, String newPassword) throws InvalidEntityException;
+	void changePassword(String curator, String oldPassword, String newPassword) throws InvalidEntityException;
 
 }

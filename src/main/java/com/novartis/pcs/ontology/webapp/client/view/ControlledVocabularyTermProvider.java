@@ -24,10 +24,10 @@ import com.novartis.pcs.ontology.entity.Synonym;
 
 public interface ControlledVocabularyTermProvider {
 	
-	public List<ControlledVocabularyTerm> getTerms();
+	List<ControlledVocabularyTerm> getTerms();
 	
-	public void removeTerms(List<ControlledVocabularyTerm> terms);
+	void removeTerms(List<ControlledVocabularyTerm> terms);
 	
-	public Synonym.Type getSynonymType();
+	Synonym.Type getSynonymType();
 
 }

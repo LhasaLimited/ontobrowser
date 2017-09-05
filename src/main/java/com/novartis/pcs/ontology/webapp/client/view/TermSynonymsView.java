@@ -69,15 +69,15 @@ public class TermSynonymsView extends OntoBrowserView implements ViewTermHandler
 		public String getValue(Synonym synonym) {
 			return synonym.getSynonym();
 		}
-	};
-	
+	}
+
 	public static class TypeColumn extends TextColumn<Synonym> {
 		@Override
 		public String getValue(Synonym synonym) {
 			return synonym.getType().toString();
 		}
-	};
-	
+	}
+
 	public static class ContextColumn extends TextColumn<Synonym> {
 		@Override
 		public String getValue(Synonym synonym) {
@@ -90,8 +90,8 @@ public class TermSynonymsView extends OntoBrowserView implements ViewTermHandler
 			}
 			return context;
 		}
-	};
-	
+	}
+
 	public static class SourceColumn extends TextColumn<Synonym> {
 		@Override
 		public String getValue(Synonym synonym) {
@@ -107,23 +107,23 @@ public class TermSynonymsView extends OntoBrowserView implements ViewTermHandler
 			}
 			return value;
 		}
-	};
-	
+	}
+
 	private static class ReferenceIdColumn extends TextColumn<Synonym> {
 		@Override
 		public String getValue(Synonym synonym) {
 			return synonym.getReferenceId();
 		}
-	};
-	
-	
+	}
+
+
 	private static class StatusColumn extends TextColumn<Synonym> {
 		@Override
 		public String getValue(Synonym synonym) {
 			return synonym.getStatus().toString();
 		}
-	};
-		
+	}
+
 	private final Panel panel = new SimplePanel();
 	
 	private final ProvidesKey<Synonym> keyProvider = new EntityKeyProvider<Synonym>();

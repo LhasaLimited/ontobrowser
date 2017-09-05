@@ -90,8 +90,8 @@ public abstract class ApproveRejectComposite<T extends VersionedEntity> extends 
 		public String getValue(T entity) {
 			return entity.getCreatedBy().getUsername();
 		}
-	};
-	
+	}
+
 	private class CreatedDateColumn extends Column<T, Date> 
 			implements Comparator<T> {		
 		public CreatedDateColumn() {
@@ -108,8 +108,8 @@ public abstract class ApproveRejectComposite<T extends VersionedEntity> extends 
 		public int compare(T entity1, T entity2) {
 			return entity2.getCreatedDate().compareTo(entity1.getCreatedDate());
 		}
-	};
-	
+	}
+
 	private class ApprovedByColumn extends TextColumn<T> {
 		public ApprovedByColumn() {
 			setSortable(false);
@@ -129,8 +129,8 @@ public abstract class ApproveRejectComposite<T extends VersionedEntity> extends 
 			
 			return buf.toString();
 		}
-	};
-	
+	}
+
 	private class RejectedByColumn extends TextColumn<T> {
 		public RejectedByColumn() {
 			setSortable(false);
@@ -150,8 +150,8 @@ public abstract class ApproveRejectComposite<T extends VersionedEntity> extends 
 			
 			return buf.toString();
 		}
-	};
-	
+	}
+
 	protected final Entity entity;
 	protected final OntoBrowserServiceAsync service;
 	protected final EventBus eventBus;
@@ -409,7 +409,7 @@ public abstract class ApproveRejectComposite<T extends VersionedEntity> extends 
 			table.setColumnWidth(checkColumn, 16, Unit.PX);
 			
 			table.setSelectionModel(selection,
-		    		DefaultSelectionEventManager.<T> createCheckboxManager(0));
+		    		DefaultSelectionEventManager.createCheckboxManager(0));
 	    } else {
 	    	table.setSelectionModel(new NoSelectionModel<T>(keyProvider));
 	    }

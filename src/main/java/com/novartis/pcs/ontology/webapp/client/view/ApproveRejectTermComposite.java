@@ -44,8 +44,8 @@ public class ApproveRejectTermComposite extends ApproveRejectComposite<Term> {
 		public String getValue(Term term) {
 			return term.getOntology().getName();
 		}
-	};
-	
+	}
+
 	private static class TermColumn extends Column<Term, InlineHyperlink> 
 			implements Comparator<Term> {
 		public TermColumn() {
@@ -62,8 +62,8 @@ public class ApproveRejectTermComposite extends ApproveRejectComposite<Term> {
 		public int compare(Term term1, Term term2) {
 			return term1 == term2 ? 0 : term1.getName().compareToIgnoreCase(term2.getName());
 		}
-	};
-		
+	}
+
 	public ApproveRejectTermComposite(OntoBrowserServiceAsync service,
 			EventBus eventBus, Curator curator, BusyIndicatorHandler busyIndicatorHandler) {
 		super(Entity.TERM, service, eventBus, curator, busyIndicatorHandler, 

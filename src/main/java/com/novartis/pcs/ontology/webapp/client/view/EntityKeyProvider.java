@@ -25,4 +25,4 @@ public class EntityKeyProvider<T extends AbstractEntity> implements ProvidesKey<
 	public Object getKey(T entity) {
 		return entity != null ? entity.getId() : null;
 	}
-};
+}

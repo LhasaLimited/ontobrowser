@@ -61,8 +61,8 @@ public class ReplaceTermPopup implements OntoBrowserPopup, ViewTermHandler, Clic
 		public String getValue(Term term) {
 			return term.getOntology().getName();
 		}
-	};
-	
+	}
+
 	private static class TermColumn extends Column<Term, InlineHyperlink> {
 		public TermColumn() {
 			super(new HyperlinkCell());
@@ -72,8 +72,8 @@ public class ReplaceTermPopup implements OntoBrowserPopup, ViewTermHandler, Clic
 		public InlineHyperlink getValue(Term term) {
 			return new InlineHyperlink(term.getName(), OntoBrowser.historyTokenFor(term));
 		}
-	};
-	
+	}
+
 	private final OntoBrowserServiceAsync service;
 	private final EventBus eventBus;
 	private final DialogBox dialogBox = new DialogBox(false, false);

@@ -24,6 +24,6 @@ import com.novartis.pcs.ontology.entity.RelationshipType;
 @Local
 public interface RelationshipTypeDAOLocal extends VersionedDAO<RelationshipType> {
 	
-	public RelationshipType loadByRelationship(String relationship);
+	RelationshipType loadByRelationship(String relationship);
 
 }

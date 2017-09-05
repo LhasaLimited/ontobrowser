@@ -21,8 +21,8 @@ import com.novartis.pcs.ontology.entity.VersionedEntity;
 
 public interface OntoBrowserEditPopup<T extends VersionedEntity> extends OntoBrowserPopup {
 	
-	public void setEntity(T entity);
+	void setEntity(T entity);
 	
-	public T getEntity();
+	T getEntity();
 
 }

@@ -19,8 +19,8 @@ package com.novartis.pcs.ontology.entity;
 
 public interface ReplaceableEntity<T> {
 	
-	public T getReplacedBy();
+	T getReplacedBy();
 	
-	public void setReplacedBy(T replacedBy);
+	void setReplacedBy(T replacedBy);
 
 }

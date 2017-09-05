@@ -47,85 +47,85 @@ import com.novartis.pcs.ontology.service.search.result.InvalidQuerySyntaxExcepti
  */
 @RemoteServiceRelativePath("service")
 public interface OntoBrowserService extends RemoteService {
-	public Curator loadCurrentCurator();
-	public List<Term> loadRootTerms();
+	Curator loadCurrentCurator();
+	List<Term> loadRootTerms();
 
-	public Term loadTerm(String id, final String ontologyName);
-	public List<Term> loadOntologyTerms(String ontology);
-	public String loadSVG(String id, final String ontologyName);
-	public String loadSVGDeep(String id, final String ontologyName);
-	public List<RelationshipType> loadAllRelationshipTypes();
-	public List<Term> loadLastCreatedTerms(int max);
+	Term loadTerm(String id, final String ontologyName);
+	List<Term> loadOntologyTerms(String ontology);
+	String loadSVG(String id, final String ontologyName);
+	String loadSVGDeep(String id, final String ontologyName);
+	List<RelationshipType> loadAllRelationshipTypes();
+	List<Term> loadLastCreatedTerms(int max);
 	
-	public List<HTMLSearchResult> search(String pattern, boolean includeSynonyms) 
+	List<HTMLSearchResult> search(String pattern, boolean includeSynonyms)
 			throws InvalidQuerySyntaxException;
 		
-	public Term createChildTerm(String ontologyName, String termName,
-			String definition, String url, String comments,
-			String relatedTermRefId, String relationshipType,
-			String datasoureAcronym, String referenceId,
-			List<ControlledVocabularyTerm> synonyms,
-			Synonym.Type synonymType)
+	Term createChildTerm(String ontologyName, String termName,
+						 String definition, String url, String comments,
+						 String relatedTermRefId, String relationshipType,
+						 String datasoureAcronym, String referenceId,
+						 List<ControlledVocabularyTerm> synonyms,
+						 Synonym.Type synonymType)
 			throws DuplicateEntityException, InvalidEntityException;
 	
-	public Term addSynonym(String termRefId, String synonym, Synonym.Type type,
-			String source, String referenceId) 
+	Term addSynonym(String termRefId, String synonym, Synonym.Type type,
+					String source, String referenceId)
 			throws DuplicateEntityException, InvalidEntityException;
-	public Term addSynonyms(String termRefId, 
-			Collection<ControlledVocabularyTerm> terms, Synonym.Type type)
+	Term addSynonyms(String termRefId,
+					 Collection<ControlledVocabularyTerm> terms, Synonym.Type type)
 			throws DuplicateEntityException, InvalidEntityException;
 
-	public Term addRelationship(String termRefId, String relatedTermRefId, String relationship,
-			final String ontologyName)
+	Term addRelationship(String termRefId, String relatedTermRefId, String relationship,
+						 final String ontologyName)
 			throws DuplicateEntityException, InvalidEntityException;
 	
-	public List<Datasource> loadPublicDatasources();
-	public List<ControlledVocabulary> loadControlledVocabularies();
-	public List<ControlledVocabularyTerm> loadControlledVocabularyTerms(ControlledVocabularyDomain domain);
-	public List<ControlledVocabularyTerm> loadControlledVocabularyTerms(ControlledVocabularyDomain domain,
-			ControlledVocabularyContext conext);
-	public List<ControlledVocabularyTerm> loadControlledVocabularyTerms(ControlledVocabularyDomain domain,
-			Datasource datasource);
-	public List<ControlledVocabularyTerm> loadControlledVocabularyTerms(ControlledVocabularyDomain domain,
-			ControlledVocabularyContext conext, Datasource datasource);
+	List<Datasource> loadPublicDatasources();
+	List<ControlledVocabulary> loadControlledVocabularies();
+	List<ControlledVocabularyTerm> loadControlledVocabularyTerms(ControlledVocabularyDomain domain);
+	List<ControlledVocabularyTerm> loadControlledVocabularyTerms(ControlledVocabularyDomain domain,
+																 ControlledVocabularyContext conext);
+	List<ControlledVocabularyTerm> loadControlledVocabularyTerms(ControlledVocabularyDomain domain,
+																 Datasource datasource);
+	List<ControlledVocabularyTerm> loadControlledVocabularyTerms(ControlledVocabularyDomain domain,
+																 ControlledVocabularyContext conext, Datasource datasource);
 	
-	public void excludeControlledVocabularyTerms(Set<ControlledVocabularyTerm> terms)
+	void excludeControlledVocabularyTerms(Set<ControlledVocabularyTerm> terms)
 			throws InvalidEntityException;
 	
-	public List<ControlledVocabularyTermLink> loadControlledVocabularyTermLinks(ControlledVocabularyTerm term);
+	List<ControlledVocabularyTermLink> loadControlledVocabularyTermLinks(ControlledVocabularyTerm term);
 	
-	public List<Term> loadPendingTerms();
-	public List<Synonym> loadPendingSynonyms();
-	public List<Relationship> loadPendingRelationships();
+	List<Term> loadPendingTerms();
+	List<Synonym> loadPendingSynonyms();
+	List<Relationship> loadPendingRelationships();
 	
-	public <T extends VersionedEntity> Set<T> approve(Set<T> pending, String comments)
+	<T extends VersionedEntity> Set<T> approve(Set<T> pending, String comments)
 			throws InvalidEntityException;
-	public <T extends VersionedEntity> Set<T> reject(Set<T> pending, String comments)
-			throws InvalidEntityException;
-	
-	public Term updateTerm(long termId, String definition, 
-			String url, String comments) throws InvalidEntityException;
-	public Synonym updateSynonym(long synonymId, Synonym.Type type)
-			throws InvalidEntityException;
-	public Relationship updateRelationship(long relationshipId, 
-			String relationship) throws DuplicateEntityException, InvalidEntityException;
-	
-	public <T extends VersionedEntity> void delete(T entity) throws InvalidEntityException;
-	
-	public Term obsoleteTerm(long termId, long replacementTermId, String comments)
+	<T extends VersionedEntity> Set<T> reject(Set<T> pending, String comments)
 			throws InvalidEntityException;
 	
-	public Synonym obsoleteSynonym(long synonymId, long replacementSynonymId, String comments)
+	Term updateTerm(long termId, String definition,
+					String url, String comments) throws InvalidEntityException;
+	Synonym updateSynonym(long synonymId, Synonym.Type type)
+			throws InvalidEntityException;
+	Relationship updateRelationship(long relationshipId,
+									String relationship) throws DuplicateEntityException, InvalidEntityException;
+	
+	<T extends VersionedEntity> void delete(T entity) throws InvalidEntityException;
+	
+	Term obsoleteTerm(long termId, long replacementTermId, String comments)
 			throws InvalidEntityException;
 	
-	public Relationship obsoleteRelationship(long relationshipId, long replacementRelationshipId, String comments)
+	Synonym obsoleteSynonym(long synonymId, long replacementSynonymId, String comments)
 			throws InvalidEntityException;
 	
-	public List<CuratorAction> loadCuratorActions();
+	Relationship obsoleteRelationship(long relationshipId, long replacementRelationshipId, String comments)
+			throws InvalidEntityException;
 	
-	public void changePassword(String oldPassword, String newPassword) throws InvalidEntityException;
+	List<CuratorAction> loadCuratorActions();
+	
+	void changePassword(String oldPassword, String newPassword) throws InvalidEntityException;
 
-	public void addOntology(Ontology ontology) throws InvalidEntityException;
+	void addOntology(Ontology ontology) throws InvalidEntityException;
 
 	List<Ontology> loadOntologies();
 	Term loadRootTermFor(String ontologyName);

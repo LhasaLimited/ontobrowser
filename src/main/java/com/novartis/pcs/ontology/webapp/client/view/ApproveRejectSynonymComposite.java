@@ -44,8 +44,8 @@ public class ApproveRejectSynonymComposite extends ApproveRejectComposite<Synony
 		public String getValue(Synonym synonym) {
 			return synonym.getTerm().getOntology().getName();
 		}
-	};
-	
+	}
+
 	private static class TermColumn extends Column<Synonym, InlineHyperlink> 
 			implements Comparator<Synonym> {
 		public TermColumn() {
@@ -65,8 +65,8 @@ public class ApproveRejectSynonymComposite extends ApproveRejectComposite<Synony
 			Term term2 = synonym2.getTerm();
 			return term1 == term2 ? 0 : term1.getName().compareToIgnoreCase(term2.getName());
 		}
-	};
-		
+	}
+
 	private static class SynonymColumn extends Column<Synonym, String> 
 			implements Comparator<Synonym> { 
 		public SynonymColumn() {
@@ -83,15 +83,15 @@ public class ApproveRejectSynonymComposite extends ApproveRejectComposite<Synony
 		public int compare(Synonym s1, Synonym s2) {
 			return s1 == s2 ? 0 : s1.getSynonym().compareToIgnoreCase(s2.getSynonym());
 		}
-	};
-	
+	}
+
 	private static class TypeColumn extends ComparableTextColumn<Synonym> { 
 		@Override
 		public String getValue(Synonym synonym) {
 			return synonym.getType().toString();
 		}
-	};
-	
+	}
+
 	private static class SourceColumn extends ComparableTextColumn<Synonym> { 
 		@Override
 		public String getValue(Synonym synonym) {
@@ -109,8 +109,8 @@ public class ApproveRejectSynonymComposite extends ApproveRejectComposite<Synony
 			}
 			return value;
 		}
-	};
-	
+	}
+
 	public static class UsageColumn extends Column<Synonym, Number> 
 			implements Comparator<Synonym> {
 		public UsageColumn() {
@@ -151,8 +151,8 @@ public class ApproveRejectSynonymComposite extends ApproveRejectComposite<Synony
 						
 			return usage1 == usage2 ? 0 : usage1 < usage2 ? -1 : 1;
 		}
-	};
-		
+	}
+
 	private final ControlledVocabularyTermLinksView linkedTermsView;
 		
 	public ApproveRejectSynonymComposite(OntoBrowserServiceAsync service,

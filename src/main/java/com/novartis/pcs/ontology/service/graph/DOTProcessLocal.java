@@ -21,6 +21,6 @@ import javax.ejb.Local;
 @Local
 public interface DOTProcessLocal {
 	
-	public String submit(String dot);
+	String submit(String dot);
 
 }

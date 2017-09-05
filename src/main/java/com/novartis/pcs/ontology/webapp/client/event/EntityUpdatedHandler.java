@@ -22,6 +22,6 @@ import com.novartis.pcs.ontology.entity.VersionedEntity;
 
 public interface EntityUpdatedHandler<T extends VersionedEntity> extends EventHandler {
 	
-	public void onEntityUpdated(EntityUpdatedEvent<T> event);
+	void onEntityUpdated(EntityUpdatedEvent<T> event);
 
 }

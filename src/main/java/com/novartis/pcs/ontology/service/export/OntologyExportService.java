@@ -24,14 +24,14 @@ import com.novartis.pcs.ontology.entity.Datasource;
 
 public interface OntologyExportService {
 	
-	public void exportOntology(String ontologyName, OutputStream os, 
-			OntologyFormat format) throws OntologyNotFoundException;
+	void exportOntology(String ontologyName, OutputStream os,
+						OntologyFormat format) throws OntologyNotFoundException;
 	
-	public void exportOntology(String ontologyName, OutputStream os, 
-			OntologyFormat format, boolean includeNonPublicXrefs)
+	void exportOntology(String ontologyName, OutputStream os,
+						OntologyFormat format, boolean includeNonPublicXrefs)
 			throws OntologyNotFoundException;
 	
-	public void exportOntology(String ontologyName, OutputStream os, 
-			OntologyFormat format, Collection<Datasource> xrefDatasources)
+	void exportOntology(String ontologyName, OutputStream os,
+						OntologyFormat format, Collection<Datasource> xrefDatasources)
 			throws OntologyNotFoundException;
 }

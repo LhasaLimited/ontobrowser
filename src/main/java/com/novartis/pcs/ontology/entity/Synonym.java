@@ -73,8 +73,8 @@ import com.novartis.pcs.ontology.entity.util.UrlParser;
 public class Synonym extends VersionedEntity implements ReplaceableEntity<Synonym>, Comparable<Synonym> {
 	private static final long serialVersionUID = 1L;
 
-	public enum Type {BROAD, EXACT, NARROW, RELATED};
-	
+	public enum Type {BROAD, EXACT, NARROW, RELATED}
+
 	public static final String QUERY_BY_TERM_REF_ID = "Synonym.loadByTermRefId";
 	public static final String QUERY_BY_CTRLD_VOCAB_TERM = "Synonym.loadByCtrldVocabTermId";
 	public static final String QUERY_BY_SYNONYM = "Synonym.loadBySynonym";

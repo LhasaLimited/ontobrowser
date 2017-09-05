@@ -49,7 +49,7 @@ public class CodeListView extends OntoBrowserView implements ViewTermHandler {
 	private final ProvidesKey<Term> keyProvider = new EntityKeyProvider<Term>();
 	private final TermCell cell = new TermCell();
 	private final CellList<Term> list = new CellList<Term>(cell, keyProvider); 
-	private final SingleSelectionModel<Term> selection = new SingleSelectionModel<Term>(keyProvider);;
+	private final SingleSelectionModel<Term> selection = new SingleSelectionModel<Term>(keyProvider);
 	private final Map<Term,Integer> termIndex = new HashMap<Term,Integer>();
 	
 	private Ontology currentCodelist;
@@ -86,7 +86,7 @@ public class CodeListView extends OntoBrowserView implements ViewTermHandler {
 				
 		if(ontology.isCodelist()) {			
 			if(currentCodelist == null || !currentCodelist.equals(ontology)) {
-				list.setRowData(Collections.<Term>emptyList());
+				list.setRowData(Collections.emptyList());
 				list.setRowCount(0, true);
 				termIndex.clear();
 				

@@ -28,14 +28,14 @@ import com.novartis.pcs.ontology.entity.Synonym;
 @Local
 public interface SynonymDAOLocal extends VersionedDAO<Synonym> {
 	
-	public Collection<Synonym> loadByTermRefId(String termRefId);
+	Collection<Synonym> loadByTermRefId(String termRefId);
 	
-	public Collection<Synonym> loadByCtrldVocabTermId(ControlledVocabularyTerm ctrldVocabTerm);
+	Collection<Synonym> loadByCtrldVocabTermId(ControlledVocabularyTerm ctrldVocabTerm);
 	
-	public Collection<Synonym> loadBySynonym(String synonym);
+	Collection<Synonym> loadBySynonym(String synonym);
 	
-	public Collection<Synonym> loadByDatasource(Datasource datasource);
+	Collection<Synonym> loadByDatasource(Datasource datasource);
 	
-	public Collection<Synonym> loadByCtrldVocabRefId(Datasource datasource, String referenceId);
+	Collection<Synonym> loadByCtrldVocabRefId(Datasource datasource, String referenceId);
 	
 }

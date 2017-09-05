@@ -19,8 +19,8 @@ package com.novartis.pcs.ontology.webapp.client.view;
 
 public interface SearchOptionsProvider {
 	
-	public boolean includeSynonyms();
+	boolean includeSynonyms();
 	
-	public String filterByOntology();
+	String filterByOntology();
 
 }

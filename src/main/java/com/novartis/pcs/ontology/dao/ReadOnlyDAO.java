@@ -22,9 +22,9 @@ import java.util.List;
 import com.novartis.pcs.ontology.entity.AbstractEntity;
 
 public interface ReadOnlyDAO<T extends AbstractEntity> {
-	public T load(long id);
-	public T load(long id, boolean loadLazyAssociations);
-	public List<T> load(long[] ids);
-    public List<T> loadAll();
-    public List<T> loadLastCreated(int max);
+	T load(long id);
+	T load(long id, boolean loadLazyAssociations);
+	List<T> load(long[] ids);
+    List<T> loadAll();
+    List<T> loadLastCreated(int max);
 }

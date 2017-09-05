@@ -29,64 +29,64 @@ import com.novartis.pcs.ontology.entity.Term;
 
 public interface OntologyTermService {
 	
-	public Collection<Term> loadRoots();
+	Collection<Term> loadRoots();
 	
-	public Collection<Term> loadAll(String ontologyName);
+	Collection<Term> loadAll(String ontologyName);
 	
-	public Collection<Term> loadLastCreated(int max);
+	Collection<Term> loadLastCreated(int max);
 	
-	public Term loadByReferenceId(String referenceId, final String ontologyName);
+	Term loadByReferenceId(String referenceId, final String ontologyName);
 	
-	public Collection<RelationshipType> loadAllRelationshipTypes();
+	Collection<RelationshipType> loadAllRelationshipTypes();
 	
-	public Term createTerm(String ontologyName, String term,
-			String definition, String url, String comments,
-			String relatedTermRefId, String relationshipType,
-			String curatorUsername) throws DuplicateEntityException, InvalidEntityException;
+	Term createTerm(String ontologyName, String term,
+					String definition, String url, String comments,
+					String relatedTermRefId, String relationshipType,
+					String curatorUsername) throws DuplicateEntityException, InvalidEntityException;
 	
-	public Term createTerm(String ontologyName, String term,
-			String definition, String url, String comments,
-			String relatedTermRefId, String relationshipType,
-			String datasourceAcronym, String referenceId,
-			Collection<ControlledVocabularyTerm> synonyms,
-			Synonym.Type synonymType,
-			String curatorUsername) throws DuplicateEntityException, InvalidEntityException;
+	Term createTerm(String ontologyName, String term,
+					String definition, String url, String comments,
+					String relatedTermRefId, String relationshipType,
+					String datasourceAcronym, String referenceId,
+					Collection<ControlledVocabularyTerm> synonyms,
+					Synonym.Type synonymType,
+					String curatorUsername) throws DuplicateEntityException, InvalidEntityException;
 	
-	public Term addSynonym(String termRefId, String synonym, Synonym.Type type,
-			String datasourceAcronym, String referenceId, String curatorUsername)
+	Term addSynonym(String termRefId, String synonym, Synonym.Type type,
+					String datasourceAcronym, String referenceId, String curatorUsername)
 			throws DuplicateEntityException, InvalidEntityException;
 	
-	public Term addSynonym(String termRefId, 
-			ControlledVocabularyTerm vocabTerm, 
-			Synonym.Type synonymType,
-			String curatorUsername)
+	Term addSynonym(String termRefId,
+					ControlledVocabularyTerm vocabTerm,
+					Synonym.Type synonymType,
+					String curatorUsername)
 			throws DuplicateEntityException, InvalidEntityException;
 	
-	public Term addSynonyms(String termRefId, 
-			Collection<ControlledVocabularyTerm> terms, 
-			Synonym.Type synonymType,
-			String curatorUsername)
+	Term addSynonyms(String termRefId,
+					 Collection<ControlledVocabularyTerm> terms,
+					 Synonym.Type synonymType,
+					 String curatorUsername)
 			throws DuplicateEntityException, InvalidEntityException;
 	
-	public Term addRelationship(String termRefId, String relatedTermRefId,
-			String relationshipType, String curatorUsername, final String ontologyName)
+	Term addRelationship(String termRefId, String relatedTermRefId,
+						 String relationshipType, String curatorUsername, final String ontologyName)
 			throws DuplicateEntityException, InvalidEntityException;
 	
-	public Term updateTerm(long termId, String definition, String url, 
-			String comments, String curatorUsername) throws InvalidEntityException;
+	Term updateTerm(long termId, String definition, String url,
+					String comments, String curatorUsername) throws InvalidEntityException;
 	
-	public Synonym updateSynonym(long synonymId, Synonym.Type type, 
-			String curatorUsername) throws InvalidEntityException;
+	Synonym updateSynonym(long synonymId, Synonym.Type type,
+						  String curatorUsername) throws InvalidEntityException;
 	
-	public Relationship updateRelationship(long relationshipId, 
-			String relationship, String curatorUsername)
+	Relationship updateRelationship(long relationshipId,
+									String relationship, String curatorUsername)
 			throws InvalidEntityException, DuplicateEntityException;
 	
-	public void deleteTerm(long termId, String curatorUsername) throws InvalidEntityException;
+	void deleteTerm(long termId, String curatorUsername) throws InvalidEntityException;
 	
-	public void deleteSynonym(long synonymId, String curatorUsername) throws InvalidEntityException;
+	void deleteSynonym(long synonymId, String curatorUsername) throws InvalidEntityException;
 	
-	public void deleteRelationship(long relationshipId, String curatorUsername)
+	void deleteRelationship(long relationshipId, String curatorUsername)
 			throws InvalidEntityException;
 
 	Term loadByOntology(String ontologyName);

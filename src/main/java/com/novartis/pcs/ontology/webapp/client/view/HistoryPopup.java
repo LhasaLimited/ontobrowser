@@ -82,30 +82,30 @@ public class HistoryPopup implements OntoBrowserPopup, AsyncCallback<List<Curato
 		public int compare(CuratorAction action1, CuratorAction action2) {
 			return action2.getActionDate().compareTo(action1.getActionDate());
 		}
-	};
-		
+	}
+
 	private static class CuratorColumn extends ComparableTextColumn<CuratorAction> {
 		@Override
 		public String getValue(CuratorAction action) {
 			return action.getCurator().getUsername();
 		}
-	};
-	
+	}
+
 	private static class ActionColumn extends ComparableTextColumn<CuratorAction> {
 		@Override
 		public String getValue(CuratorAction action) {
 			return action.getAction().toString();
 		}
-	};
-	
+	}
+
 	private static class EntityColumn extends ComparableTextColumn<CuratorAction> {
 		@Override
 		public String getValue(CuratorAction action) {
 			String className = action.getEntity().getClass().getName();
 			return className.substring(className.lastIndexOf('.')+1);
 		}
-	};
-	
+	}
+
 	private static class OntologyColumn extends ComparableTextColumn<CuratorAction> {
 		@Override
 		public String getValue(CuratorAction action) {
@@ -113,8 +113,8 @@ public class HistoryPopup implements OntoBrowserPopup, AsyncCallback<List<Curato
 			
 			return term != null ? term.getOntology().getName() : null;
 		}
-	};
-	
+	}
+
 	private static class TermColumn extends Column<CuratorAction, InlineHyperlink> 
 			implements Comparator<CuratorAction> {
 		public TermColumn() {
@@ -139,8 +139,8 @@ public class HistoryPopup implements OntoBrowserPopup, AsyncCallback<List<Curato
 			return name1 != null ? name1.compareToIgnoreCase(name2)
 					: name2 != null ? 1 : 0;
 		}
-	};
-	
+	}
+
 	private static class EntityValueColumn extends ComparableTextColumn<CuratorAction> {	
 		@Override
 		public String getValue(CuratorAction action) {
@@ -157,15 +157,15 @@ public class HistoryPopup implements OntoBrowserPopup, AsyncCallback<List<Curato
 			
 			return value;
 		}
-	};
-		
+	}
+
 	private static class CommentsColumn extends ComparableTextColumn<CuratorAction> {
 		@Override
 		public String getValue(CuratorAction action) {
 			return action.getComments();
 		}
-	};
-	
+	}
+
 	private final OntoBrowserServiceAsync service;
 	private final DialogBox dialogBox = new DialogBox(false, false);
 	private final BusyIndicatorHandler busyIndicator = new WidgetBusyIndicatorHandler(dialogBox.getCaption().asWidget());

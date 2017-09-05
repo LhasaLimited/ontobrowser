@@ -29,17 +29,17 @@ import com.novartis.pcs.ontology.entity.Datasource;
 @Local
 public interface ControlledVocabularyTermDAOLocal extends DAO<ControlledVocabularyTerm> {
 	
-	public List<ControlledVocabularyTerm> loadUnmapped();
+	List<ControlledVocabularyTerm> loadUnmapped();
 	
-	public List<ControlledVocabularyTerm> loadUnmapped(ControlledVocabularyDomain domain);
+	List<ControlledVocabularyTerm> loadUnmapped(ControlledVocabularyDomain domain);
 	
-	public List<ControlledVocabularyTerm> loadUnmapped(ControlledVocabularyDomain domain,
-			ControlledVocabularyContext context);
+	List<ControlledVocabularyTerm> loadUnmapped(ControlledVocabularyDomain domain,
+												ControlledVocabularyContext context);
 	
-	public List<ControlledVocabularyTerm> loadUnmapped(ControlledVocabularyDomain domain,
-			Datasource datasource);
+	List<ControlledVocabularyTerm> loadUnmapped(ControlledVocabularyDomain domain,
+												Datasource datasource);
 	
-	public List<ControlledVocabularyTerm> loadUnmapped(ControlledVocabularyDomain domain,
-			ControlledVocabularyContext context, Datasource datasource);
+	List<ControlledVocabularyTerm> loadUnmapped(ControlledVocabularyDomain domain,
+												ControlledVocabularyContext context, Datasource datasource);
 
 }

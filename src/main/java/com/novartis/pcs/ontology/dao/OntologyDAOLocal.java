@@ -24,8 +24,8 @@ import com.novartis.pcs.ontology.entity.Ontology;
 @Local
 public interface OntologyDAOLocal extends VersionedDAO<Ontology> {
 	
-	public Ontology loadByName(String ontologyName);
+	Ontology loadByName(String ontologyName);
 	
-	public Ontology loadByName(String ontologyName, boolean lock);
+	Ontology loadByName(String ontologyName, boolean lock);
 
 }

@@ -19,10 +19,10 @@ package com.novartis.pcs.ontology.webapp.client.view;
 
 public interface BusyIndicatorHandler {
 	
-	public void busy();
+	void busy();
 	
-	public void idle();
+	void idle();
 	
-	public void error();
+	void error();
 
 }

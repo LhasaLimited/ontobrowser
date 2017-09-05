@@ -51,8 +51,8 @@ import javax.validation.constraints.NotNull;
 public class CuratorAction extends AbstractEntity {
 	private static final long serialVersionUID = 1L;
 	
-	public enum Action {APPROVE, REJECT, REPLACE};
-	
+	public enum Action {APPROVE, REJECT, REPLACE}
+
 	public static final String QUERY_BY_CURATOR_ID = "CuratorAction.loadByCuratorId";
 	
 	@NotNull
@@ -121,7 +121,7 @@ public class CuratorAction extends AbstractEntity {
 	public VersionedEntity getEntity() {
 		return term != null ? term :
 			relationship != null ? relationship :
-				synonym != null ? synonym : null;
+					synonym;
 	}
 	
 	public void setEntity(VersionedEntity entity) {

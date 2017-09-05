@@ -51,7 +51,7 @@ public class StatusChecker {
     			invalid.add(entity);
     		}
     	}
-    	return invalid.isEmpty() ? false : entities.removeAll(invalid);
+    	return !invalid.isEmpty() && entities.removeAll(invalid);
 	}
 	
 	public static <T extends VersionedEntity> Collection<T> valid(Collection<T> entities) {

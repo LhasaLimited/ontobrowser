@@ -22,6 +22,6 @@ import javax.ejb.Local;
 @Local
 public interface ControlledVocabularyAutoMapperLocal {
 	
-	public void execute(boolean sendNotifcation);
+	void execute(boolean sendNotifcation);
 
 }

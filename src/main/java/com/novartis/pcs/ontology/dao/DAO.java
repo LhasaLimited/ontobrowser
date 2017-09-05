@@ -21,7 +21,7 @@ import com.novartis.pcs.ontology.entity.AbstractEntity;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
 
 public interface DAO<T extends AbstractEntity> extends ReadOnlyDAO<T> {
-	public void save(T entity) throws InvalidEntityException;
-	public void saveAll(Iterable<T> entities) throws InvalidEntityException;
-	public void delete(T entity) throws InvalidEntityException;
+	void save(T entity) throws InvalidEntityException;
+	void saveAll(Iterable<T> entities) throws InvalidEntityException;
+	void delete(T entity) throws InvalidEntityException;
 }

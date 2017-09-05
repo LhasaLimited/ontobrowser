@@ -59,8 +59,8 @@ public class AddRelationshipPopup implements OntoBrowserPopup, ViewTermHandler, 
 		public String getValue(Term term) {
 			return term.getOntology().getName();
 		}
-	};
-	
+	}
+
 	private static class TermColumn extends Column<Term, InlineHyperlink> {
 		public TermColumn() {
 			super(new HyperlinkCell());
@@ -70,8 +70,8 @@ public class AddRelationshipPopup implements OntoBrowserPopup, ViewTermHandler, 
 		public InlineHyperlink getValue(Term term) {
 			return new InlineHyperlink(term.getName(), term.getReferenceId());
 		}
-	};
-	
+	}
+
 	private final OntoBrowserServiceAsync service;
 	private final EventBus eventBus;
 	private final DialogBox dialogBox = new DialogBox(false, false);

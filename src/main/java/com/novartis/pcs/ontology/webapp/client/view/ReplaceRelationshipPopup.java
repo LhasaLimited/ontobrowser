@@ -59,22 +59,22 @@ public class ReplaceRelationshipPopup implements OntoBrowserPopup, ClickHandler 
 			Term term = relationship.getRelatedTerm();
 			return term.getName(); 
 		}
-	};
-	
+	}
+
 	private static class RelationshipColumn extends TextColumn<Relationship> {
 		@Override
 		public String getValue(Relationship relationship) {
 			return relationship.getType().getRelationship();
 		}
-	};
-	
+	}
+
 	private static class StatusColumn extends TextColumn<Relationship> {
 		@Override
 		public String getValue(Relationship relationship) {
 			return relationship.getStatus().toString();
 		}
-	};
-		
+	}
+
 	private final OntoBrowserServiceAsync service;
 	private final EventBus eventBus;
 	private final DialogBox dialogBox = new DialogBox(false, true);
@@ -201,7 +201,7 @@ public class ReplaceRelationshipPopup implements OntoBrowserPopup, ClickHandler 
 			typeLabel.setText(null);
 			relatedTermLabel.setText(null);
 			
-			table.setRowData(Collections.<Relationship>emptyList());
+			table.setRowData(Collections.emptyList());
 			table.setRowCount(0, true);
 		}
 	}
@@ -229,7 +229,7 @@ public class ReplaceRelationshipPopup implements OntoBrowserPopup, ClickHandler 
 		table.addColumn(new StatusColumn(), "Status");
 		
 		table.setSelectionModel(selection, 
-				DefaultSelectionEventManager.<Relationship>createCheckboxManager(0));
+				DefaultSelectionEventManager.createCheckboxManager(0));
 		
 	}
 		

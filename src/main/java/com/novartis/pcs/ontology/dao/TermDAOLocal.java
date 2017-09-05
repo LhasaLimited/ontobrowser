@@ -31,19 +31,19 @@ import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
 @Local
 public interface TermDAOLocal extends VersionedDAO<Term> {
 	
-	public Collection<Term> loadRoots();
+	Collection<Term> loadRoots();
 	
-	public Collection<Term> loadAll(Ontology ontology);
+	Collection<Term> loadAll(Ontology ontology);
 	
-	public Collection<Term> loadSubTermsByReferenceId(String referenceId, Set<Status> status);
+	Collection<Term> loadSubTermsByReferenceId(String referenceId, Set<Status> status);
 	
-	public Term loadByReferenceId(String referenceId, final String ontologyName);
+	Term loadByReferenceId(String referenceId, final String ontologyName);
 	
-	public Term loadByReferenceId(String referenceId, final String ontologyName, boolean loadLazyAssociations);
+	Term loadByReferenceId(String referenceId, final String ontologyName, boolean loadLazyAssociations);
 	
-	public Term loadByName(String name, Ontology ontology);
+	Term loadByName(String name, Ontology ontology);
 	
-	public Term loadByName(String name, Ontology ontology, boolean loadLazyAssociations);
+	Term loadByName(String name, Ontology ontology, boolean loadLazyAssociations);
 
 	Term loadByOntology(String ontology, boolean loadLazyAssociations);
 

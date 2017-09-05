@@ -70,8 +70,8 @@ public class ControlledVocabularyTermLinksView {
 			
 			return name1.compareToIgnoreCase(name2);
 		}
-	};
-	
+	}
+
 	public static class DomainColumn extends TextColumn<ControlledVocabularyTermLink> 
 	implements Comparator<ControlledVocabularyTermLink> {
 		public DomainColumn() {
@@ -100,8 +100,8 @@ public class ControlledVocabularyTermLinksView {
 
 			return domain1.getName().compareToIgnoreCase(domain2.getName());
 		}
-	};
-	
+	}
+
 	public static class ContextColumn extends TextColumn<ControlledVocabularyTermLink> 
 			implements Comparator<ControlledVocabularyTermLink> {
 		public ContextColumn() {
@@ -128,8 +128,8 @@ public class ControlledVocabularyTermLinksView {
 
 			return context1.getName().compareToIgnoreCase(context2.getName());
 		}
-	};
-		
+	}
+
 	public static class SourceColumn extends TextColumn<ControlledVocabularyTermLink> 
 			implements Comparator<ControlledVocabularyTermLink> {
 		public SourceColumn() {
@@ -156,8 +156,8 @@ public class ControlledVocabularyTermLinksView {
 			
 			return datasource1.getAcronym().compareToIgnoreCase(datasource2.getAcronym());
 		}
-	};
-	
+	}
+
 	public static class UsageColumn extends Column<ControlledVocabularyTermLink, Number> 
 			implements Comparator<ControlledVocabularyTermLink> {
 		public UsageColumn() {
@@ -182,8 +182,8 @@ public class ControlledVocabularyTermLinksView {
 			
 			return usage1 == usage2 ? 0 : usage1 < usage2 ? -1 : 1;
 		}
-	};
-	
+	}
+
 	private final OntoBrowserServiceAsync service;
 	private final PopupPanel dialogBox = new PopupPanel(true, true);
 			

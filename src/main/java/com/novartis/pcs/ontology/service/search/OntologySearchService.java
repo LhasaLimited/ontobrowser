@@ -26,12 +26,12 @@ import com.novartis.pcs.ontology.service.search.result.InvalidQuerySyntaxExcepti
 
 public interface OntologySearchService {
 	
-	public List<HTMLSearchResult> search(String pattern, boolean includeSynonyms)
+	List<HTMLSearchResult> search(String pattern, boolean includeSynonyms)
 			throws InvalidQuerySyntaxException;
 	
-	public void update(Term term);
+	void update(Term term);
 	
-	public void update(Collection<Term> term);
+	void update(Collection<Term> term);
 	
-	public void delete(Term term);
+	void delete(Term term);
 }

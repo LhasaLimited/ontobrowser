@@ -67,22 +67,22 @@ public class RelatedTermsView extends OntoBrowserView implements ViewTermHandler
 			Term term = relationship.getRelatedTerm();
 			return new InlineHyperlink(term.getName(), OntoBrowser.historyTokenFor(term));
 		}
-	};
-	
+	}
+
 	private static class RelationshipColumn extends TextColumn<Relationship> {
 		@Override
 		public String getValue(Relationship relationship) {
 			return relationship.getType().getName(); //getRelationship();
 		}
-	};
-	
+	}
+
 	private static class StatusColumn extends TextColumn<Relationship> {
 		@Override
 		public String getValue(Relationship relationship) {
 			return relationship.getStatus().toString();
 		}
-	};
-		
+	}
+
 	private final Panel panel = new SimplePanel();
 	
 	private final ProvidesKey<Relationship> keyProvider = new EntityKeyProvider<Relationship>();

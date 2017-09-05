@@ -30,25 +30,25 @@ import com.novartis.pcs.ontology.entity.Synonym;
 
 public interface OntologySynonymService {
 	
-	public Collection<Synonym> loadSynonyms(String termRefId);
+	Collection<Synonym> loadSynonyms(String termRefId);
 	
-	public Collection<Datasource> loadPublicDatasources();
+	Collection<Datasource> loadPublicDatasources();
 	
-	public Collection<ControlledVocabulary> loadControlledVocabulariesWithUnmappedTerms();
+	Collection<ControlledVocabulary> loadControlledVocabulariesWithUnmappedTerms();
 	
-	public Collection<ControlledVocabularyTerm> loadUnmappedControlledVocabularyTerms(ControlledVocabularyDomain domain);
+	Collection<ControlledVocabularyTerm> loadUnmappedControlledVocabularyTerms(ControlledVocabularyDomain domain);
 	
-	public Collection<ControlledVocabularyTerm> loadUnmappedControlledVocabularyTerms(ControlledVocabularyDomain domain,
-			ControlledVocabularyContext context);
+	Collection<ControlledVocabularyTerm> loadUnmappedControlledVocabularyTerms(ControlledVocabularyDomain domain,
+																			   ControlledVocabularyContext context);
 	
-	public Collection<ControlledVocabularyTerm> loadUnmappedControlledVocabularyTerms(ControlledVocabularyDomain domain,
-			Datasource datasource);
+	Collection<ControlledVocabularyTerm> loadUnmappedControlledVocabularyTerms(ControlledVocabularyDomain domain,
+																			   Datasource datasource);
 	
-	public Collection<ControlledVocabularyTerm> loadUnmappedControlledVocabularyTerms(ControlledVocabularyDomain domain,
-			ControlledVocabularyContext context, Datasource datasource);
+	Collection<ControlledVocabularyTerm> loadUnmappedControlledVocabularyTerms(ControlledVocabularyDomain domain,
+																			   ControlledVocabularyContext context, Datasource datasource);
 	
-	public void excludeUnmappedControlledVocabularyTerms(Collection<ControlledVocabularyTerm> terms, 
-			String curatorUsername) throws InvalidEntityException;
+	void excludeUnmappedControlledVocabularyTerms(Collection<ControlledVocabularyTerm> terms,
+												  String curatorUsername) throws InvalidEntityException;
 	
-	public Collection<ControlledVocabularyTermLink> loadControlledVocabularyTermLinks(ControlledVocabularyTerm term);
+	Collection<ControlledVocabularyTermLink> loadControlledVocabularyTermLinks(ControlledVocabularyTerm term);
 }

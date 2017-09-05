@@ -21,6 +21,6 @@ import com.google.gwt.event.shared.EventHandler;
 
 public interface ViewTermHandler extends EventHandler {
 	
-	public void onViewTerm(ViewTermEvent event);
+	void onViewTerm(ViewTermEvent event);
 
 }

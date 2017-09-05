@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.Reader;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.PorterStemFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 
@@ -31,9 +30,9 @@ public class TermNameAnalyzer extends Analyzer {
 	private static class SavedStreams {
 		Tokenizer tokenizer;
 		TokenStream stream;
-	};
-	
-	
+	}
+
+
 	public TermNameAnalyzer(boolean indexing) {
 		this.indexing = indexing;
 	}
