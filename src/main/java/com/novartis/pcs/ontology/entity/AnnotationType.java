@@ -49,6 +49,9 @@ public class AnnotationType extends VersionedEntity implements ReplaceableEntity
 	@Column(name = "PREFIXED_XML_TYPE")
 	private String prefixedXmlType;
 
+	@Column(name = "DEFINITION_URL")
+	private String definitionUrl;
+
 	@ManyToOne
 	@JoinColumn(name = "ONTOLOGY_ID")
 	private Ontology ontology;
@@ -75,6 +78,14 @@ public class AnnotationType extends VersionedEntity implements ReplaceableEntity
 
 	public void setOntology(final Ontology ontology) {
 		this.ontology = ontology;
+	}
+
+	public String getDefinitionUrl() {
+		return definitionUrl;
+	}
+
+	public void setDefinitionUrl(final String definitionUrl) {
+		this.definitionUrl = definitionUrl;
 	}
 
 	@Override

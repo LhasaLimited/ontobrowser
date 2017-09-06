@@ -14,18 +14,18 @@ import org.semanticweb.owlapi.model.OWLLiteral;
  * @author Artur Polit
  * @since 09/08/2017
  */
-public class ApiHelper {
+public final class ApiHelper {
 
 	private ApiHelper() {
 	}
 
-	public static final String getString(OWLAnnotation owlAnnotation) {
+	public static String getString(OWLAnnotation owlAnnotation) {
 		String result = null;
 		if (owlAnnotation.getValue() instanceof OWLLiteral) {
 			OWLLiteral owlLiteral = (OWLLiteral) owlAnnotation.getValue();
 			result = owlLiteral.getLiteral();
 		} else if (owlAnnotation.getValue() instanceof IRI) {
-			result = ((IRI) owlAnnotation.getValue()).getRemainder().orNull();
+			result = owlAnnotation.getValue().toString();
 		}
 		return result;
 	}

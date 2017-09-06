@@ -162,8 +162,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		}
 		Set<OWLAnnotationProperty> annotationProps = owlOntology.getAnnotationPropertiesInSignature();
 		for (OWLAnnotationProperty annotationProp : annotationProps) {
-			context.visitPropertyAnnotation(annotationProp.getIRI().getRemainder().orNull(),
-					this::createAnnotationType);
+			context.putAnnotationType(annotationProp.getIRI().getRemainder().orNull(), createAnnotationType(annotationProp));
 		}
 
 
@@ -201,9 +200,10 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		context.approve(current);
 		return current;
 	}
-	private AnnotationType createAnnotationType(String name) {
-		AnnotationType anAnnotationType = new AnnotationType(name, context.getCurator(), context.getVersion());
+	private AnnotationType createAnnotationType(OWLAnnotationProperty annotationProp) {
+		AnnotationType anAnnotationType = new AnnotationType(annotationProp.getIRI().getRemainder().orNull(), context.getCurator(), context.getVersion());
 		anAnnotationType.setOntology(context.getOntology());
+		anAnnotationType.setDefinitionUrl(annotationProp.getIRI().toString());
 		context.approve(anAnnotationType);
 		return anAnnotationType;
 	}
@@ -258,7 +258,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 			logger.log(INFO, "Duplicated relationship {0} {1} {2}", new String[]{term.getReferenceId(),
 					relatedTerm.getReferenceId(), isARelationship.getRelationship()});
 		} else if (relatedTerm.getReferenceId().equalsIgnoreCase(OWL_THING.getShortForm())) {
-			logger.log(INFO, "Subclass to Thing dropped for {0} to {1]",
+			logger.log(INFO, "Subclass to Thing dropped for {0} to {1}",
 					new String[] { term.getReferenceId(), relatedTerm.getReferenceId() });
 		} else {
 			relationshipTypesSet.add(isARelationship.getRelationship());

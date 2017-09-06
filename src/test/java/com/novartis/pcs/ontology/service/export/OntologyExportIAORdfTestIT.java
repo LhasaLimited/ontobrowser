@@ -41,9 +41,9 @@ import com.novartis.pcs.ontology.service.importer.OntologyImportServiceLocal;
  */
 @RunWith(Arquillian.class)
 @Transactional(TransactionMode.ROLLBACK)
-public class OntologyExportOWLArqTestIT {
+public class OntologyExportIAORdfTestIT {
 
-	private static final String ONTOBROWSER_TEST = "OntobrowserTest";
+	private static final String ONTOLOGY_NAME = "iao";
 
 	@EJB(beanName = "owlImportService")
 	private OntologyImportServiceLocal importService;
@@ -71,33 +71,25 @@ public class OntologyExportOWLArqTestIT {
 				.addPackages(true, "com.novartis.pcs.ontology")
 				.addPackages(false, "org.semanticweb.owlapi.util", "org.coode.owlapi.obo12.parser")
 				.addAsResource("META-INF/persistence-test.xml", "META-INF/persistence.xml")
-				.addAsResource("test-reference/test-reference.owl");
+				.addAsResource("iao-merged.owl");
 	}
 
 	@Before
 	public void loadOntology() throws DuplicateEntityException, InvalidEntityException {
-		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/test-reference/test-reference.owl");
-		importService.importOntology("OntobrowserTest", ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
+		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/iao-merged.owl");
+		importService.importOntology(ONTOLOGY_NAME, ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
 
-		ontology = ontologyDAOLocal.loadByName("OntobrowserTest");
+		ontology = ontologyDAOLocal.loadByName(ONTOLOGY_NAME);
 		assertThat(ontology, notNullValue());
 	}
 
 	@Test
 	public void shouldExportOwlClassWithSourceIRI() throws OntologyNotFoundException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		exportService.exportOntology(ONTOBROWSER_TEST, baos, OntologyFormat.RDFXML);
+		exportService.exportOntology(ONTOLOGY_NAME, baos, OntologyFormat.RDFXML);
 		String rdfXML = baos.toString();
-		assertThat(rdfXML, containsString("about=\"http://www.lhasalimited.org/ontobrowser.owl#OB_00001\""));
-
-	}
-
-	@Test
-	public void shouldExportAnnotationValueAsUrl() throws OntologyNotFoundException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		exportService.exportOntology(ONTOBROWSER_TEST, baos, OntologyFormat.RDFXML);
-		String rdfXML = baos.toString();
-		assertThat(rdfXML, containsString("<obo:IAO_0000114 rdf:resource=\"http://purl.obolibrary.org/obo/IAO_0000122\"/>"));
+		assertThat(rdfXML, containsString("<obo:BFO_0000179>entity</obo:BFO_0000179>"));
+		System.out.print(rdfXML);
 	}
 
 }

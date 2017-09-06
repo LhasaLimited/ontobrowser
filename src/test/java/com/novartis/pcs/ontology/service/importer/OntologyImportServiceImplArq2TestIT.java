@@ -166,8 +166,9 @@ public class OntologyImportServiceImplArq2TestIT {
 				a -> a.getAnnotationType().getPrefixedXmlType().equals("IAO_0000114"))
 				.findFirst();
 		Annotation annotation = first.orElseThrow(AssertionFailedError::new);
-		assertThat(annotation.getAnnotation(), is("IAO_0000122"));
+		assertThat(annotation.getAnnotation(), is("http://purl.obolibrary.org/obo/IAO_0000122"));
 		assertThat(annotation.getAnnotationType().getAnnotationType(), is("has curation status"));
+		assertThat(annotation.getAnnotationType().getDefinitionUrl(), is("http://purl.obolibrary.org/obo/IAO_0000114"));
 	}
 
 	@Test

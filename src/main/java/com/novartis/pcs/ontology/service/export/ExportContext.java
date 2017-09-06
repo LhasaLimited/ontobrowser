@@ -8,8 +8,8 @@ package com.novartis.pcs.ontology.service.export;
 
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import org.semanticweb.owlapi.model.OWLAxiom;
-import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyFormat;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 
 import java.util.HashSet;
@@ -22,11 +22,13 @@ import java.util.Set;
 class ExportContext {
 	private final OWLOntologyManager manager;
 	private final OWLOntology ontology;
+	private final OWLOntologyFormat format;
 	private final Set<RelationshipType> relationshipTypes = new HashSet<>();
 
-	ExportContext(final OWLOntologyManager manager, final OWLDataFactory factory, final OWLOntology ontology) {
+	ExportContext(final OWLOntologyManager manager, final OWLOntology ontology, final OWLOntologyFormat format) {
 		this.manager = manager;
 		this.ontology = ontology;
+		this.format = format;
 	}
 
 	public void addRelationshipType(RelationshipType relationshipType) {
@@ -39,6 +41,10 @@ class ExportContext {
 
 	public Set<RelationshipType> getRelationshipTypes() {
 		return relationshipTypes;
+	}
+
+	public OWLOntologyFormat getFormat() {
+		return format;
 	}
 
 	public void addAxiom(OWLAxiom owlAxiom) {

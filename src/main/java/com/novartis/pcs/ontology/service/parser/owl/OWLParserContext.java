@@ -23,7 +23,6 @@ import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.entity.VersionedEntity;
-import org.semanticweb.owlapi.model.OWLClass;
 
 
 public class OWLParserContext {
@@ -196,11 +195,10 @@ public class OWLParserContext {
 		setRelationshipType(relationshipType);
 	}
 
-	void visitPropertyAnnotation(String propertyFragment, final Function<String, AnnotationType> annotationTypeFunction) {
-		AnnotationType annotationType = annotationTypes.computeIfAbsent(propertyFragment, annotationTypeFunction);
-		setAnnotationType(annotationType);
-	}
 
+	public void putAnnotationType(final String annotationTypeFragment, final AnnotationType annotationType) {
+		annotationTypes.put(annotationTypeFragment, annotationType);
+	}
 	void setStateWithEntity(final String referenceId) {
 		if (hasTerm(referenceId)) {
 			// if annotation is related to already existing class
@@ -224,4 +222,5 @@ public class OWLParserContext {
 		return relatedTerms.computeIfAbsent(relatedTerm.getReferenceId(),
 				id -> new HashSet<>());
 	}
+
 }

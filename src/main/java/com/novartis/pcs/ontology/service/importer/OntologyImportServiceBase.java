@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import com.novartis.pcs.ontology.dao.AnnotationTypeDAOLocal;
 import com.novartis.pcs.ontology.entity.AnnotationType;
@@ -35,6 +37,9 @@ public abstract class OntologyImportServiceBase extends OntologyService
 
     @EJB
     private AnnotationTypeDAOLocal annotationTypeDAO;
+
+    @PersistenceContext(unitName = "ontobrowser")
+    private EntityManager entityManager;
 
     public OntologyImportServiceBase() {
         super();
@@ -110,6 +115,8 @@ public abstract class OntologyImportServiceBase extends OntologyService
             }
             searchService.update(term);
         }
+        entityManager.flush();
+        entityManager.clear();
     }
 
     protected abstract void findRefId(Ontology ontology, Collection<Term> terms) throws InvalidEntityException;

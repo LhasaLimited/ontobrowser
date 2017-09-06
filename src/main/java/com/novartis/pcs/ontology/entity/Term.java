@@ -17,7 +17,9 @@ limitations under the License.
 */
 package com.novartis.pcs.ontology.entity;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.AssociationOverride;
@@ -149,7 +151,7 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "term",
 			cascade={CascadeType.PERSIST, CascadeType.REMOVE})
 	@Cache(usage=CacheConcurrencyStrategy.TRANSACTIONAL)
-	private Set<Annotation> annotations = new HashSet<>(0);
+	private List<Annotation> annotations = new ArrayList<>(0);
 
 	@Valid
 	@ManyToOne(cascade={CascadeType.PERSIST})
@@ -255,11 +257,11 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 		this.synonyms = synonyms;
 	}
 
-	public Set<Annotation> getAnnotations() {
+	public List<Annotation> getAnnotations() {
 		return annotations;
 	}
 
-	public void setAnnotations(final Set<Annotation> annotations) {
+	public void setAnnotations(final List<Annotation> annotations) {
 		this.annotations = annotations;
 	}
 

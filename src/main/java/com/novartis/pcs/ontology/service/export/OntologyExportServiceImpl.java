@@ -59,6 +59,9 @@ import org.semanticweb.owlapi.io.RDFXMLOntologyFormat;
 import org.semanticweb.owlapi.model.AddOntologyAnnotation;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
+import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
+import org.semanticweb.owlapi.model.OWLAnnotationProperty;
+import org.semanticweb.owlapi.model.OWLAnnotationValue;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
@@ -73,11 +76,14 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyFormat;
 import org.semanticweb.owlapi.model.OWLOntologyID;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.vocab.OWL2Datatype;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.novartis.pcs.ontology.dao.DatasourceDAOLocal;
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
 import com.novartis.pcs.ontology.dao.TermDAOLocal;
+import com.novartis.pcs.ontology.entity.Annotation;
 import com.novartis.pcs.ontology.entity.ControlledVocabularyTerm;
 import com.novartis.pcs.ontology.entity.CrossReference;
 import com.novartis.pcs.ontology.entity.Datasource;
@@ -88,6 +94,7 @@ import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
 import com.novartis.pcs.ontology.service.util.TermReferenceIdComparator;
+import com.novartis.pcs.ontology.webapp.client.util.UrlValidator;
 
 /**
  * Session Bean implementation class OntologyExportServiceImpl
@@ -380,7 +387,7 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 
 			OWLDataFactory factory = manager.getOWLDataFactory();
 			OWLOntology onto = exportOntology(ontology, manager, factory);
-			ExportContext exportContext = new ExportContext(manager, factory, onto);
+			ExportContext exportContext = new ExportContext(manager, onto, format);
 
 			Collection<Term> terms = termDAO.loadAll(ontology);
 			exportTerms(iriProvider, factory, terms, exportContext);
@@ -437,39 +444,9 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 				Set<OWLClassExpression> intersectClasses = new HashSet<>();
 				Set<OWLClassExpression> unionClasses = new HashSet<>();
 
-				for (Relationship relationship : term.getRelationships()) {
-					if (relationship.getStatus().equals(APPROVED)) {
-						RelationshipType type = relationship.getType();
-						Term relatedTerm = relationship.getRelatedTerm();
-						IRI relatedTermIRI = iriProvider.getIRI(relatedTerm);
-						OWLClass relatedTermClass = factory.getOWLClass(relatedTermIRI);
-						exportContext.addRelationshipType(type);
-						if (relationship.isIntersection()) {
-							OWLClassExpression intersect = relatedTermClass;
-							if (!type.getRelationship().equals("is_a")) {
-								IRI relationshipIRI = getRelationshipIRI(type.getRelationship());
-								OWLObjectProperty objectProp = factory.getOWLObjectProperty(relationshipIRI);
-								intersect = factory.getOWLObjectSomeValuesFrom(objectProp, relatedTermClass);
-							}
-							intersectClasses.add(intersect);
-						} else if (type.getRelationship().equals("is_a")) {
-							OWLAxiom axiom = factory.getOWLSubClassOfAxiom(termClass, relatedTermClass);
-							exportContext.addAxiom(axiom);
-						} else if (type.getRelationship().equals("union_of")) {
-							unionClasses.add(relatedTermClass);
-						} else if (type.getRelationship().equals("disjoint_from")) {
-							OWLAxiom axiom = factory.getOWLDisjointClassesAxiom(termClass, relatedTermClass);
-							exportContext.addAxiom(axiom);
-						} else {
-							IRI relationshipIRI = getRelationshipIRI(type.getRelationship());
-							OWLObjectProperty objectProp = factory.getOWLObjectProperty(relationshipIRI);
-							OWLObjectSomeValuesFrom someValuesFrom = factory.getOWLObjectSomeValuesFrom(objectProp,
-									relatedTermClass);
-							OWLAxiom axiom = factory.getOWLSubClassOfAxiom(termClass, someValuesFrom);
-							exportContext.addAxiom(axiom);
-						}
-					}
-				}
+				exportRelationships(iriProvider, factory, exportContext, term, termClass, intersectClasses,
+						unionClasses);
+				exportAnnotations(factory, exportContext, term, termIRI);
 
 				if (!intersectClasses.isEmpty()) {
 					OWLObjectIntersectionOf intersection = factory.getOWLObjectIntersectionOf(intersectClasses);
@@ -486,6 +463,71 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 				if (term.getStatus().equals(OBSOLETE)) {
 					OWLAxiom axiom = factory.getOWLAnnotationAssertionAxiom(factory.getOWLDeprecated(), termIRI,
 							factory.getOWLLiteral(true));
+					exportContext.addAxiom(axiom);
+				}
+			}
+		}
+	}
+
+	private void exportAnnotations(final OWLDataFactory factory, final ExportContext exportContext, final Term term,
+			final IRI termIRI) {
+		for (Annotation annotation : term.getAnnotations()) {
+			if (annotation == null) continue;
+			String annotationValue = annotation.getAnnotation();
+			String definitionUrl = annotation.getAnnotationType().getDefinitionUrl();
+			OWLAnnotationValue owlAnnotationValue;
+			if (UrlValidator.validate(annotationValue)) {
+				owlAnnotationValue = IRI.create(annotationValue);
+			} else if (CharMatcher.INVISIBLE.matchesAnyOf(annotationValue)) {
+				owlAnnotationValue = factory.getOWLLiteral(annotationValue, "en");
+			} else {
+				owlAnnotationValue = factory.getOWLLiteral(annotationValue, OWL2Datatype.RDF_PLAIN_LITERAL);
+			}
+			if (annotationValue != null) {
+				OWLAnnotationProperty property = factory.getOWLAnnotationProperty(IRI.create(definitionUrl));
+				OWLAnnotationAssertionAxiom axiom = factory.getOWLAnnotationAssertionAxiom(property, termIRI,
+						owlAnnotationValue);
+				exportContext.addAxiom(axiom);
+			} else {
+				logger.log(Level.SEVERE, "Annotation is null {0}, {1}",
+						new String[] { termIRI.toString(), definitionUrl });
+			}
+		}
+	}
+
+	private void exportRelationships(final IRIProvider iriProvider, final OWLDataFactory factory,
+			final ExportContext exportContext, final Term term, final OWLClass termClass,
+			final Set<OWLClassExpression> intersectClasses, final Set<OWLClassExpression> unionClasses)
+			throws URISyntaxException {
+		for (Relationship relationship : term.getRelationships()) {
+			if (relationship.getStatus().equals(APPROVED)) {
+				RelationshipType type = relationship.getType();
+				Term relatedTerm = relationship.getRelatedTerm();
+				IRI relatedTermIRI = iriProvider.getIRI(relatedTerm);
+				OWLClass relatedTermClass = factory.getOWLClass(relatedTermIRI);
+				exportContext.addRelationshipType(type);
+				if (relationship.isIntersection()) {
+					OWLClassExpression intersect = relatedTermClass;
+					if (!type.getRelationship().equals("is_a")) {
+						IRI relationshipIRI = getRelationshipIRI(type.getRelationship());
+						OWLObjectProperty objectProp = factory.getOWLObjectProperty(relationshipIRI);
+						intersect = factory.getOWLObjectSomeValuesFrom(objectProp, relatedTermClass);
+					}
+					intersectClasses.add(intersect);
+				} else if (type.getRelationship().equals("is_a")) {
+					OWLAxiom axiom = factory.getOWLSubClassOfAxiom(termClass, relatedTermClass);
+					exportContext.addAxiom(axiom);
+				} else if (type.getRelationship().equals("union_of")) {
+					unionClasses.add(relatedTermClass);
+				} else if (type.getRelationship().equals("disjoint_from")) {
+					OWLAxiom axiom = factory.getOWLDisjointClassesAxiom(termClass, relatedTermClass);
+					exportContext.addAxiom(axiom);
+				} else {
+					IRI relationshipIRI = getRelationshipIRI(type.getRelationship());
+					OWLObjectProperty objectProp = factory.getOWLObjectProperty(relationshipIRI);
+					OWLObjectSomeValuesFrom someValuesFrom = factory.getOWLObjectSomeValuesFrom(objectProp,
+							relatedTermClass);
+					OWLAxiom axiom = factory.getOWLSubClassOfAxiom(termClass, someValuesFrom);
 					exportContext.addAxiom(axiom);
 				}
 			}

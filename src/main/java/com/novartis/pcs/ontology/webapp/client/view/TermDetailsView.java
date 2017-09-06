@@ -17,7 +17,7 @@ limitations under the License.
 */
 package com.novartis.pcs.ontology.webapp.client.view;
 
-import java.util.Set;
+import java.util.List;
 import java.util.TreeSet;
 
 import com.google.gwt.event.shared.EventBus;
@@ -123,7 +123,7 @@ public class TermDetailsView extends OntoBrowserView
 		fillAnnotations(currentTerm.getAnnotations());
 	}
 
-	private void fillAnnotations(Set<Annotation> annotations) {
+	private void fillAnnotations(List<Annotation> annotations) {
 		annotationGrid.clear();
 		annotationGrid.resizeRows(annotations.size());
 		tabPanel.getTabBar().setTabText(1, "Annotations (" + annotations.size() + ")");
