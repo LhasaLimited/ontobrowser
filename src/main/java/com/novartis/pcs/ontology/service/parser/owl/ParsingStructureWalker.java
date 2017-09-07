@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.base.Optional;
 import org.semanticweb.owlapi.model.ClassExpressionType;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
@@ -162,7 +163,10 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		}
 		Set<OWLAnnotationProperty> annotationProps = owlOntology.getAnnotationPropertiesInSignature();
 		for (OWLAnnotationProperty annotationProp : annotationProps) {
-			context.putAnnotationType(annotationProp.getIRI().getRemainder().orNull(), createAnnotationType(annotationProp));
+			String annotationTypeFragment = annotationProp.getIRI().getRemainder().orNull();
+			if (!context.hasAnnotationType(annotationTypeFragment)) {
+				context.putAnnotationType(annotationTypeFragment, createAnnotationType(annotationProp));
+			}
 		}
 
 
@@ -186,11 +190,12 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 	private void fillSourceProperties(final OWLOntology owlOntology) {
 		OWLOntologyID ontologyID = owlOntology.getOntologyID();
-		String ontologyIRI = ontologyID.getOntologyIRI().toString();
 		Ontology ontology = context.getOntology();
-		ontology.setSourceUri(ontologyIRI);
-		ontology.setSourceRelease(ontologyID.getVersionIRI() == null ? ontologyIRI : ontologyID.getVersionIRI().toString());
-		ontology.setSourceNamespace(ontologyIRI.endsWith("/") ? ontologyIRI : ontologyIRI + "#");
+		String sourceUriStr = ontologyID.getOntologyIRI().get().toString();
+		ontology.setSourceUri(sourceUriStr);
+		Optional<IRI> versionIRI = ontologyID.getVersionIRI().or(ontologyID.getOntologyIRI());
+		ontology.setSourceRelease(versionIRI.get().toString());
+		ontology.setSourceNamespace(sourceUriStr.endsWith("/") ? sourceUriStr : sourceUriStr + "#");
 	}
 
 	private Term createTerm(OWLClass owlClass) {

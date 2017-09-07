@@ -24,11 +24,11 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.OWLDocumentFormat;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
-import org.semanticweb.owlapi.model.OWLOntologyFormat;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.util.OWLObjectVisitorExAdapter;
+import org.semanticweb.owlapi.util.OWLObjectVisitorAdapter;
 import org.semanticweb.owlapi.util.OWLOntologyWalker;
 
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
@@ -53,7 +53,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 	private class MyOWLOntologyWalker extends OWLOntologyWalker {
 		MyOWLOntologyWalker(OWLOntology owlOntology) {
 			super(Collections.singleton(owlOntology));
-			visitor = new OWLObjectVisitorExAdapter<>();
+			visitor = new OWLObjectVisitorAdapter();
 		}
 	}
 
@@ -103,7 +103,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			ontology.setImportedOntologies(imported);
 			entityManager.merge(ontology);
 		}
-		OWLOntologyFormat ontologyFormat = owlOntologyManager.getOntologyFormat(owlOntology);
+		OWLDocumentFormat ontologyFormat = owlOntologyManager.getOntologyFormat(owlOntology);
 		context.getOntology().setSourceFormat(ontologyFormat.getClass().getSimpleName());
 		Boolean validated = validateDuplicates(context);
 		if (!validated) {
@@ -118,7 +118,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 	}
 
 	private String getImportedName(final OWLOntology importedOwlOntology) {
-		return importedOwlOntology.getOntologyID().getOntologyIRI().getRemainder().get();
+		return importedOwlOntology.getOntologyID().getOntologyIRI().get().getRemainder().get();
 	}
 
 	private Boolean validateDuplicates(OWLParserContext context) {
