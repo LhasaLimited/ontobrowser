@@ -611,9 +611,7 @@ CREATE TABLE ANNOTATION_TYPE (
                                         CONSTRAINT ANNT_TYPE_PK
                                         PRIMARY KEY,
     ANNOTATION_TYPE   VARCHAR2(128)    NOT NULL,
-
     PREFIXED_XML_TYPE   VARCHAR2(64)   NOT NULL,
-
     STATUS              VARCHAR2(8)     DEFAULT 'PENDING' NOT NULL
                                         CONSTRAINT ANNT_TYPE_STATUS_CK
                                         CHECK(STATUS IN (
@@ -651,13 +649,10 @@ CREATE TABLE ANNOTATION (
     ANNOTATION_TYPE_ID NUMBER(12) NOT NULL
                                         CONSTRAINT ANNT_TYPE_FK
                                         REFERENCES ANNOTATION_TYPE,
-      
     TERM_ID            NUMBER(12)       NULL
                                         CONSTRAINT ANNT_TERM_FK
                                         REFERENCES TERM,
-                                        
     ANNOTATION        VARCHAR2(4000)   NOT NULL,
-
     STATUS              VARCHAR2(8)     DEFAULT 'PENDING' NOT NULL
                                         CONSTRAINT ANNT_STATUS_CK
                                         CHECK(STATUS IN (
