@@ -80,10 +80,12 @@ import org.semanticweb.owlapi.vocab.OWL2Datatype;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
+import com.novartis.pcs.ontology.dao.AnnotationTypeDAOLocal;
 import com.novartis.pcs.ontology.dao.DatasourceDAOLocal;
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
 import com.novartis.pcs.ontology.dao.TermDAOLocal;
 import com.novartis.pcs.ontology.entity.Annotation;
+import com.novartis.pcs.ontology.entity.AnnotationType;
 import com.novartis.pcs.ontology.entity.ControlledVocabularyTerm;
 import com.novartis.pcs.ontology.entity.CrossReference;
 import com.novartis.pcs.ontology.entity.Datasource;
@@ -112,6 +114,9 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 	
 	@EJB
 	protected DatasourceDAOLocal datasourceDAO;
+
+	@EJB
+	protected AnnotationTypeDAOLocal annotationTypeDao;
 	
 	@Resource(lookup="java:global/ontobrowser/export/owl/uri")
 	private URL baseURL;
@@ -387,8 +392,9 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 
 			OWLDataFactory factory = manager.getOWLDataFactory();
 			OWLOntology onto = exportOntology(ontology, manager, factory);
-			ExportContext exportContext = new ExportContext(manager, onto, format);
-
+			ExportContext exportContext = new ExportContext(manager, onto, format, iriProvider);
+			Collection<AnnotationType> annotationTypes = annotationTypeDao.loadByOntology(ontology);
+			exportAnnotationTypes(factory, exportContext, annotationTypes);
 			Collection<Term> terms = termDAO.loadAll(ontology);
 			exportTerms(iriProvider, factory, terms, exportContext);
 
@@ -399,6 +405,18 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 			logger.log(Level.WARNING, "Failed to export " + ontology.getName() + " in OWL format", e);
 			throw new RuntimeException(e);
 		}
+	}
+
+	private void exportAnnotationTypes(final OWLDataFactory factory, final ExportContext exportContext, final Collection<AnnotationType> annotationTypes) throws URISyntaxException {
+		for (AnnotationType annotationType : annotationTypes) {
+			IRI annTypeIRI = exportContext.getIriProvider().getIRI(annotationType);
+			// declaration
+			exportContext.addAxiom(factory.getOWLDeclarationAxiom(factory.getOWLAnnotationProperty(annTypeIRI)));
+			// label
+			exportContext.addAxiom(factory.getOWLAnnotationAssertionAxiom(factory.getRDFSLabel(), annTypeIRI,
+					factory.getOWLLiteral(annotationType.getAnnotationType())));
+		}
+
 	}
 
 	private OWLOntology exportOntology(final Ontology ontology, final OWLOntologyManager manager,

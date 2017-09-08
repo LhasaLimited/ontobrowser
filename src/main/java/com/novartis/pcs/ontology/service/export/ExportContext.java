@@ -23,12 +23,14 @@ class ExportContext {
 	private final OWLOntologyManager manager;
 	private final OWLOntology ontology;
 	private final OWLOntologyFormat format;
+	private final IRIProvider iriProvider;
 	private final Set<RelationshipType> relationshipTypes = new HashSet<>();
 
-	ExportContext(final OWLOntologyManager manager, final OWLOntology ontology, final OWLOntologyFormat format) {
+	ExportContext(final OWLOntologyManager manager, final OWLOntology ontology, final OWLOntologyFormat format, final IRIProvider iriProvider) {
 		this.manager = manager;
 		this.ontology = ontology;
 		this.format = format;
+		this.iriProvider = iriProvider;
 	}
 
 	public void addRelationshipType(RelationshipType relationshipType) {
@@ -37,6 +39,10 @@ class ExportContext {
 
 	public OWLOntology getOntology() {
 		return ontology;
+	}
+
+	public IRIProvider getIriProvider() {
+		return iriProvider;
 	}
 
 	public Set<RelationshipType> getRelationshipTypes() {

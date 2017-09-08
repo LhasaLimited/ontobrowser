@@ -88,7 +88,10 @@ public class OntologyExportIAORdfTestIT {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		exportService.exportOntology(ONTOLOGY_NAME, baos, OntologyFormat.RDFXML);
 		String rdfXML = baos.toString();
+		// entity with proper IRI
 		assertThat(rdfXML, containsString("<obo:BFO_0000179>entity</obo:BFO_0000179>"));
+		// annotation property label
+		assertThat(rdfXML, containsString("<rdfs:label rdf:datatype=\"http://www.w3.org/2001/XMLSchema#string\">defaultLanguage</rdfs:label>"));
 		System.out.print(rdfXML);
 	}
 

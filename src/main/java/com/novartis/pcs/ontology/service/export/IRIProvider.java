@@ -8,6 +8,7 @@ package com.novartis.pcs.ontology.service.export;
 
 import java.net.URISyntaxException;
 
+import com.novartis.pcs.ontology.entity.AnnotationType;
 import org.semanticweb.owlapi.model.IRI;
 
 import com.novartis.pcs.ontology.entity.Term;
@@ -18,6 +19,7 @@ import com.novartis.pcs.ontology.entity.Term;
  */
 interface IRIProvider {
 	IRI getIRI(Term term) throws URISyntaxException;
+	IRI getIRI(AnnotationType annotationType) throws  URISyntaxException;
 }
 /*
  * ---------------------------------------------------------------------* This

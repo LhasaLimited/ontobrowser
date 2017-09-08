@@ -11,6 +11,7 @@ import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.create
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import com.novartis.pcs.ontology.entity.AnnotationType;
 import org.semanticweb.owlapi.model.IRI;
 
 import com.novartis.pcs.ontology.entity.Ontology;
@@ -34,6 +35,11 @@ class DefaultIRIProvider implements IRIProvider {
 	@Override
 	public IRI getIRI(final Term term) throws URISyntaxException {
 		return createIRI(baseURL.toURI(), ontology.getName(), term.getReferenceId());
+	}
+
+	@Override
+	public IRI getIRI(final AnnotationType annotationType) throws URISyntaxException {
+		return createIRI(baseURL.toURI(), ontology.getName(), annotationType.getPrefixedXmlType());
 	}
 }
 /*

@@ -8,6 +8,7 @@ package com.novartis.pcs.ontology.service.export;
 
 import java.net.URISyntaxException;
 
+import com.novartis.pcs.ontology.entity.AnnotationType;
 import org.semanticweb.owlapi.model.IRI;
 
 import com.novartis.pcs.ontology.entity.Term;
@@ -21,6 +22,11 @@ class URLIRIProvider implements IRIProvider {
 	@Override
 	public IRI getIRI(final Term term) throws URISyntaxException {
 		return IRI.create(term.getUrl());
+	}
+
+	@Override
+	public IRI getIRI(final AnnotationType annotationType) throws URISyntaxException {
+		return IRI.create(annotationType.getDefinitionUrl());
 	}
 }
 /*

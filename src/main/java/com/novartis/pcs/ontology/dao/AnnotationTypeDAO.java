@@ -7,9 +7,12 @@
 package com.novartis.pcs.ontology.dao;
 
 import com.novartis.pcs.ontology.entity.AnnotationType;
+import com.novartis.pcs.ontology.entity.Ontology;
 
 import javax.ejb.Local;
 import javax.ejb.Stateless;
+import javax.persistence.TypedQuery;
+import java.util.Collection;
 
 /**
  * @author Artur Polit
@@ -17,10 +20,18 @@ import javax.ejb.Stateless;
  */
 @Stateless
 @Local(AnnotationTypeDAOLocal.class)
-public class AnnotationTypeDAO extends VersionedEntityDAO<AnnotationType> implements ReadOnlyDAO<AnnotationType> {
+public class AnnotationTypeDAO extends VersionedEntityDAO<AnnotationType> implements ReadOnlyDAO<AnnotationType>, AnnotationTypeDAOLocal {
 
 	public AnnotationTypeDAO() {
 		super();
+	}
+
+
+	@Override
+	public Collection<AnnotationType> loadByOntology(final Ontology ontology) {
+		TypedQuery<AnnotationType> namedQuery = entityManager.createNamedQuery(AnnotationType.QUERY_BY_ONTOLOGY, AnnotationType.class);
+		namedQuery.setParameter("ontology", ontology);
+		return namedQuery.getResultList();
 	}
 }
 /* ---------------------------------------------------------------------*

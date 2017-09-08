@@ -7,12 +7,16 @@
 package com.novartis.pcs.ontology.dao;
 
 import com.novartis.pcs.ontology.entity.AnnotationType;
+import com.novartis.pcs.ontology.entity.Ontology;
+
+import java.util.Collection;
 
 /**
  * @author Artur Polit
  * @since 12/07/2017
  */
 public interface AnnotationTypeDAOLocal extends VersionedDAO<AnnotationType> {
+	Collection<AnnotationType> loadByOntology(Ontology ontology);
 }
 /* ---------------------------------------------------------------------*
  * This software is the confidential and proprietary

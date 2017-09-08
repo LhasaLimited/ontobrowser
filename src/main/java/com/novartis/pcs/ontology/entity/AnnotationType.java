@@ -15,6 +15,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.validation.Valid;
 
@@ -27,7 +29,11 @@ import javax.validation.Valid;
 @AttributeOverride(name = "id",
 		column = @Column(name = "ANNOTATION_TYPE_ID", unique = true, nullable = false))
 @AssociationOverride(name = "curatorActions", joinColumns = @JoinColumn(name = "ANNOTATION_TYPE_ID"))
+@NamedQueries({
+		@NamedQuery(name = AnnotationType.QUERY_BY_ONTOLOGY, query = "from AnnotationType at where at.ontology = :ontology") })
 public class AnnotationType extends VersionedEntity implements ReplaceableEntity<AnnotationType> {
+
+	public static final String QUERY_BY_ONTOLOGY = "AnnotationType.queryByOntology";
 
 	public AnnotationType(final String prefixedXmlType, final Curator creator, final Version version) {
 		super(creator, version);
