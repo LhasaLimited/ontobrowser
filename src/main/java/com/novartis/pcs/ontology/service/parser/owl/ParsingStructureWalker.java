@@ -6,6 +6,7 @@
  */
 package com.novartis.pcs.ontology.service.parser.owl;
 
+import static com.novartis.pcs.ontology.service.export.ReferenceIdProvider.getRefId;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static org.semanticweb.owlapi.vocab.OWLRDFVocabulary.OWL_THING;
@@ -19,7 +20,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.base.Optional;
 import org.semanticweb.owlapi.model.ClassExpressionType;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
@@ -98,11 +98,14 @@ import org.semanticweb.owlapi.model.OWLTransitiveObjectPropertyAxiom;
 import org.semanticweb.owlapi.util.OWLObjectWalker;
 import org.semanticweb.owlapi.util.StructureWalker;
 
+import com.google.common.base.Optional;
 import com.novartis.pcs.ontology.entity.AnnotationType;
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.entity.TermType;
+import com.novartis.pcs.ontology.service.export.ReferenceIdProvider;
 import com.novartis.pcs.ontology.service.parser.owl.handlers.AnnotationTypeNameHandler;
 import com.novartis.pcs.ontology.service.parser.owl.handlers.OntologyDescriptionHandler;
 import com.novartis.pcs.ontology.service.parser.owl.handlers.RelationshipTypeNameHandler;
@@ -156,14 +159,23 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 		Set<OWLClass> owlClasses = owlOntology.getClassesInSignature();
 		for (OWLClass owlClass : owlClasses) {
-			String fragment = owlClass.getIRI().getRemainder().get();
+			String fragment = ReferenceIdProvider.getRefId(owlClass);
 			if (!context.hasTerm(fragment)) {
 				context.putTerm(fragment, createTerm(owlClass));
 			}
 		}
+
+		Set<OWLNamedIndividual> individuals = owlOntology.getIndividualsInSignature();
+		for (OWLNamedIndividual individual : individuals) {
+			String fragment = ReferenceIdProvider.getRefId(individual);
+			if (!context.hasTerm(fragment)) {
+				context.putTerm(fragment, createTerm(individual));
+			}
+		}
+
 		Set<OWLAnnotationProperty> annotationProps = owlOntology.getAnnotationPropertiesInSignature();
 		for (OWLAnnotationProperty annotationProp : annotationProps) {
-			String annotationTypeFragment = annotationProp.getIRI().getRemainder().orNull();
+			String annotationTypeFragment = getRefId(annotationProp);
 			if (!context.hasAnnotationType(annotationTypeFragment)) {
 				context.putAnnotationType(annotationTypeFragment, createAnnotationType(annotationProp));
 			}
@@ -172,13 +184,13 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 		Set<OWLObjectProperty> objectProperties = owlOntology.getObjectPropertiesInSignature();
 		for (OWLObjectProperty objectProperty : objectProperties) {
-			context.visitPropertyRelationship(objectProperty.getIRI().getRemainder().orNull(),
+			context.visitPropertyRelationship(getRefId(objectProperty),
 					this::createRelationshipType);
 		}
 
 		Set<OWLDataProperty> dataProperties = owlOntology.getDataPropertiesInSignature();
 		for (OWLDataProperty owlDataProperty : dataProperties) {
-			context.visitPropertyRelationship(owlDataProperty.getIRI().getRemainder().orNull(),
+			context.visitPropertyRelationship(getRefId(owlDataProperty),
 					this::createRelationshipType);
 		}
 
@@ -205,8 +217,19 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		context.approve(current);
 		return current;
 	}
+
+	private Term createTerm(OWLNamedIndividual owlIndividual) {
+		String fragment = getRefId(owlIndividual);
+		Term current = new Term(context.getOntology(), fragment, fragment, context.getCurator(), context.getVersion());
+		current.setUrl(owlIndividual.getIRI().toString());
+		current.setType(TermType.INDIVIDUAL);
+		context.approve(current);
+		return current;
+	}
+
 	private AnnotationType createAnnotationType(OWLAnnotationProperty annotationProp) {
-		AnnotationType anAnnotationType = new AnnotationType(annotationProp.getIRI().getRemainder().orNull(), context.getCurator(), context.getVersion());
+		AnnotationType anAnnotationType = new AnnotationType(getRefId(annotationProp), context.getCurator(),
+				context.getVersion());
 		anAnnotationType.setOntology(context.getOntology());
 		anAnnotationType.setDefinitionUrl(annotationProp.getIRI().toString());
 		context.approve(anAnnotationType);
@@ -235,11 +258,22 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	@Override
 	public void visit(OWLClass owlClass) {
 		logger.log(FINE, "OWLClass:{0}", owlClass.toString());
-		String fragment = owlClass.getIRI().getRemainder().orNull();
+		String fragment = getRefId(owlClass);
 		Term current = context.getTerm(fragment);
 		context.termPush(current);
 		context.statePush(ParserState.TERM);
 		super.visit(owlClass);
+		context.statePop();
+	}
+
+	@Override
+	public void visit(final OWLNamedIndividual individual) {
+		logger.log(FINE, "OWLNamedIndividual:{0}", individual.toString());
+		String fragment = ReferenceIdProvider.getRefId(individual);
+		Term current = context.getTerm(fragment);
+		context.termPush(current);
+		context.statePush(ParserState.TERM);
+		super.visit(individual);
 		context.statePop();
 	}
 
@@ -255,6 +289,10 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		// order!
 		Term term = context.termPop();
 
+		createIsARelationship(relatedTerm, term);
+	}
+
+	private void createIsARelationship(final Term relatedTerm, final Term term) {
 		RelationshipType isARelationship = context.getRelationshipType("is_a");
 
 		Set<String> relationshipTypesSet = context.getRelationshipTypes(relatedTerm, term);
@@ -267,8 +305,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 					new String[] { term.getReferenceId(), relatedTerm.getReferenceId() });
 		} else {
 			relationshipTypesSet.add(isARelationship.getRelationship());
-			Relationship relationship = createRelationship(relatedTerm, term, isARelationship, context.getOntology());
-			term.getRelationships().add(relationship);
+			createRelationship(relatedTerm, term, isARelationship, context.getOntology());
 		}
 	}
 
@@ -367,7 +404,13 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	@Override
 	public void visit(OWLClassAssertionAxiom axiom) {
 		logger.log(FINE, "OWLClassAssertionAxiom:{0}", axiom.toString());
-		super.visit(axiom);
+
+		if (axiom.getIndividual() instanceof OWLNamedIndividual && axiom.getClassExpression() instanceof OWLClass) {
+			OWLNamedIndividual namedIndividual = (OWLNamedIndividual) axiom.getIndividual();
+			Term individual = context.getTerm(getRefId(namedIndividual));
+			Term indClass = context.getTerm(getRefId((OWLClass) axiom.getClassExpression()));
+			createIsARelationship(indClass, individual);
+		}
 	}
 
 	@Override
@@ -568,11 +611,6 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		super.visit(literal);
 	}
 
-	@Override
-	public void visit(OWLNamedIndividual individual) {
-		logger.log(FINE, "OWLNamedIndividual:{0}", individual.toString());
-		super.visit(individual);
-	}
 
 	@Override
 	public void visit(OWLNegativeDataPropertyAssertionAxiom axiom) {

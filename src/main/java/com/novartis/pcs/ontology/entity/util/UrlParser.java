@@ -246,6 +246,6 @@ public class UrlParser {
 	}
 
 	public static boolean isValidProtocol(String protocol) {
-		return protocol.equals("http") || protocol.equals("https");
+		return protocol.equals("http") || protocol.equals("https") || protocol.equals("mailto");
 	}
 }

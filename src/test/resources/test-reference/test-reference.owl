@@ -28,10 +28,10 @@
         <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Ontology comment 2</Literal>
     </Annotation>
     <Declaration>
-        <Class IRI="#OB_00010"/>
+        <AnnotationProperty abbreviatedIRI="obo:IAO_0000115"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty abbreviatedIRI="obo:IAO_0000115"/>
+        <Class IRI="#OB_00010"/>
     </Declaration>
     <Declaration>
         <Class IRI="#OB_00002"/>
@@ -43,13 +43,16 @@
         <Class IRI="#OB_00015"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#OB_00014"/>
-    </Declaration>
-    <Declaration>
         <Class IRI="#OB_00003"/>
     </Declaration>
     <Declaration>
+        <Class IRI="#OB_00014"/>
+    </Declaration>
+    <Declaration>
         <AnnotationProperty abbreviatedIRI="obo:IAO_0000114"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#someObjectProperty"/>
     </Declaration>
     <Declaration>
         <Class IRI="#OB_00016"/>
@@ -58,13 +61,22 @@
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasNarrowSynonym"/>
     </Declaration>
     <Declaration>
+        <NamedIndividual IRI="#assayIndividual"/>
+    </Declaration>
+    <Declaration>
+        <NamedIndividual IRI="#TopClassIndividual"/>
+    </Declaration>
+    <Declaration>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasDbXref"/>
+    </Declaration>
+    <Declaration>
+        <AnnotationProperty abbreviatedIRI="oboInOwl:hasRelatedSynonym"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasBroadSynonym"/>
     </Declaration>
     <Declaration>
-        <AnnotationProperty abbreviatedIRI="oboInOwl:hasRelatedSynonym"/>
+        <DataProperty IRI="#someDataProperty"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasExactSynonym"/>
@@ -89,6 +101,38 @@
         <Class IRI="#OB_00016"/>
         <Class IRI="#OB_00001"/>
     </SubClassOf>
+    <ClassAssertion>
+        <Class IRI="#OB_00010"/>
+        <NamedIndividual IRI="#TopClassIndividual"/>
+    </ClassAssertion>
+    <ClassAssertion>
+        <Class IRI="#OB_00001"/>
+        <NamedIndividual IRI="#assayIndividual"/>
+    </ClassAssertion>
+    <ObjectPropertyAssertion>
+        <ObjectProperty IRI="#someObjectProperty"/>
+        <NamedIndividual IRI="#TopClassIndividual"/>
+        <NamedIndividual IRI="#assayIndividual"/>
+    </ObjectPropertyAssertion>
+    <DataPropertyAssertion>
+        <DataProperty IRI="#someDataProperty"/>
+        <NamedIndividual IRI="#TopClassIndividual"/>
+        <Literal datatypeIRI="http://www.w3.org/2000/01/rdf-schema#Literal">Data property value</Literal>
+    </DataPropertyAssertion>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#someObjectProperty"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#someObjectProperty"/>
+            <Class IRI="#OB_00001"/>
+        </ObjectSomeValuesFrom>
+    </ObjectPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#someDataProperty"/>
+        <DataSomeValuesFrom>
+            <DataProperty IRI="#someDataProperty"/>
+            <Datatype abbreviatedIRI="rdfs:Literal"/>
+        </DataSomeValuesFrom>
+    </DataPropertyDomain>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <AbbreviatedIRI>obo:IAO_0000114</AbbreviatedIRI>
@@ -208,6 +252,16 @@
         <AnnotationProperty abbreviatedIRI="rdfs:label"/>
         <IRI>#OB_00016</IRI>
         <Literal xml:lang="en" datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">assay_kit_4</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
+        <IRI>#TopClassIndividual</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Top class individual</Literal>
+    </AnnotationAssertion>
+    <AnnotationAssertion>
+        <AnnotationProperty abbreviatedIRI="rdfs:label"/>
+        <IRI>#assayIndividual</IRI>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">Assay individual</Literal>
     </AnnotationAssertion>
 </Ontology>
 

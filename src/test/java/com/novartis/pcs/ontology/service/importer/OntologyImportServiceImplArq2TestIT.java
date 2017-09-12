@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import javax.ejb.EJB;
 
 import org.coode.owlapi.obo12.parser.OBOVocabulary;
+import org.hamcrest.CoreMatchers;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.transaction.api.annotation.TransactionMode;
@@ -40,6 +41,7 @@ import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.entity.TermType;
 import com.novartis.pcs.ontology.service.OntologyTermServiceLocal;
 
 import junit.framework.AssertionFailedError;
@@ -181,6 +183,20 @@ public class OntologyImportServiceImplArq2TestIT {
 		Optional<Relationship> parentClassRelOpt = findRel(relationships, ROOT_IRI);
 		Relationship parentClassRel = parentClassRelOpt.orElseThrow(AssertionError::new);
 		assertThat(parentClassRel.isLeaf(), is(Boolean.FALSE));
+	}
+
+	@Test
+	public void shouldImportIndividual() {
+		Collection<Term> terms = termDAO.loadAll(ontology);
+		assertThat(terms.size(), is(7 + 2));
+		Term topClassIndividual = termDAO.loadByReferenceId("TopClassIndividual", ontology.getName(), true);
+		Term topClass = termDAO.loadByReferenceId("OB_00010", ontology.getName(), true);
+		assertThat(topClassIndividual, CoreMatchers.notNullValue());
+		assertThat(topClassIndividual.getType(), is(TermType.INDIVIDUAL));
+		Relationship someObjectProperty = topClassIndividual.getRelationships().stream()
+				.filter(r -> r.getType().getRelationship().equals("is_a")).findAny()
+				.orElseThrow(AssertionError::new);
+		assertThat(someObjectProperty.getRelatedTerm(), is(topClass));
 	}
 
 	private Optional<Relationship> findRel(final Collection<Relationship> relationships, final String referenceId) {

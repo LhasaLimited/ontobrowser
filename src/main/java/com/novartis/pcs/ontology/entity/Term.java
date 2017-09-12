@@ -26,6 +26,7 @@ import javax.persistence.AssociationOverride;
 import javax.persistence.AttributeOverride;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -128,6 +129,10 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 	
 	@Column(name = "IS_ROOT", nullable = false)
 	private boolean root;
+
+	@Column(name = "TERM_TYPE")
+	@Convert(converter = TermTypeConverter.class)
+	private TermType type;
 	
 	@Valid
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "term",
@@ -167,6 +172,7 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 		setOntology(ontology);
 		setName(name);
 		setReferenceId(referenceId);
+		this.type = TermType.CLASS;
 	}
 	
 	public Ontology getOntology() {
@@ -207,10 +213,14 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 
 	public void setUrl(String url) {
 		if(url != null && url.trim().length() > 0) {
-			try {
-				this.url = UrlParser.parse(url.trim());
-			} catch(Exception e) {
-				throw new IllegalArgumentException("Invalid URL: " + e.getMessage());
+			if (url.startsWith("mailto")) {
+				this.url = url;
+			} else {
+				try {
+					this.url = UrlParser.parse(url.trim());
+				} catch (Exception e) {
+					throw new IllegalArgumentException("Invalid URL: " + e.getMessage());
+				}
 			}
 		} else {
 			this.url = null;
@@ -232,7 +242,15 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 	public void setRoot(boolean root) {
 		this.root = root;
 	}
-		
+
+	public TermType getType() {
+		return type;
+	}
+
+	public void setType(final TermType type) {
+		this.type = type;
+	}
+
 	public Set<CrossReference> getCrossReferences() {
 		return crossReferences;
 	}

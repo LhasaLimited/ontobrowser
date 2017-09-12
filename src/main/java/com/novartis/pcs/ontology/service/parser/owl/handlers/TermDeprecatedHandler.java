@@ -6,9 +6,12 @@
  */
 package com.novartis.pcs.ontology.service.parser.owl.handlers;
 
+import org.semanticweb.owlapi.model.OWLAnnotation;
+
+import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.entity.VersionedEntity;
 import com.novartis.pcs.ontology.service.parser.owl.OWLParserContext;
 import com.novartis.pcs.ontology.service.parser.owl.OWLVisitorHandler;
-import org.semanticweb.owlapi.model.OWLAnnotation;
 
 /**
  * @author Artur Polit
@@ -23,7 +26,9 @@ public class TermDeprecatedHandler implements OWLVisitorHandler {
 
 	@Override
 	public void handleAnnotation(final OWLParserContext context, final OWLAnnotation owlAnnotation) {
-		context.termPeek().setObsoleteVersion(context.getVersion());
+		Term term = context.termPeek();
+		term.setObsoleteVersion(context.getVersion());
+		term.setStatus(VersionedEntity.Status.OBSOLETE);
 	}
 }
 /* ---------------------------------------------------------------------*
