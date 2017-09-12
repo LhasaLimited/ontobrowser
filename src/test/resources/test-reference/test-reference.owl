@@ -73,6 +73,9 @@
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasRelatedSynonym"/>
     </Declaration>
     <Declaration>
+        <Class IRI="#topLeafClass"/>
+    </Declaration>
+    <Declaration>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasBroadSynonym"/>
     </Declaration>
     <Declaration>

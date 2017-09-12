@@ -177,7 +177,7 @@ public class OntologyImportServiceImplArq2TestIT {
 	public void shouldSelectRootTermsForOntology() {
 		Term thing = termDAO.loadByReferenceId("Thing", "OWL");
 		Collection<Relationship> relationships = ontologyTermService.getRelationships(thing, "OntobrowserTest", false);
-		Optional<Relationship> topClassRelOpt = findRel(relationships, "OB_00010");
+		Optional<Relationship> topClassRelOpt = findRel(relationships, "topLeafClass");
 		Relationship topClassRel = topClassRelOpt.orElseThrow(AssertionError::new);
 		assertThat(topClassRel.isLeaf(), is(Boolean.TRUE));
 		Optional<Relationship> parentClassRelOpt = findRel(relationships, ROOT_IRI);
@@ -188,7 +188,7 @@ public class OntologyImportServiceImplArq2TestIT {
 	@Test
 	public void shouldImportIndividual() {
 		Collection<Term> terms = termDAO.loadAll(ontology);
-		assertThat(terms.size(), is(7 + 2));
+		assertThat(terms.size(), is(8 + 2));
 		Term topClassIndividual = termDAO.loadByReferenceId("TopClassIndividual", ontology.getName(), true);
 		Term topClass = termDAO.loadByReferenceId("OB_00010", ontology.getName(), true);
 		assertThat(topClassIndividual, CoreMatchers.notNullValue());
