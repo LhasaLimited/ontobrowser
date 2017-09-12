@@ -20,10 +20,10 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLDocumentFormat;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -31,6 +31,8 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.util.OWLObjectVisitorAdapter;
 import org.semanticweb.owlapi.util.OWLOntologyWalker;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
 import com.novartis.pcs.ontology.entity.Ontology;
@@ -118,7 +120,9 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 	}
 
 	private String getImportedName(final OWLOntology importedOwlOntology) {
-		return importedOwlOntology.getOntologyID().getOntologyIRI().get().getRemainder().get();
+		Optional<IRI> documentIRI = importedOwlOntology.getOntologyID().getDefaultDocumentIRI();
+		return documentIRI.isPresent() ? documentIRI.get().getRemainder().get()
+				: importedOwlOntology.getOntologyID().toString();
 	}
 
 	private Boolean validateDuplicates(OWLParserContext context) {

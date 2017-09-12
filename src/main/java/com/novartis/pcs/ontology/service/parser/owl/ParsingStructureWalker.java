@@ -203,11 +203,16 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	private void fillSourceProperties(final OWLOntology owlOntology) {
 		OWLOntologyID ontologyID = owlOntology.getOntologyID();
 		Ontology ontology = context.getOntology();
-		String sourceUriStr = ontologyID.getOntologyIRI().get().toString();
-		ontology.setSourceUri(sourceUriStr);
-		Optional<IRI> versionIRI = ontologyID.getVersionIRI().or(ontologyID.getOntologyIRI());
-		ontology.setSourceRelease(versionIRI.get().toString());
-		ontology.setSourceNamespace(sourceUriStr.endsWith("/") ? sourceUriStr : sourceUriStr + "#");
+		Optional<IRI> ontologyIRI = ontologyID.getOntologyIRI();
+		if (ontologyIRI.isPresent()) {
+			String sourceUriStr = ontologyIRI.get().toString();
+			ontology.setSourceNamespace(sourceUriStr.endsWith("/") ? sourceUriStr : sourceUriStr + "#");
+			ontology.setSourceUri(sourceUriStr);
+		}
+		Optional<IRI> versionIRI = ontologyID.getVersionIRI().or(ontologyIRI);
+		if (versionIRI.isPresent()) {
+			ontology.setSourceRelease(versionIRI.get().toString());
+		}
 	}
 
 	private Term createTerm(OWLClass owlClass) {
