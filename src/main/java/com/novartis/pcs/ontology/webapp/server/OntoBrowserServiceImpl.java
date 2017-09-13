@@ -60,6 +60,7 @@ import com.novartis.pcs.ontology.service.search.OntologySearchServiceLocal;
 import com.novartis.pcs.ontology.service.search.result.HTMLSearchResult;
 import com.novartis.pcs.ontology.service.search.result.InvalidQuerySyntaxException;
 import com.novartis.pcs.ontology.service.util.TermNameComparator;
+import com.novartis.pcs.ontology.webapp.client.ChildTermDto;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserService;
 
 /**
@@ -177,20 +178,13 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 	}
 
 	@Override
-	public Term createChildTerm(String ontologyName, String termName,
-			String definition, String url, String comments, String relatedTermRefId, String relationshipType,
-			String datasourceAcronym, String referenceId, List<ControlledVocabularyTerm> synonyms, Type synonymType,
-			final Boolean isIndividual)
-					throws DuplicateEntityException, InvalidEntityException {
+	public Term createChildTerm(final ChildTermDto childTermDto)
+			throws DuplicateEntityException, InvalidEntityException {
 		String username = getUsername();
 		
-		logger.info(username + " creating term: " + termName);
+		logger.info(username + " creating term: " + childTermDto.getTermName());
 		
-		return termService.createTerm(ontologyName, termName, 
-				definition, url, comments,
-				relatedTermRefId, relationshipType,
-				datasourceAcronym, referenceId,
-				synonyms, synonymType, username, isIndividual);
+		return termService.createTerm(childTermDto, username);
 	}
 
 	@Override

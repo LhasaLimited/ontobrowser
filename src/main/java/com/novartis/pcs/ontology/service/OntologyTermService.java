@@ -26,6 +26,7 @@ import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.webapp.client.ChildTermDto;
 
 public interface OntologyTermService {
 	
@@ -44,13 +45,8 @@ public interface OntologyTermService {
 					String relatedTermRefId, String relationshipType,
 					String curatorUsername) throws DuplicateEntityException, InvalidEntityException;
 	
-	Term createTerm(String ontologyName, String term,
-					String definition, String url, String comments,
-					String relatedTermRefId, String relationshipType,
-					String datasourceAcronym, String referenceId,
-					Collection<ControlledVocabularyTerm> synonyms,
-					Synonym.Type synonymType,
-			String curatorUsername, final Boolean isIndividual) throws DuplicateEntityException, InvalidEntityException;
+	Term createTerm(final ChildTermDto childTermDto, String curatorUsername)
+			throws DuplicateEntityException, InvalidEntityException;
 	
 	Term addSynonym(String termRefId, String synonym, Synonym.Type type,
 					String datasourceAcronym, String referenceId, String curatorUsername)

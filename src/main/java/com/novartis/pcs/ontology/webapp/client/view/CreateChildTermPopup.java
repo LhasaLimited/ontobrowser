@@ -61,6 +61,8 @@ import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.TermType;
 import com.novartis.pcs.ontology.service.util.DatasourceAcronymComparator;
+import com.novartis.pcs.ontology.webapp.client.ChildTermDto;
+import com.novartis.pcs.ontology.webapp.client.ChildTermDtoBuilder;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowser;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermEvent;
@@ -312,19 +314,16 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 			nameError.setText(null);
 			busyIndicator.busy();
 			createButton.setEnabled(false);
-			service.createChildTerm(currentTerm.getOntology().getName(),
-					nameField.getValue().trim(),
-					definitionField.getValue().trim(),
-					url,
-					commentsField.getValue().trim(),
-					currentTerm.getReferenceId(),
-					typeDropBox.getValue(typeDropBox.getSelectedIndex()),
-					source,
-					refId,
-					currentSynonyms,
-					synonymType,
-					TermType.INDIVIDUAL.equals(currentTerm.getType()) ? true : individualField.getValue(),
-					new AsyncCallback<Term>() {
+			ChildTermDto childTermDto = new ChildTermDtoBuilder().setOntologyName(currentTerm.getOntology().getName())
+					.setTermName(nameField.getValue().trim()).setDefinition(definitionField.getValue().trim())
+					.setUrl(url).setComments(commentsField.getValue().trim())
+					.setRelatedTermRefId(currentTerm.getReferenceId())
+					.setRelationshipType(typeDropBox.getValue(typeDropBox.getSelectedIndex()))
+					.setDatasourceAcronym(source).setReferenceId(refId).setSynonyms(currentSynonyms)
+					.setSynonymType(synonymType)
+					.setValue(TermType.INDIVIDUAL.equals(currentTerm.getType()) ? true : individualField.getValue())
+					.createChildTermDto();
+			service.createChildTerm(childTermDto, new AsyncCallback<Term>() {
 				public void onFailure(Throwable caught) {
 					GWT.log("Failed to create new child term", caught);
 					nameError.setText(caught.getMessage());

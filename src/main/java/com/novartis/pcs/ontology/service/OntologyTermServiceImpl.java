@@ -53,6 +53,8 @@ import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
 import com.novartis.pcs.ontology.service.search.OntologySearchServiceListener;
 import com.novartis.pcs.ontology.service.search.OntologySearchServiceLocal;
 import com.novartis.pcs.ontology.service.util.StatusChecker;
+import com.novartis.pcs.ontology.webapp.client.ChildTermDto;
+import com.novartis.pcs.ontology.webapp.client.ChildTermDtoBuilder;
 
 
 /**
@@ -267,22 +269,20 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 			String definition, String url, String comments,
 			String relatedTermRefId, String relationshipType,
 			String curatorUsername) throws DuplicateEntityException, InvalidEntityException {
-		return createTerm(ontologyName, termName, 
-				definition, url, comments, 
-				relatedTermRefId, relationshipType,
-				null, null,
-				null, null, curatorUsername, false);
+		ChildTermDto childTermDto = new ChildTermDtoBuilder().setOntologyName(ontologyName).setTermName(termName)
+				.setDefinition(definition).setUrl(url).setComments(comments).setRelatedTermRefId(relatedTermRefId)
+				.setRelationshipType(relationshipType).createChildTermDto();
+
+		return createTerm(childTermDto, curatorUsername);
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked", "unused" })
 	@Interceptors({OntologySearchServiceListener.class})
-	public Term createTerm(String ontologyName, String termName,
-			String definition, String url, String comments, String relatedTermRefId, String relationshipType,
-			String datasourceAcronym, String sourceReferenceId, Collection<ControlledVocabularyTerm> synonyms,
-			Synonym.Type synonymType, String curatorUsername, final Boolean isIndividual)
+	public Term createTerm(final ChildTermDto childTermDto, String curatorUsername)
 			throws DuplicateEntityException, InvalidEntityException {
 		// Lock ontology because of update of term reference id value
+		String ontologyName = childTermDto.getOntologyName();
 		Ontology ontology = ontologyDAO.loadByName(ontologyName, true);
 		Curator curator = curatorDAO.loadByUsername(curatorUsername);
 		
@@ -292,7 +292,7 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 			throw new InvalidEntityException(curator, "Curator is invalid/inactive");
 		}
 		
-		Term duplicate = termDAO.loadByName(termName, ontology);
+		Term duplicate = termDAO.loadByName(childTermDto.getTermName(), ontology);
 		if(duplicate != null) {
 			throw new DuplicateEntityException(duplicate, "Term already exists");
 		}
@@ -300,24 +300,41 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 		Version version = lastUnpublishedVersion(curator);
 		String referenceId = nextReferenceId(ontology);
 		
-		Term newTerm = new Term(ontology, termName, referenceId, curator, version);
-		
+		Term newTerm = new Term(ontology, childTermDto.getTermName(), referenceId, curator, version);
+
+		String definition = childTermDto.getDefinition();
 		if(definition != null && definition.trim().length() > 0) {
 			newTerm.setDefinition(definition.trim());
 		}
-		
+
+		String url = childTermDto.getUrl();
 		if(url != null && url.trim().length() > 0) {
 			newTerm.setUrl(url.trim());
 		}
-		
+
+		String comments = childTermDto.getComments();
 		if(comments != null && comments.trim().length() > 0) {
 			newTerm.setComments(comments.trim());
 		}
 
-		if (Boolean.TRUE.equals(isIndividual)) {
+		if (Boolean.TRUE.equals(childTermDto.getValue())) {
 			newTerm.setType(TermType.INDIVIDUAL);
 		}
 
+		createRelationship(ontologyName, newTerm, childTermDto.getRelatedTermRefId(),
+				childTermDto.getRelationshipType(), curator, version);
+		createCrossReference(newTerm, childTermDto.getDatasoureAcronym(), childTermDto.getReferenceId(), curator);
+
+		List<ControlledVocabularyTerm> synonyms = childTermDto.getSynonyms();
+		Synonym.Type synonymType = childTermDto.getSynonymType();
+		createSynonym(newTerm, synonyms, synonymType, curator, version);
+
+		termDAO.save(newTerm);
+		return newTerm;
+	}
+
+	private void createRelationship(final String ontologyName, final Term newTerm, final String relatedTermRefId,
+			final String relationshipType, final Curator curator, final Version version) throws InvalidEntityException {
 		if(relatedTermRefId != null) {
 			Term relatedTerm = termDAO.loadByReferenceId(relatedTermRefId, ontologyName);
 
@@ -325,12 +342,15 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 				throw new InvalidEntityException(relatedTerm, "Related term cannot be an Individual");
 			}
 			RelationshipType type = relationshipTypeDAO.loadByRelationship(relationshipType);
-			
+
 			StatusChecker.validate(type, relatedTerm);
-						
+
 			Relationship relationship = new Relationship(newTerm, relatedTerm, type, curator, version);
 		}
-		
+	}
+
+	private void createCrossReference(final Term newTerm, final String datasourceAcronym,
+			final String sourceReferenceId, final Curator curator) throws InvalidEntityException {
 		if(datasourceAcronym != null) {
 			Datasource datasource = datasourceDAO.loadByAcronym(datasourceAcronym);
 			if(datasource == null) {
@@ -338,36 +358,37 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 			}
 			CrossReference xref = new CrossReference(newTerm, datasource, sourceReferenceId, curator);
 		}
-		
+	}
+
+	private void createSynonym(final Term newTerm, final List<ControlledVocabularyTerm> synonyms,
+			final Synonym.Type synonymType, final Curator curator, final Version version)
+			throws DuplicateEntityException {
 		if(synonyms != null) {
 			for(ControlledVocabularyTerm vocabTerm : synonyms) {
-				Collection<Synonym> existingSynonyms = synonymDAO.loadByCtrldVocabTermId(vocabTerm);				
+				Collection<Synonym> existingSynonyms = synonymDAO.loadByCtrldVocabTermId(vocabTerm);
 				for(Synonym existingSynonym : existingSynonyms) {
 					if(StatusChecker.isValid(existingSynonym)) {
-						throw new DuplicateEntityException(existingSynonym, 
+						throw new DuplicateEntityException(existingSynonym,
 								"Synonym already exists for controlled vocabulary term: " + vocabTerm);
 					}
 				}
-				
+
 				Collection<Synonym> duplicateSynonyms = synonymDAO.loadBySynonym(vocabTerm.getName());
 				for(Synonym duplicateSynonym : duplicateSynonyms) {
 					if(StatusChecker.isValid(duplicateSynonym)) {
-						throw new DuplicateEntityException(duplicate, 
+						throw new DuplicateEntityException(newTerm,
 									"Similar synonym has been mapped to a different ontology term: "
 										+ duplicateSynonym.getTerm().getName());
 					}
 				}
-				
-				Synonym synonym = new Synonym(newTerm, vocabTerm.getName(), 
+
+				Synonym synonym = new Synonym(newTerm, vocabTerm.getName(),
 						synonymType, curator, version);
 				synonym.setControlledVocabularyTerm(vocabTerm);
 			}
 		}
-
-		termDAO.save(newTerm);
-		return newTerm; 
 	}
-	
+
 	@Override
 	public Term updateTerm(long termId, String definition, String url,
 			String comments, String curatorUsername) throws InvalidEntityException {

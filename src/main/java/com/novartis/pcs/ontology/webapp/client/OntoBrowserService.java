@@ -60,12 +60,7 @@ public interface OntoBrowserService extends RemoteService {
 	List<HTMLSearchResult> search(String pattern, boolean includeSynonyms)
 			throws InvalidQuerySyntaxException;
 		
-	Term createChildTerm(String ontologyName, String termName,
-						 String definition, String url, String comments,
-						 String relatedTermRefId, String relationshipType,
-						 String datasoureAcronym, String referenceId,
-						 List<ControlledVocabularyTerm> synonyms,
-			Synonym.Type synonymType, final Boolean isIndividual)
+	Term createChildTerm(final ChildTermDto childTermDto)
 			throws DuplicateEntityException, InvalidEntityException;
 	
 	Term addSynonym(String termRefId, String synonym, Synonym.Type type,
