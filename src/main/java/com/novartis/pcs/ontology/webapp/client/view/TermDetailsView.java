@@ -43,7 +43,7 @@ import com.novartis.pcs.ontology.webapp.client.util.UrlValidator;
 
 public class TermDetailsView extends OntoBrowserView
 		implements ViewTermHandler, EntityUpdatedHandler<Term>, EntityDeletedHandler<Term> {
-	private final String[] LABELS = { "Id", "Ontology", "Term", "Definition", "Source", "Reference Id", "Comments",
+	private final String[] LABELS = { "Id", "Type", "Ontology", "Term", "Definition", "Source", "Reference Id", "Comments",
 			"Created By", "Status" };
 
 	private final SimplePanel simplePanel = new SimplePanel();
@@ -84,6 +84,7 @@ public class TermDetailsView extends OntoBrowserView
 		currentTerm = event.getTerm();
 		int row = 0;
 		grid.setText(row++, 1, currentTerm.getReferenceId());
+		grid.setText(row++, 1, currentTerm.getType().name());
 		grid.setText(row, 0, currentTerm.getOntology().isCodelist() ? "Codelist:" : "Ontology:");
 		grid.setText(row++, 1, currentTerm.getOntology().getName());
 		if (UrlValidator.validate(currentTerm.getUrl())) {
