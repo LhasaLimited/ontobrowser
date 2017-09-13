@@ -37,6 +37,7 @@ import com.novartis.pcs.ontology.dao.RelationshipTypeDAOLocal;
 import com.novartis.pcs.ontology.dao.TermDAOLocal;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.entity.TermType;
 import com.novartis.pcs.ontology.service.OntologyTermServiceLocal;
 import com.novartis.pcs.ontology.service.util.StatusChecker;
 import com.novartis.pcs.ontology.service.util.TermNameComparator;
@@ -97,7 +98,7 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 		StringBuilder dot = new StringBuilder(2048);
 		Collection<Relationship> hierarchy = ontologyTermService.getRelationships(term, ontologyName, deep);
 		Collection<Term> terms = collectTerms(term, hierarchy);
-				
+
 		dot.append("digraph \"").append(escape(term.getName())).append("\" {").append(EOL);
 		dot.append("\tgraph [rankdir=")
 			.append(orientation.name())
@@ -116,6 +117,8 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 			
 			if(t.equals(term)) {
 				dot.append(", fillcolor=\"#91B9CE\"");
+			} else if (TermType.INDIVIDUAL.equals(t.getType())) {
+				dot.append(", fillcolor=\"#b5b5b5\"");
 			}
 			dot.append("];").append(EOL);
 		}
