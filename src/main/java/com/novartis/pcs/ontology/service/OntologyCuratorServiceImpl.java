@@ -17,11 +17,12 @@ limitations under the License.
 */
 package com.novartis.pcs.ontology.service;
 
+import static org.obolibrary.oboformat.parser.OBOFormatConstants.OboFormatTag.TAG_IS_A;
+
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,6 +46,7 @@ import com.novartis.pcs.ontology.entity.InvalidPasswordException;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.entity.TermType;
 import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.entity.VersionedEntity;
 import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
@@ -332,7 +334,7 @@ public class OntologyCuratorServiceImpl extends OntologyService implements Ontol
 			Term replacementTerm = termDAO.load(replacementTermId);
 						
 			if(replacementTerm == null) {
-				throw new InvalidEntityException(replacementTerm, "Replacement term does not exist");
+				throw new InvalidEntityException(null, "Replacement term does not exist");
 			}
 			
 			if(replacementTerm.equals(term)) {
@@ -369,6 +371,12 @@ public class OntologyCuratorServiceImpl extends OntologyService implements Ontol
 			for (Relationship relationship : descendents) {
 				if(StatusChecker.isValid(relationship)
 						&& !relationship.getTerm().equals(replacementTerm)) {
+
+					if (TermType.INDIVIDUAL.equals(replacementTerm.getType())
+							&& relationship.getType().getRelationship().equals(TAG_IS_A.getTag())) {
+						throw new InvalidEntityException(replacementTerm,
+								"Replacement term for is_a relationship type cannot be an Individual");
+					}
 					Relationship newRelationship = new Relationship(relationship.getTerm(),
 							replacementTerm, relationship.getType(), curator, version);
 					newRelationship.setStatus(relationship.getStatus());
@@ -401,7 +409,7 @@ public class OntologyCuratorServiceImpl extends OntologyService implements Ontol
 	@SuppressWarnings("unchecked")
 	public <T extends VersionedEntity> Set<T> approve(Set<T> pending, String comments, 
 			String curatorUsername) throws InvalidEntityException {				
-		Set<T> approved = new LinkedHashSet<T>();
+		Set<T> approved = new LinkedHashSet<>();
 		for(T entity : pending) {
 			if(entity instanceof Synonym) {
 				Synonym synonym = (Synonym)entity;
@@ -426,7 +434,7 @@ public class OntologyCuratorServiceImpl extends OntologyService implements Ontol
 	@SuppressWarnings("unchecked")
 	public <T extends VersionedEntity> Set<T> reject(Set<T> pending, String comments, 
 			String curatorUsername) throws InvalidEntityException {
-		Set<T> rejected = new LinkedHashSet<T>();
+		Set<T> rejected = new LinkedHashSet<>();
 		for(T entity : pending) {
 			if(entity instanceof Synonym) {
 				Synonym synonym = (Synonym)entity;

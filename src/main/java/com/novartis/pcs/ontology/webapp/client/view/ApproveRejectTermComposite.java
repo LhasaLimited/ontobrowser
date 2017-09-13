@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
-	package com.novartis.pcs.ontology.webapp.client.view;
+package com.novartis.pcs.ontology.webapp.client.view;
 
 import java.util.Comparator;
 
@@ -36,6 +36,7 @@ import com.novartis.pcs.ontology.webapp.client.event.SynonymDeletedEvent;
 import com.novartis.pcs.ontology.webapp.client.event.TermDeletedEvent;
 import com.novartis.pcs.ontology.webapp.client.event.TermUpdatedEvent;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermEvent;
+import com.novartis.pcs.ontology.webapp.client.util.OboConstants;
 
 public class ApproveRejectTermComposite extends ApproveRejectComposite<Term> {	
 	
@@ -103,7 +104,7 @@ public class ApproveRejectTermComposite extends ApproveRejectComposite<Term> {
 			for(Relationship relationship : term.getRelationships()) {
 				if(StatusChecker.isValid(relationship)) {
 					parent = relationship.getRelatedTerm();
-					if(relationship.getType().getRelationship().equals("is_a")) {
+					if (relationship.getType().getRelationship().equals(OboConstants.IS_A)) {
 						break;
 					}
 				}

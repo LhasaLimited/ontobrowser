@@ -178,11 +178,9 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 
 	@Override
 	public Term createChildTerm(String ontologyName, String termName,
-			String definition, String url, String comments,
-			String relatedTermRefId, String relationshipType,
-			String datasourceAcronym, String referenceId,
-			List<ControlledVocabularyTerm> synonyms,
-			Synonym.Type synonymType) 
+			String definition, String url, String comments, String relatedTermRefId, String relationshipType,
+			String datasourceAcronym, String referenceId, List<ControlledVocabularyTerm> synonyms, Type synonymType,
+			final Boolean isIndividual)
 					throws DuplicateEntityException, InvalidEntityException {
 		String username = getUsername();
 		
@@ -192,7 +190,7 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 				definition, url, comments,
 				relatedTermRefId, relationshipType,
 				datasourceAcronym, referenceId,
-				synonyms, synonymType, username);
+				synonyms, synonymType, username, isIndividual);
 	}
 
 	@Override
@@ -396,7 +394,7 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 		if(collection instanceof List<?>) {
 			return (List<T>)collection;
 		}
-		return new ArrayList<T>(collection);
+		return new ArrayList<>(collection);
 	}
 	
 }

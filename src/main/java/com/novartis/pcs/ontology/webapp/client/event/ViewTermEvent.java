@@ -23,7 +23,7 @@ import com.novartis.pcs.ontology.entity.Term;
 
 
 public class ViewTermEvent extends Event<ViewTermHandler> {
-	public static Type<ViewTermHandler> TYPE = new Type<ViewTermHandler>();	
+	public static Type<ViewTermHandler> TYPE = new Type<>();
 	public final Term term;
 	private final Ontology ontology;
 
@@ -36,7 +36,7 @@ public class ViewTermEvent extends Event<ViewTermHandler> {
 	public ViewTermEvent(Term term) {
 		super();
 		this.term = term;
-		this.ontology = null;
+		this.ontology = term.getOntology();
 	}
 
 	@Override

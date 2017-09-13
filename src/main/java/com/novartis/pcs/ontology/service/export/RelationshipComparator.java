@@ -17,6 +17,8 @@ limitations under the License.
 */
 package com.novartis.pcs.ontology.service.export;
 
+import static org.obolibrary.oboformat.parser.OBOFormatConstants.OboFormatTag.TAG_IS_A;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -25,9 +27,7 @@ import com.novartis.pcs.ontology.entity.Relationship;
 
 public class RelationshipComparator implements Comparator<Relationship> {
 
-	private static List<String> order = Arrays.asList("is_a",
-		"union_of",
-		"disjoint_from");
+	private static List<String> order = Arrays.asList(TAG_IS_A.getTag(), "union_of", "disjoint_from");
 	
 	@Override
 	public int compare(Relationship r1, Relationship r2) {

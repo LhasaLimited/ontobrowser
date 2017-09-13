@@ -18,7 +18,8 @@ limitations under the License.
 package com.novartis.pcs.ontology.service;
 
 
-import java.util.ArrayList;
+import static org.obolibrary.oboformat.parser.OBOFormatConstants.OboFormatTag.TAG_IS_A;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -46,8 +47,8 @@ import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.entity.TermType;
 import com.novartis.pcs.ontology.entity.Version;
-import com.novartis.pcs.ontology.entity.VersionedEntity;
 import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
 import com.novartis.pcs.ontology.service.search.OntologySearchServiceListener;
 import com.novartis.pcs.ontology.service.search.OntologySearchServiceLocal;
@@ -136,6 +137,10 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 					&& duplicate.getType().equals(type)) {
 				throw new DuplicateEntityException(duplicate, "Relationship already exists");
 			}
+		}
+
+		if (TermType.INDIVIDUAL.equals(relatedTerm.getType()) && type.getRelationship().equals(TAG_IS_A.getTag())) {
+			throw new InvalidEntityException(relatedTerm, "Related term cannot be an Individual");
 		}
 		
 		Relationship relationship = new Relationship(term, relatedTerm, type, curator, version);
@@ -266,25 +271,23 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 				definition, url, comments, 
 				relatedTermRefId, relationshipType,
 				null, null,
-				null, null, curatorUsername);
+				null, null, curatorUsername, false);
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked", "unused" })
 	@Interceptors({OntologySearchServiceListener.class})
 	public Term createTerm(String ontologyName, String termName,
-			String definition, String url, String comments,
-			String relatedTermRefId, String relationshipType,
-			String datasourceAcronym, String sourceReferenceId,
-			Collection<ControlledVocabularyTerm> synonyms,
-			Synonym.Type synonymType,
-			String curatorUsername) throws DuplicateEntityException, InvalidEntityException {
+			String definition, String url, String comments, String relatedTermRefId, String relationshipType,
+			String datasourceAcronym, String sourceReferenceId, Collection<ControlledVocabularyTerm> synonyms,
+			Synonym.Type synonymType, String curatorUsername, final Boolean isIndividual)
+			throws DuplicateEntityException, InvalidEntityException {
 		// Lock ontology because of update of term reference id value
 		Ontology ontology = ontologyDAO.loadByName(ontologyName, true);
 		Curator curator = curatorDAO.loadByUsername(curatorUsername);
 		
 		StatusChecker.validate(ontology);
-		
+
 		if(curator == null || !curator.isActive()) {
 			throw new InvalidEntityException(curator, "Curator is invalid/inactive");
 		}
@@ -310,9 +313,17 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 		if(comments != null && comments.trim().length() > 0) {
 			newTerm.setComments(comments.trim());
 		}
-		
+
+		if (Boolean.TRUE.equals(isIndividual)) {
+			newTerm.setType(TermType.INDIVIDUAL);
+		}
+
 		if(relatedTermRefId != null) {
 			Term relatedTerm = termDAO.loadByReferenceId(relatedTermRefId, ontologyName);
+
+			if (TermType.INDIVIDUAL.equals(relatedTerm.getType()) && TAG_IS_A.getTag().equals(relationshipType)) {
+				throw new InvalidEntityException(relatedTerm, "Related term cannot be an Individual");
+			}
 			RelationshipType type = relationshipTypeDAO.loadByRelationship(relationshipType);
 			
 			StatusChecker.validate(type, relatedTerm);
@@ -323,7 +334,7 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 		if(datasourceAcronym != null) {
 			Datasource datasource = datasourceDAO.loadByAcronym(datasourceAcronym);
 			if(datasource == null) {
-				throw new InvalidEntityException(datasource, "Datasource does not exist: " + datasourceAcronym);
+				throw new InvalidEntityException(null, "Datasource does not exist: " + datasourceAcronym);
 			}
 			CrossReference xref = new CrossReference(newTerm, datasource, sourceReferenceId, curator);
 		}
@@ -352,7 +363,7 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 				synonym.setControlledVocabularyTerm(vocabTerm);
 			}
 		}
-				
+
 		termDAO.save(newTerm);
 		return newTerm; 
 	}
@@ -569,7 +580,7 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 
 	private List<Relationship> createRelationshipsToThing(final List<Term> rootTerms, final boolean leaf) {
 		Term thing = termDAO.loadByReferenceId("Thing", "OWL");
-		RelationshipType isA = relationshipTypeDAO.loadByRelationship("is_a");
+		RelationshipType isA = relationshipTypeDAO.loadByRelationship(TAG_IS_A.getTag());
 		return rootTerms.stream().map(term -> {
 			Relationship relationship = new Relationship(term, thing, isA, null, null);
 			term.getRelationships().remove(relationship);
@@ -579,19 +590,4 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 		}).collect(Collectors.toList());
 	}
 
-	private Collection<Relationship> toHierarchy(final List<Object[]> objects) {
-		List<Relationship> relationships = new ArrayList<>();
-		for (Object[] object : objects) {
-			final Term term = termDAO.load(((Number) object[0]).longValue());
-			final Term relatedTerm = termDAO.load(((Number) object[1]).longValue());
-			final RelationshipType type = relationshipTypeDAO.load(((Number) object[2]).longValue());
-			final boolean isLeaf = ((Number) object[3]).intValue() == 0;
-			Relationship relationship = new Relationship(term, relatedTerm, type, null, null);
-			term.getRelationships().remove(relationship);
-			relationship.setStatus(VersionedEntity.Status.APPROVED);
-			relationship.setLeaf(isLeaf);
-			relationships.add(relationship);
-		}
-		return relationships;
-	}
 }

@@ -17,6 +17,8 @@ limitations under the License.
 */
 package com.novartis.pcs.ontology.service.export;
 
+import static org.obolibrary.oboformat.parser.OBOFormatConstants.OboFormatTag.TAG_IS_A;
+
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +29,7 @@ import com.novartis.pcs.ontology.entity.RelationshipType;
 
 class OntologyExportUtil {
 	private static final URI oboURI = URI.create("http://purl.obolibrary.org/obo");
-	private static final Map<String, IRI> relationshipIRIs = new HashMap<String, IRI>();
+	private static final Map<String, IRI> relationshipIRIs = new HashMap<>();
 	
 	static {
 		relationshipIRIs.put("part_of",createIRI(oboURI, "BFO_0000050"));
@@ -192,7 +194,7 @@ class OntologyExportUtil {
 	
 	static boolean isBuiltIn(RelationshipType type) {
 		String r = type.getRelationship();
-		return r.equals("is_a") || r.equals("union_of") || r.equals("disjoint_from");
+		return r.equals(TAG_IS_A.getTag()) || r.equals("union_of") || r.equals("disjoint_from");
 	}
 	
 	static String escapeOBO(String s) {

@@ -9,6 +9,7 @@ package com.novartis.pcs.ontology.service.parser.owl;
 import static com.novartis.pcs.ontology.service.export.ReferenceIdProvider.getRefId;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
+import static org.obolibrary.oboformat.parser.OBOFormatConstants.OboFormatTag.TAG_IS_A;
 import static org.semanticweb.owlapi.vocab.OWLRDFVocabulary.OWL_THING;
 
 import java.util.ArrayList;
@@ -298,7 +299,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	}
 
 	private void createIsARelationship(final Term relatedTerm, final Term term) {
-		RelationshipType isARelationship = context.getRelationshipType("is_a");
+		RelationshipType isARelationship = context.getRelationshipType(TAG_IS_A.getTag());
 
 		Set<String> relationshipTypesSet = context.getRelationshipTypes(relatedTerm, term);
 

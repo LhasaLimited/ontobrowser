@@ -50,7 +50,7 @@ public interface OntologyTermService {
 					String datasourceAcronym, String referenceId,
 					Collection<ControlledVocabularyTerm> synonyms,
 					Synonym.Type synonymType,
-					String curatorUsername) throws DuplicateEntityException, InvalidEntityException;
+			String curatorUsername, final Boolean isIndividual) throws DuplicateEntityException, InvalidEntityException;
 	
 	Term addSynonym(String termRefId, String synonym, Synonym.Type type,
 					String datasourceAcronym, String referenceId, String curatorUsername)

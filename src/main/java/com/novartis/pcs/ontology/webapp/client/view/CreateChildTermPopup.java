@@ -43,6 +43,7 @@ import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
@@ -58,11 +59,13 @@ import com.novartis.pcs.ontology.entity.Datasource;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.entity.TermType;
 import com.novartis.pcs.ontology.service.util.DatasourceAcronymComparator;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowser;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermEvent;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermHandler;
+import com.novartis.pcs.ontology.webapp.client.util.OboConstants;
 import com.novartis.pcs.ontology.webapp.client.util.UrlValidator;
 import com.novartis.pcs.ontology.webapp.client.view.CrossRefPopup.NameColumn;
 import com.novartis.pcs.ontology.webapp.client.view.CrossRefPopup.SourceColumn;
@@ -76,17 +79,18 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 	private final EventBus eventBus;
 	private final DialogBox dialogBox = new DialogBox(false, true);
 	private final BusyIndicatorHandler busyIndicator = new WidgetBusyIndicatorHandler(dialogBox.getCaption().asWidget());
+	private final CheckBox individualField = new CheckBox("Check for owl:NamedIndividual/OBO entity");
 	private final TextBox nameField = new ClipboardAwareTextBox();
 	private final TextArea definitionField = new TextArea();
 	private final TextBox urlField = new TextBox();
 	private final TextArea commentsField = new TextArea();
-	private final ListBox typeDropBox = new ListBox(false);
-	private final ListBox sourceDropBox = new ListBox(false);
+	private final ListBox typeDropBox = new ListBox();
+	private final ListBox sourceDropBox = new ListBox();
 	private final TextBox referenceIdField = new ClipboardAwareTextBox();
 		
-	private final CellTable<ControlledVocabularyTerm> synonymTable = 
-			new CellTable<ControlledVocabularyTerm>(new EntityKeyProvider<ControlledVocabularyTerm>());
-	
+	private final CellTable<ControlledVocabularyTerm> synonymTable =
+			new CellTable<>(new EntityKeyProvider<>());
+
 	private final Label parentTermLabel = new Label();
 	private final Label nameError = new Label();
 	private final Label definitionError = new Label();
@@ -169,6 +173,12 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 	
 	@Override
 	public void show() {
+		if (TermType.INDIVIDUAL.equals(currentTerm.getType())) {
+			InfoPopup infoPopup = new InfoPopup();
+			infoPopup.showInfo("Cannot add a child to the Individual");
+
+			return;
+		}
 		if(synonymProvider != null) {
 			currentSynonyms = synonymProvider.getTerms();
 			synonymType = synonymProvider.getSynonymType();
@@ -214,6 +224,13 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 	public void onViewTerm(ViewTermEvent event) {
 		currentTerm = event.getTerm();
 		parentTermLabel.setText(currentTerm.getName());
+		if (TermType.INDIVIDUAL.equals(currentTerm.getType())) {
+			individualField.setValue(true);
+			individualField.setEnabled(false);
+		} else {
+			individualField.setValue(false);
+			individualField.setEnabled(true);
+		}
 	}
 	
 	@Override
@@ -306,6 +323,7 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 					refId,
 					currentSynonyms,
 					synonymType,
+					TermType.INDIVIDUAL.equals(currentTerm.getType()) ? true : individualField.getValue(),
 					new AsyncCallback<Term>() {
 				public void onFailure(Throwable caught) {
 					GWT.log("Failed to create new child term", caught);
@@ -327,7 +345,7 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 					sourceDropBox.setSelectedIndex(0);
 					referenceIdField.setEnabled(false); 
 					referenceIdField.setValue(null);
-					
+					individualField.setValue(null);
 					if(synonymProvider != null && currentSynonyms != null) {
 						synonymProvider.removeTerms(currentSynonyms);
 					}
@@ -348,13 +366,14 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 			}
 
 			public void onSuccess(List<RelationshipType> types) {
+				Collections.sort(types, (t1, t2) -> t1.getName().compareToIgnoreCase(t2.getName()));
 				int i = 0;
-				
+
 				for(RelationshipType type : types) {
-					String label = type.getRelationship().replace('_', ' ');
+					String label = type.getName().replace('_', ' ');
 					String value = type.getRelationship();
 					typeDropBox.addItem(label, value);
-					if(value.equals("is_a")) {
+					if(value.equals(OboConstants.IS_A)) {
 						defaultTypeIndex = i;
 					}
 					i++;
@@ -394,7 +413,7 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 				referenceIdField.setValue(null);
 				synonymError.setText(null);
 				createButton.setEnabled(false);
-				
+				individualField.setValue(null);
 				dialogBox.hide();
 			}
 		});
@@ -410,6 +429,8 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 		buttonsHPanel.addStyleName("dialog-buttons");	
 				
 		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);
+		dialogVPanel.add(new Label("Individual:"));
+		dialogVPanel.add(individualField);
 		dialogVPanel.add(new Label("Name:"));
 		dialogVPanel.add(nameField);
 		dialogVPanel.add(nameError);
@@ -432,7 +453,7 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 		synonymTable.setWidth("100%");
 		synonymTable.addStyleName("gwt-CellTable");
 		synonymTable.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.DISABLED);
-		synonymTable.setSelectionModel(new NoSelectionModel<ControlledVocabularyTerm>(
+		synonymTable.setSelectionModel(new NoSelectionModel<>(
 				synonymTable.getKeyProvider()));
 		
 		synonymTable.addColumn(new NameColumn(), "Synonym");
@@ -442,7 +463,6 @@ public class CreateChildTermPopup implements OntoBrowserPopup, ViewTermHandler,
 		dialogVPanel.add(synonymError);
 		
 		dialogVPanel.add(new Label("Relationship:"));
-		//dialogVPanel.add(typeDropBox);
 		dialogVPanel.add(relshipTypeHPanel);
 		dialogVPanel.add(typeError);
 		

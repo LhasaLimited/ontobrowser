@@ -53,11 +53,9 @@ public interface OntoBrowserServiceAsync {
 	void loadAllRelationshipTypes(AsyncCallback<List<RelationshipType>> callback);
 	void loadLastCreatedTerms(int max, AsyncCallback<List<Term>> callback);
 	void createChildTerm(String ontologyName, String termName,
-			String definition, String url, String comments,
-			String relatedTermRefId, String relationshipType,
-			String datasoureAcronym, String referenceId,
-			List<ControlledVocabularyTerm> synonyms, Type synonymType,
-			AsyncCallback<Term> callback);
+			String definition, String url, String comments, String relatedTermRefId, String relationshipType,
+			String datasoureAcronym, String referenceId, List<ControlledVocabularyTerm> synonyms, Type synonymType,
+			final Boolean value, AsyncCallback<Term> callback);
 	void addSynonym(String termRefId, String synonym, Type type, String source,
 			String referenceId, AsyncCallback<Term> callback);
 	void addSynonyms(String termRefId, 

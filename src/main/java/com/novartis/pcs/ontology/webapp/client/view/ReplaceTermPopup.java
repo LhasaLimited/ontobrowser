@@ -48,6 +48,7 @@ import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 import com.novartis.pcs.ontology.webapp.client.event.SearchEvent;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermEvent;
 import com.novartis.pcs.ontology.webapp.client.event.ViewTermHandler;
+import com.novartis.pcs.ontology.webapp.client.util.OboConstants;
 
 public class ReplaceTermPopup implements OntoBrowserPopup, ViewTermHandler, ClickHandler {
 	private int MAX_LAST_VIEWED = 10;
@@ -85,12 +86,12 @@ public class ReplaceTermPopup implements OntoBrowserPopup, ViewTermHandler, Clic
 	private final Label errorLabel = new Label();
 	private final Button obsoleteButton = new Button("Obsolete");
 	
-	private final ProvidesKey<Term> keyProvider = new EntityKeyProvider<Term>();
-	private final ListDataProvider<Term> recentlyViewedDataProvider = new ListDataProvider<Term>(keyProvider);
-	private final CellTable<Term> recentlyViewTable = new CellTable<Term>(keyProvider);
+	private final ProvidesKey<Term> keyProvider = new EntityKeyProvider<>();
+	private final ListDataProvider<Term> recentlyViewedDataProvider = new ListDataProvider<>(keyProvider);
+	private final CellTable<Term> recentlyViewTable = new CellTable<>(keyProvider);
 	
-	private final ListDataProvider<Term> recentlyCreatedDataProvider = new ListDataProvider<Term>(keyProvider);
-	private final CellTable<Term> recentlyCreatedTable = new CellTable<Term>(keyProvider);
+	private final ListDataProvider<Term> recentlyCreatedDataProvider = new ListDataProvider<>(keyProvider);
+	private final CellTable<Term> recentlyCreatedTable = new CellTable<>(keyProvider);
 	
 	private Term obsoleteTerm;
 	private Term currentTerm;
@@ -199,7 +200,7 @@ public class ReplaceTermPopup implements OntoBrowserPopup, ViewTermHandler, Clic
 						for(Relationship relationship : term.getRelationships()) {
 							if(StatusChecker.isValid(relationship.getRelatedTerm())) {
 								parent = relationship.getRelatedTerm();
-								if(relationship.getType().getRelationship().equals("is_a")) {
+										if (relationship.getType().getRelationship().equals(OboConstants.IS_A)) {
 									break;
 								}
 							}
@@ -247,7 +248,7 @@ public class ReplaceTermPopup implements OntoBrowserPopup, ViewTermHandler, Clic
 		table.setWidth("100%");
 		table.addStyleName("gwt-CellTable");
 		table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.DISABLED);
-		table.setSelectionModel(new NoSelectionModel<Term>(keyProvider));
+		table.setSelectionModel(new NoSelectionModel<>(keyProvider));
 	    
 		table.addColumn(new OntologyColumn(), "Ontology");
 		table.addColumn(new TermColumn(), "Term");

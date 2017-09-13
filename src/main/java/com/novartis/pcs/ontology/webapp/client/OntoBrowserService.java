@@ -65,7 +65,7 @@ public interface OntoBrowserService extends RemoteService {
 						 String relatedTermRefId, String relationshipType,
 						 String datasoureAcronym, String referenceId,
 						 List<ControlledVocabularyTerm> synonyms,
-						 Synonym.Type synonymType)
+			Synonym.Type synonymType, final Boolean isIndividual)
 			throws DuplicateEntityException, InvalidEntityException;
 	
 	Term addSynonym(String termRefId, String synonym, Synonym.Type type,

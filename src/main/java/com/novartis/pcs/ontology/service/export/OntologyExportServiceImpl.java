@@ -25,6 +25,7 @@ import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.escape
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.getRelationshipIRI;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.isBuiltIn;
 import static java.util.Arrays.asList;
+import static org.obolibrary.oboformat.parser.OBOFormatConstants.OboFormatTag.TAG_IS_A;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -316,7 +317,7 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 							
 							if(relationship.isIntersection()) {
 								writer.append("intersection_of: ");
-								if(!type.getRelationship().equals("is_a")) {
+								if (!type.getRelationship().equals(TAG_IS_A.getTag())) {
 									writer.append(escapeOBO(type.getRelationship())).append(" ");
 								}
 							} else if(isBuiltIn(type)) {
@@ -560,12 +561,12 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 				exportContext.addRelationshipType(type);
 				if (relationship.isIntersection()) {
 					OWLClassExpression intersect = relatedTermClass;
-					if (!type.getRelationship().equals("is_a")) {
+					if (!type.getRelationship().equals(TAG_IS_A.getTag())) {
 						OWLObjectProperty objectProp = getOwlObjectProperty(factory, type);
 						intersect = factory.getOWLObjectSomeValuesFrom(objectProp, relatedTermClass);
 					}
 					intersectClasses.add(intersect);
-				} else if (type.getRelationship().equals("is_a")) {
+				} else if (type.getRelationship().equals(TAG_IS_A.getTag())) {
 					OWLAxiom axiom = factory.getOWLSubClassOfAxiom(termClass, relatedTermClass);
 					exportContext.addAxiom(axiom);
 				} else if (type.getRelationship().equals("union_of")) {
@@ -596,7 +597,7 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 				IRI relatedTermIRI = iriProvider.getIRI(relatedTerm);
 				OWLClass relatedTermClass = factory.getOWLClass(relatedTermIRI);
 				exportContext.addRelationshipType(type);
-				if (type.getRelationship().equals("is_a")) {
+				if (type.getRelationship().equals(TAG_IS_A.getTag())) {
 					OWLAxiom axiom = factory.getOWLClassAssertionAxiom(relatedTermClass, termClass);
 					exportContext.addAxiom(axiom);
 				} else if (TermType.INDIVIDUAL.equals(relatedTerm.getType())) {

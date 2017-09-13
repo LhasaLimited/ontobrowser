@@ -3,6 +3,7 @@ package com.novartis.pcs.ontology.service.importer;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.obolibrary.oboformat.parser.OBOFormatConstants.OboFormatTag.TAG_IS_A;
 
 import java.io.File;
 import java.io.InputStream;
@@ -194,7 +195,7 @@ public class OntologyImportServiceImplArq2TestIT {
 		assertThat(topClassIndividual, CoreMatchers.notNullValue());
 		assertThat(topClassIndividual.getType(), is(TermType.INDIVIDUAL));
 		Relationship someObjectProperty = topClassIndividual.getRelationships().stream()
-				.filter(r -> r.getType().getRelationship().equals("is_a")).findAny()
+				.filter(r -> r.getType().getRelationship().equals(TAG_IS_A.getTag())).findAny()
 				.orElseThrow(AssertionError::new);
 		assertThat(someObjectProperty.getRelatedTerm(), is(topClass));
 	}
