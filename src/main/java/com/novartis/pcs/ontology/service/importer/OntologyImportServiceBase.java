@@ -3,13 +3,16 @@ package com.novartis.pcs.ontology.service.importer;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.novartis.pcs.ontology.dao.AnnotationTypeDAOLocal;
 import com.novartis.pcs.ontology.entity.AnnotationType;
@@ -80,7 +83,7 @@ public abstract class OntologyImportServiceBase extends OntologyService
         Collection<Term> terms = context.getTerms();
 
         findRefId(ontology, terms);
-        validateDuplicates(terms);
+        handleDuplicates(terms);
         markRoot(terms);
 
         datasources = context.getDatasources();
@@ -121,18 +124,27 @@ public abstract class OntologyImportServiceBase extends OntologyService
 
     protected abstract void findRefId(Ontology ontology, Collection<Term> terms) throws InvalidEntityException;
 
-    private void validateDuplicates(Collection<Term> terms) throws DuplicateEntityException {
-        Set<String> names = new HashSet<>(terms.size());
+    private void handleDuplicates(Collection<Term> terms) throws DuplicateEntityException {
+		Map<String, Integer> names = new HashMap<>(terms.size());
         for (Term term : terms) {
-            if (!names.add(term.getName().toLowerCase())) {
-                logger.warning("Duplicated term:" + term.getName());
-                term.setName(term.getReferenceId() + ":" + term.getName());
-                // throw new DuplicateEntityException(term, "Duplicate term: " +
-                // term.getName());
+			if (term.getName() == null) {
+				throw new IllegalArgumentException(ToStringBuilder.reflectionToString(term));
             }
-        }
-
-    }
+			names.compute(term.getName().toLowerCase(), (key, counter) -> {
+				if (counter == null) {
+					return 1;
+				} else {
+					counter++;
+					term.setReferenceId(term.getReferenceId() + counter);
+					term.setName(term.getName() + counter);
+					logger.logp(Level.WARNING, this.getClass().getName(), "handleDuplicates",
+							"Duplicated term [name={0}, referenceId={1}]",
+							new String[] { term.getName(), term.getReferenceId() });
+					return counter;
+				}
+			});
+		}
+	}
 
     private void markRoot(Collection<Term> terms) {
         for (Term term : terms) {
