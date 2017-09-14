@@ -34,4 +34,11 @@ public class ReferenceIdProviderTest {
 				.getRefId(new OWLNamedIndividualImpl(IRI.create("mailto:obi-users@googlegroups.com")));
 		Assert.assertThat(referenceId, is("mailto:obi-users@googlegroups.com"));
 	}
+
+	@Test
+	public void shouldHandleSlashAtEnd() {
+		String referenceId = ReferenceIdProvider.getRefId(
+				new OWLNamedIndividualImpl(IRI.create("http://code.google.com/p/information-artifact-ontology/")));
+		Assert.assertThat(referenceId, is("information-artifact-ontology"));
+	}
 }

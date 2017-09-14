@@ -48,7 +48,6 @@ import com.novartis.pcs.ontology.service.search.result.InvalidQuerySyntaxExcepti
 @RemoteServiceRelativePath("service")
 public interface OntoBrowserService extends RemoteService {
 	Curator loadCurrentCurator();
-	List<Term> loadRootTerms();
 
 	Term loadTerm(String id, final String ontologyName);
 	List<Term> loadOntologyTerms(String ontology);

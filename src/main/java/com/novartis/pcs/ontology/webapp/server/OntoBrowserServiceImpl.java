@@ -22,7 +22,6 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -121,20 +120,7 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 				
 		return curator;
 	}
-	
-	@Override
-	public List<Term> loadRootTerms() {
-		List<Term> terms = asList(termService.loadRoots());
-		Collections.sort(terms, new Comparator<Term>() {
-			@Override
-			public int compare(Term t1, Term t2) {
-				return t1.getOntology().getName().compareToIgnoreCase(
-						t2.getOntology().getName());
-			}
-		});
-		return terms;
-	}
-	
+
 	@Override
 	public List<Term> loadOntologyTerms(String ontology) {
 		List<Term> terms = asList(termService.loadAll(ontology));

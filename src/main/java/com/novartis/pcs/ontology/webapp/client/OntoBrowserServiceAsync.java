@@ -43,7 +43,6 @@ import com.novartis.pcs.ontology.service.search.result.HTMLSearchResult;
  * The async counterpart of <code>OntoBrowserService</code>.
  */
 public interface OntoBrowserServiceAsync {
-	void loadRootTerms(AsyncCallback<List<Term>> callback);
 	void loadCurrentCurator(AsyncCallback<Curator> callback);
 
 	void loadTerm(String referenceId, final String ontologyName, AsyncCallback<Term> asyncCallback);

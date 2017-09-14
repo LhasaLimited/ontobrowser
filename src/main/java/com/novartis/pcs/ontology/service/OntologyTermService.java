@@ -30,8 +30,6 @@ import com.novartis.pcs.ontology.webapp.client.ChildTermDto;
 
 public interface OntologyTermService {
 	
-	Collection<Term> loadRoots();
-	
 	Collection<Term> loadAll(String ontologyName);
 	
 	Collection<Term> loadLastCreated(int max);

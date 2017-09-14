@@ -6,12 +6,13 @@
  */
 package com.novartis.pcs.ontology.service.parser.owl.handlers;
 
+import org.semanticweb.owlapi.model.OWLAnnotation;
+
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.service.parser.owl.ApiHelper;
 import com.novartis.pcs.ontology.service.parser.owl.OWLParserContext;
 import com.novartis.pcs.ontology.service.parser.owl.OWLVisitorHandler;
 import com.novartis.pcs.ontology.service.parser.owl.ParserState;
-import org.semanticweb.owlapi.model.OWLAnnotation;
 
 /**
  * @author Artur Polit
@@ -25,7 +26,8 @@ public class TermLabelHandler implements OWLVisitorHandler {
 	@Override
 	public void handleAnnotation(final OWLParserContext context, OWLAnnotation owlAnnotation) {
 		Term term = context.termPeek();
-		term.setName(ApiHelper.getString(owlAnnotation));
+		String string = ApiHelper.getString(owlAnnotation);
+		term.setName(string);
 	}
 }
 /* ---------------------------------------------------------------------*

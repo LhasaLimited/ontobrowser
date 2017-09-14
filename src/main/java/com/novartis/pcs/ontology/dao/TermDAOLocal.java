@@ -31,8 +31,6 @@ import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
 @Local
 public interface TermDAOLocal extends VersionedDAO<Term> {
 	
-	Collection<Term> loadRoots();
-	
 	Collection<Term> loadAll(Ontology ontology);
 	
 	Collection<Term> loadSubTermsByReferenceId(String referenceId, Set<Status> status);

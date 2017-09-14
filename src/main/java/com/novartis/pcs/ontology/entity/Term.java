@@ -58,9 +58,6 @@ import com.novartis.pcs.ontology.entity.util.UrlParser;
 		column = @Column(name = "TERM_ID", unique = true, nullable = false))
 @AssociationOverride(name = "curatorActions", joinColumns = @JoinColumn(name = "TERM_ID"))
 @NamedQueries({
-		@NamedQuery(name=Term.QUERY_ROOTS,
-			query="select t from Term as t where t.root = true",
-			hints={ @QueryHint(name="org.hibernate.cacheable", value="true") }),
 		@NamedQuery(name=Term.QUERY_ALL,
 			query="select t from Term as t"
 				+ " where t.ontology = :ontology",
@@ -95,7 +92,6 @@ import com.novartis.pcs.ontology.entity.util.UrlParser;
 public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 	private static final long serialVersionUID = 1L;
 	
-	public static final String QUERY_ROOTS = "Term.loadRoots";
 	public static final String QUERY_ALL = "Term.loadAll";
 	public static final String QUERY_BY_REF_ID = "Term.loadByReferenceId";
 	public static final String QUERY_BY_NAME = "Term.loadByName";

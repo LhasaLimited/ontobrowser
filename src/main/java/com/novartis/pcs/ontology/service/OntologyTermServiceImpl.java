@@ -84,13 +84,6 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 		StatusChecker.removeInvalid(terms);
     	return terms;
 	}
-
-	@Override
-    public Collection<Term> loadRoots() {
-    	Collection<Term> terms = termDAO.loadRoots();
-    	StatusChecker.removeInvalid(terms);
-    	return terms;
-    }
         
     @Override
 	public Collection<Term> loadLastCreated(int max) {

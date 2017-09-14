@@ -65,13 +65,6 @@ public class TermDAO extends VersionedEntityDAO<Term>
 
     @Override
     @SuppressWarnings("unchecked")
-    public Collection<Term> loadRoots() {
-		Query query = entityManager.createNamedQuery(Term.QUERY_ROOTS);
-		return query.getResultList();
-	}
-    
-    @Override
-    @SuppressWarnings("unchecked")
     public Collection<Term> loadAll(Ontology ontology) {
 		Query query = entityManager.createNamedQuery(Term.QUERY_ALL);
 		query.setParameter("ontology", ontology);

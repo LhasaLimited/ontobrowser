@@ -35,7 +35,6 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.novartis.pcs.ontology.entity.Ontology;
-import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.webapp.client.OntoBrowserServiceAsync;
 import com.novartis.pcs.ontology.webapp.client.event.SearchEvent;
 import com.novartis.pcs.ontology.webapp.client.event.SearchHandler;
@@ -60,11 +59,10 @@ public class SearchOptionsView extends OntoBrowserView
 		addStyleName("padded-border");
 		
 		eventBus.addHandler(SearchEvent.TYPE, this);
-		service.loadRootTerms(new AsyncCallback<List<Term>>() {			
+		service.loadOntologies(new AsyncCallback<List<Ontology>>() {
 			@Override
-			public void onSuccess(List<Term> terms) {				
-				for(Term term : terms) {
-					Ontology ontology = term.getOntology();
+			public void onSuccess(List<Ontology> ontologies) {
+				for (Ontology ontology : ontologies) {
 					String name = ontology.getName();
 					ontologiesDropBox.addItem(name);
 				}

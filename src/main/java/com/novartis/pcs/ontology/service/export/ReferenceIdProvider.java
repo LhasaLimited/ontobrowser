@@ -21,10 +21,16 @@ public final class ReferenceIdProvider {
 	public static String getRefId(OWLNamedObject owlNamedObject) {
 		IRI iri = owlNamedObject.getIRI();
 		if (iri.getScheme().startsWith("http")) {
-			return iri.getRemainder().or(() -> {
+			if (iri.getRemainder().isPresent()) {
+				return iri.getRemainder().get();
+			} else {
 				String iriString = iri.toString();
+				if (iriString.endsWith("/")) {
+					iriString = iriString.substring(0, iriString.lastIndexOf('/'));
+				}
 				return iriString.substring(iriString.lastIndexOf('/') + 1);
-			});
+			}
+
 		} else if (iri.getScheme().equalsIgnoreCase("mailto")) {
 			return iri.toString();
 		}
