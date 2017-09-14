@@ -31,6 +31,7 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTMLTable.CellFormatter;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
@@ -118,13 +119,17 @@ public class SearchOptionsView extends OntoBrowserView
 		label.addStyleName("search-header");
 		label.getElement().getStyle().setDisplay(Display.BLOCK);
 		
-		Grid grid = new Grid(2,2);
+		Grid grid = new Grid(3, 1);
+		grid.setWidth("100%");
 		grid.setText(0, 0, "Ontology/Codelist:");
-		grid.setWidget(0, 1, ontologiesDropBox);
-		grid.setText(1, 0, "Include Synonyms:");
-		grid.setWidget(1, 1, includeSynonyms);
+		ontologiesDropBox.setWidth("100%");
+		grid.setWidget(1, 0, ontologiesDropBox);
+		HorizontalPanel flowPanel = new HorizontalPanel();
+		flowPanel.add(new Label("Include Synonyms:"));
+		flowPanel.add(includeSynonyms);
+		grid.setWidget(2, 0, flowPanel);
 		grid.addStyleName("search-options");
-		
+
 		CellFormatter cellFormatter = grid.getCellFormatter();
 		for(int i = 0; i < grid.getRowCount(); i++) {
 			cellFormatter.addStyleName(i, 0, "search-option");
