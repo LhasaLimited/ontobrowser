@@ -14,6 +14,7 @@ import org.semanticweb.owlapi.model.OWLAnnotation;
  */
 public interface OWLVisitorHandler {
 	boolean match(final OWLParserContext context, OWLAnnotation owlAnnotation);
+
 	void handleAnnotation(final OWLParserContext context, OWLAnnotation owlAnnotation);
 }
 /* ---------------------------------------------------------------------*

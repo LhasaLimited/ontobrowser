@@ -52,10 +52,10 @@
         <AnnotationProperty abbreviatedIRI="obo:IAO_0000114"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="#someObjectProperty"/>
+        <Class IRI="#OB_00016"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#OB_00016"/>
+        <ObjectProperty IRI="#someObjectProperty"/>
     </Declaration>
     <Declaration>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasNarrowSynonym"/>
@@ -70,13 +70,13 @@
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasDbXref"/>
     </Declaration>
     <Declaration>
+        <AnnotationProperty abbreviatedIRI="oboInOwl:hasBroadSynonym"/>
+    </Declaration>
+    <Declaration>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasRelatedSynonym"/>
     </Declaration>
     <Declaration>
         <Class IRI="#topLeafClass"/>
-    </Declaration>
-    <Declaration>
-        <AnnotationProperty abbreviatedIRI="oboInOwl:hasBroadSynonym"/>
     </Declaration>
     <Declaration>
         <DataProperty IRI="#someDataProperty"/>
@@ -179,7 +179,7 @@
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="oboInOwl:hasDbXref"/>
         <IRI>#OB_00001</IRI>
-        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">DICT:D0001</Literal>
+        <Literal datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral">SEND:D0001</Literal>
     </AnnotationAssertion>
     <AnnotationAssertion>
         <AnnotationProperty abbreviatedIRI="rdfs:comment"/>

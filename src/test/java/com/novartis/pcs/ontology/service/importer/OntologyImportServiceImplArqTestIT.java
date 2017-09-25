@@ -2,10 +2,10 @@ package com.novartis.pcs.ontology.service.importer;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
-import javax.ejb.TransactionAttribute;
 
 import com.novartis.pcs.ontology.dao.AnnotationDAOLocal;
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
@@ -16,7 +16,6 @@ import com.novartis.pcs.ontology.dao.TermDAOLocal;
 import com.novartis.pcs.ontology.entity.Ontology;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.persistence.ShouldMatchDataSet;
 import org.jboss.arquillian.transaction.api.annotation.TransactionMode;
 import org.jboss.arquillian.transaction.api.annotation.Transactional;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -76,7 +75,7 @@ public class OntologyImportServiceImplArqTestIT {
 	@Test
 	public void shouldImportBfoOntology() throws Exception {
 		InputStream bfoObo = this.getClass().getResourceAsStream("/bfo.obo");
-		importService.importOntology("BFO OBO", bfoObo, curatorDAOLocal.loadByUsername("SYSTEM"));
+		importService.importOntology("BFO OBO", bfoObo, curatorDAOLocal.loadByUsername("SYSTEM"), Collections.emptyList(), true);
 		Ontology ontology = ontologyDAOLocal.loadByName("BFO OBO");
 		Assert.assertThat(termDAOLocal.loadAll(ontology).size(), is(35));
 		Assert.assertThat(relationshipDAOLocal.loadAll().size(), is(52));

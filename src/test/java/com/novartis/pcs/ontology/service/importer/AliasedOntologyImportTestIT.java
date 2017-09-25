@@ -1,16 +1,9 @@
-/**
- * Copyright © 2017 Lhasa Limited
- * File created: 16/08/2017 by Artur Polit
- * Creator : Artur Polit
- * Version : $$Id$$
- */
-package com.novartis.pcs.ontology.service.export;
+package com.novartis.pcs.ontology.service.importer;
 
-import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collections;
@@ -30,21 +23,17 @@ import org.junit.runner.RunWith;
 
 import com.novartis.pcs.ontology.dao.CuratorDAOLocal;
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
+import com.novartis.pcs.ontology.dao.RelationshipDAOLocal;
 import com.novartis.pcs.ontology.dao.TermDAOLocal;
 import com.novartis.pcs.ontology.entity.DuplicateEntityException;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
 import com.novartis.pcs.ontology.entity.Ontology;
-import com.novartis.pcs.ontology.service.importer.OntologyImportServiceLocal;
+import com.novartis.pcs.ontology.entity.OntologyAlias;
+import com.novartis.pcs.ontology.service.OntologyTermServiceLocal;
 
-/**
- * @author Artur Polit
- * @since 16/08/2017
- */
 @RunWith(Arquillian.class)
 @Transactional(TransactionMode.ROLLBACK)
-public class OntologyExportIAORdfTestIT {
-
-	private static final String ONTOLOGY_NAME = "iao";
+public class AliasedOntologyImportTestIT {
 
 	@EJB(beanName = "owlImportService")
 	private OntologyImportServiceLocal importService;
@@ -56,10 +45,13 @@ public class OntologyExportIAORdfTestIT {
 	private OntologyDAOLocal ontologyDAOLocal;
 
 	@EJB
+	private RelationshipDAOLocal relationshipDAO;
+
+	@EJB
 	private TermDAOLocal termDAO;
 
 	@EJB
-	private OntologyExportServiceLocal exportService;
+	private OntologyTermServiceLocal ontologyTermService;
 
 	private Ontology ontology;
 
@@ -72,38 +64,30 @@ public class OntologyExportIAORdfTestIT {
 				.addPackages(true, "com.novartis.pcs.ontology")
 				.addPackages(false, "org.semanticweb.owlapi.util", "org.coode.owlapi.obo12.parser")
 				.addAsResource("META-INF/persistence-test.xml", "META-INF/persistence.xml")
-				.addAsResource("iao-merged.owl");
+				.addAsResource("test-reference/test-reference.owl").addAsResource("simple.owl");
 	}
 
 	@Before
 	public void loadOntology() throws DuplicateEntityException, InvalidEntityException {
-		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/iao-merged.owl");
-		importService.importOntology(ONTOLOGY_NAME, ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"),
-				Collections.emptyList(), true);
+		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/test-reference/test-reference.owl");
+		importService.importOntology("OntobrowserTest", ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"), Collections.emptyList(), true);
 
-		ontology = ontologyDAOLocal.loadByName(ONTOLOGY_NAME);
+		ontology = ontologyDAOLocal.loadByName("OntobrowserTest");
 		assertThat(ontology, notNullValue());
 	}
 
 	@Test
-	public void shouldExportOwlClassWithSourceIRI() throws OntologyNotFoundException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		exportService.exportOntology(ONTOLOGY_NAME, baos, OntologyFormat.RDFXML);
-		String rdfXML = baos.toString();
-		// entity with proper IRI
-		assertThat(rdfXML, containsString("<obo:BFO_0000179>entity</obo:BFO_0000179>"));
-		// annotation property label
-		assertThat(rdfXML, containsString("<rdfs:label rdf:datatype=\"http://www.w3.org/2001/XMLSchema#string\">defaultLanguage</rdfs:label>"));
-		System.out.print(rdfXML);
+	public void shouldImportAliasedOntology() throws DuplicateEntityException, InvalidEntityException {
+		OntologyAlias alias = new OntologyAlias();
+		alias.setOntology(ontology);
+		alias.setAliasUrl("http://www.lhasalimited.org/0.1/ontobrowser.owl");
+		ontology.getAliases().add(alias);
+
+		InputStream stream = this.getClass().getResourceAsStream("/simple.owl");
+		importService.importOntology("simple.owl", stream, curatorDAOLocal.loadByUsername("SYSTEM"), Collections.emptyList(), true);
+
+		Ontology simpleOntology = ontologyDAOLocal.loadByName("simple.owl");
+		assertThat(simpleOntology.getImportedOntologies(), hasItem(ontology));
 	}
 
 }
-/*
- * ---------------------------------------------------------------------* This
- * software is the confidential and proprietary information of Lhasa Limited
- * Granary Wharf House, 2 Canal Wharf, Leeds, LS11 5PY --- No part of this
- * confidential information shall be disclosed and it shall be used only in
- * accordance with the terms of a written license agreement entered into by
- * holder of the information with LHASA Ltd.
- * ---------------------------------------------------------------------
- */

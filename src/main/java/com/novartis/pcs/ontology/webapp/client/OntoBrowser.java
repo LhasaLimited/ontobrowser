@@ -198,7 +198,7 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 		menu.setAnimationEnabled(true);
 
 		for (final Ontology ontology : ontologies) {
-			if (!ontology.isCodelist() && ontology.getImportedBy().isEmpty()) {
+			if (!ontology.isCodelist() && !ontology.isIntermediate()) {
 				if (ontology.getImportedOntologies().isEmpty()) {
 					menu.addItem(ontology.getName(), getCommand(ontology));
 				} else {
@@ -223,7 +223,9 @@ public class OntoBrowser implements EntryPoint, ValueChangeHandler<String> {
 			if (!shown.contains(imported)) {
 				importedBar.addItem(imported.getName(), getCommand(imported));
 				shown.add(imported);
-				addImportedItems(imported, shown, importedBar);
+				if (imported.isIntermediate()) {
+					addImportedItems(imported, shown, importedBar);
+				}
 			}
 		}
 	}

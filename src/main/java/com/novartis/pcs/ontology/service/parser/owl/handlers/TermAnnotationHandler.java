@@ -6,6 +6,12 @@
  */
 package com.novartis.pcs.ontology.service.parser.owl.handlers;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.semanticweb.owlapi.model.OWLAnnotation;
+
+import com.google.common.base.Strings;
 import com.novartis.pcs.ontology.entity.Annotation;
 import com.novartis.pcs.ontology.entity.AnnotationType;
 import com.novartis.pcs.ontology.entity.Term;
@@ -13,13 +19,14 @@ import com.novartis.pcs.ontology.service.parser.owl.ApiHelper;
 import com.novartis.pcs.ontology.service.parser.owl.OWLParserContext;
 import com.novartis.pcs.ontology.service.parser.owl.OWLVisitorHandler;
 import com.novartis.pcs.ontology.service.parser.owl.ParserState;
-import org.semanticweb.owlapi.model.OWLAnnotation;
 
 /**
  * @author Artur Polit
  * @since 09/08/2017
  */
 public class TermAnnotationHandler implements OWLVisitorHandler {
+	private final Logger logger = Logger.getLogger(getClass().getName());
+
 	@Override
 	public boolean match(final OWLParserContext context, final OWLAnnotation owlAnnotation) {
 		return  ParserState.TERM.equals(context.statePeek());
@@ -30,10 +37,16 @@ public class TermAnnotationHandler implements OWLVisitorHandler {
 		Term term = context.termPeek();
 		AnnotationType annotationType = context.getAnnotationType(owlAnnotation.getProperty().getIRI().getRemainder().get());
 		String value = ApiHelper.getString(owlAnnotation);
-		Annotation annotation = new Annotation(value, annotationType, term, context.getCurator(), context.getVersion());
-		annotation.setOntology(context.getOntology());
-		context.approve(annotation);
-		term.getAnnotations().add(annotation);
+		if (!Strings.isNullOrEmpty(value)) {
+			Annotation annotation = new Annotation(value, annotationType, term, context.getCurator(),
+					context.getVersion());
+			annotation.setOntology(context.getOntology());
+			context.approve(annotation);
+			term.getAnnotations().add(annotation);
+		} else {
+			logger.log(Level.WARNING, "Annotation omitted, value is null [termReferenceId={0}, annotationType={1}]",
+					new String[] { term.getReferenceId(), annotationType.getAnnotationType() });
+		}
 	}
 }
 /* ---------------------------------------------------------------------*

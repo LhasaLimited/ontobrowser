@@ -43,10 +43,9 @@ import com.novartis.pcs.ontology.entity.VersionedEntity.Status;
  * Stateless session bean DAO for Term entity
  */
 @Stateless
-@Local({TermDAOLocal.class})
-@Remote({TermDAORemote.class})
-public class TermDAO extends VersionedEntityDAO<Term> 
-	implements TermDAOLocal, TermDAORemote {
+@Local({ TermDAOLocal.class })
+@Remote({ TermDAORemote.class })
+public class TermDAO extends VersionedEntityDAO<Term> implements TermDAOLocal, TermDAORemote {
 
 	// Only required for non-Oracle implementation
 	@EJB
@@ -54,67 +53,70 @@ public class TermDAO extends VersionedEntityDAO<Term>
 
 	private Term thing;
 
-    public TermDAO() {
-        super();
-    }
+	public TermDAO() {
+		super();
+	}
 
 	@PostConstruct
 	public void postConstruct() {
 		thing = load(1, true);
 	}
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public Collection<Term> loadAll(Ontology ontology) {
+	@Override
+	@SuppressWarnings("unchecked")
+	public Collection<Term> loadAll(Ontology ontology) {
 		Query query = entityManager.createNamedQuery(Term.QUERY_ALL);
 		query.setParameter("ontology", ontology);
 		return query.getResultList();
 	}
-    
-    @Override
-    @SuppressWarnings("unchecked")
+
+	@Override
+	@SuppressWarnings("unchecked")
 	public Collection<Term> loadSubTermsByReferenceId(String referenceId, Set<Status> status) {
-    	if(isOracle()) {
-	    	// Oracle database hierarchical query implementation. Comment out for non-Oracle databases.
-	    	Query query = entityManager.createNamedQuery(Term.QUERY_SUBTERMS);
+		if (isOracle()) {
+			// Oracle database hierarchical query implementation. Comment out
+			// for non-Oracle databases.
+			Query query = entityManager.createNamedQuery(Term.QUERY_SUBTERMS);
 			// When using a native query with an Enum as a parameter
 			// the Enum integer is used and not the name.
 			Collection<String> statusNames = new ArrayList<String>();
-			for(Status s : status) {
+			for (Status s : status) {
 				statusNames.add(s.name());
 			}
-			// Setting cache hint causes exception due to hibernate bug (https://hibernate.atlassian.net/browse/HHH-9111)
-	       	// query.setHint("org.hibernate.cacheable", Boolean.TRUE);
-			query.setParameter("referenceId", referenceId.toUpperCase());				
+			// Setting cache hint causes exception due to hibernate bug
+			// (https://hibernate.atlassian.net/browse/HHH-9111)
+			// query.setHint("org.hibernate.cacheable", Boolean.TRUE);
+			query.setParameter("referenceId", referenceId.toUpperCase());
 			query.setParameter("status", statusNames);
 			return query.getResultList();
-    	} else {    	
-	    	// non-Oracle implementation which loads all relationships (from second level cache)
-	    	List<Relationship> all = relationshipDAO.loadAll();
+		} else {
+			// non-Oracle implementation which loads all relationships (from
+			// second level cache)
+			List<Relationship> all = relationshipDAO.loadAll();
 			Map<String, List<Term>> map = new HashMap<String, List<Term>>(all.size());
-			for(Relationship relationship : all) {
-				if(status.contains(relationship.getStatus())) {
+			for (Relationship relationship : all) {
+				if (status.contains(relationship.getStatus())) {
 					String parentReferenceId = relationship.getRelatedTerm().getReferenceId();
 					List<Term> list = map.get(parentReferenceId);
-					if(list == null) {
+					if (list == null) {
 						list = new ArrayList<Term>();
 						map.put(parentReferenceId, list);
 					}
 					list.add(relationship.getTerm());
 				}
 			}
-			
+
 			Set<Term> subterms = new LinkedHashSet<Term>();
 			addSubterms(subterms, map, referenceId);
 			return new ArrayList<Term>(subterms);
-    	}
+		}
 	}
 
 	@Override
 	public Term loadByReferenceId(String referenceId, final String ontologyName) {
 		return loadByReferenceId(referenceId, ontologyName, false);
 	}
-	
+
 	@Override
 	public Term loadByReferenceId(String referenceId, final String ontologyName, boolean loadLazyAssociations) {
 		if (thing.getReferenceId().equalsIgnoreCase(referenceId)) {
@@ -124,11 +126,20 @@ public class TermDAO extends VersionedEntityDAO<Term>
 			Query query = entityManager.createNamedQuery(Term.QUERY_BY_REF_ID);
 			query.setParameter("referenceId", referenceId.toUpperCase());
 			query.setParameter("ontology_name", ontologyName);
-			Term term = (Term)query.getSingleResult();
+			Term term = (Term) query.getSingleResult();
 			return loadLazyAssociations ? loadLazyAssociations(term) : term;
 		} catch (NoResultException e) {
 			throw new EntityNotFoundException("Failed to load term with reference id: " + referenceId);
 		}
+	}
+
+	@Override
+	public Term loadByReferenceIdSafe(String referenceId, final String ontologyName) {
+		Query query = entityManager.createNamedQuery(Term.QUERY_BY_REF_ID);
+		query.setParameter("referenceId", referenceId.toUpperCase());
+		query.setParameter("ontology_name", ontologyName);
+		query.setHint("org.hibernate.cacheable", Boolean.TRUE);
+		return query.getResultList().isEmpty() ? null : (Term) query.getResultList().get(0);
 	}
 
 	@Override
@@ -141,19 +152,13 @@ public class TermDAO extends VersionedEntityDAO<Term>
 	public Term loadByName(String name, Ontology ontology) {
 		return loadByName(name, ontology, false);
 	}
-	
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public Term loadByName(String name, Ontology ontology, boolean loadLazyAssociations) {
 		Query query = entityManager.createNamedQuery(Term.QUERY_BY_NAME);
 		query.setParameter("name", name.toLowerCase());
 		query.setParameter("ontology", ontology);
-		
-		// Causes transaction to be rolled back if term does not exist.
-		// This method is used to check in a term already exists so
-		// this is not desired.
-		//return (Term)query.getSingleResult();
-		
 		List<Term> list = query.getResultList();
 		Term term = list.isEmpty() ? null : list.get(0);
 		return loadLazyAssociations ? loadLazyAssociations(term) : term;
@@ -168,7 +173,7 @@ public class TermDAO extends VersionedEntityDAO<Term>
 
 	@Override
 	protected Term loadLazyAssociations(Term term) {
-		if(term != null) {
+		if (term != null) {
 			// lazy init may require an optimization
 			term.getCrossReferences().size();
 			term.getRelationships().size();
@@ -177,12 +182,12 @@ public class TermDAO extends VersionedEntityDAO<Term>
 		}
 		return super.loadLazyAssociations(term);
 	}
-	
+
 	private void addSubterms(Set<Term> subterms, Map<String, List<Term>> map, String refId) {
 		List<Term> terms = map.get(refId);
-		if(terms != null) {
-			for(Term term : terms) {
-				if(subterms.add(term)) {
+		if (terms != null) {
+			for (Term term : terms) {
+				if (subterms.add(term)) {
 					addSubterms(subterms, map, term.getReferenceId());
 				}
 			}

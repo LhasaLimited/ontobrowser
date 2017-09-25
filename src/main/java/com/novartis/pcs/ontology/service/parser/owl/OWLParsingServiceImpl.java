@@ -4,6 +4,8 @@ import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,24 +24,37 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.mutable.MutableBoolean;
-import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.OWLAPIParsersModule;
+import org.semanticweb.owlapi.OWLAPIServiceLoaderModule;
+import org.semanticweb.owlapi.io.StreamDocumentSource;
 import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.MissingImportListener;
 import org.semanticweb.owlapi.model.OWLDocumentFormat;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyID;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.util.OWLObjectVisitorAdapter;
 import org.semanticweb.owlapi.util.OWLOntologyWalker;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
-import com.novartis.pcs.ontology.entity.InvalidEntityException;
+import com.novartis.pcs.ontology.dao.TermDAOLocal;
 import com.novartis.pcs.ontology.entity.Ontology;
+import com.novartis.pcs.ontology.entity.OntologyAlias;
 import com.novartis.pcs.ontology.entity.Relationship;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.VersionedEntity;
 import com.novartis.pcs.ontology.service.parser.ParseContext;
+import com.novartis.pcs.ontology.service.parser.owl.interceptor.OwlapiInterceptorModule;
+import com.novartis.pcs.ontology.service.parser.owl.interceptor.OwlapiLoaderInterceptor;
+
+import uk.ac.manchester.cs.owl.owlapi.OWLAPIImplModule;
+import uk.ac.manchester.cs.owl.owlapi.concurrent.Concurrency;
 
 @Stateless
 @Local(OWLParsingServiceLocal.class)
@@ -48,6 +63,9 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 
 	@EJB
 	private OntologyDAOLocal ontologyDAO;
+
+	@EJB
+	private TermDAOLocal termDAO;
 
 	@PersistenceContext(unitName = "ontobrowser")
 	protected EntityManager entityManager;
@@ -63,53 +81,70 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 	public ParseContext parseOWLontology(InputStream inputStream, Ontology mainOntology, final OWLParserContext context)
 			throws OWLOntologyCreationException {
 
-		final OWLOntologyManager owlOntologyManager = OWLManager.createOWLOntologyManager();
-		OWLOntology owlOntology = owlOntologyManager.loadOntologyFromOntologyDocument(inputStream);
+		Map<IRI, Ontology> alreadyImported = createIgnoredConfig(
+				ontologyDAO.loadNonIntermediateWithAliases(mainOntology));
+		OWLOntologyManager owlOntologyManager = createInterceptedOntologyManager(alreadyImported);
+
+		StreamDocumentSource ds = new StreamDocumentSource(inputStream);
+		OWLOntology mainOwlOntology = owlOntologyManager.loadOntologyFromOntologyDocument(ds);
+
+		OWLDocumentFormat ontologyFormat = owlOntologyManager.getOntologyFormat(mainOwlOntology);
+		context.getOntology().setSourceFormat(ontologyFormat.getClass().getSimpleName());
+
+		List<OWLOntology> sortedImportsClosure = owlOntologyManager.getSortedImportsClosure(mainOwlOntology);
+		logger.log(INFO, "Sorted import closure: {0}", listToString(sortedImportsClosure));
+
+		List<OWLOntology> mainImportClosure = Lists.reverse(sortedImportsClosure);
+		logger.log(INFO, "Final import order: {0}", listToString(mainImportClosure));
+
+		List<Ontology> existingOntologies = new ArrayList<>();
 
 		Map<String, Ontology> ontologyMap = new HashMap<>();
-		List<OWLOntology> sortedImportsClosure = owlOntologyManager.getSortedImportsClosure(owlOntology);
-
-		List<OWLOntology> reversed = Lists.reverse(sortedImportsClosure);
-		for (OWLOntology importedOwlOntology : reversed) {
-			String importedName = getImportedName(importedOwlOntology);
-			Ontology ontology = ontologyDAO.loadByName(importedName, true);
-			if (ontology == null) {
-				if(reversed.lastIndexOf(importedOwlOntology) == reversed.size() - 1 ){
-					ontology = mainOntology;
+		for (OWLOntology owlOntology : mainImportClosure) {
+			String importedUri = getImportedUri(owlOntology);
+			Ontology ontology;
+			if (mainImportClosure.indexOf(owlOntology) == mainImportClosure.size() - 1) {
+				ontology = mainOntology;
+			} else {
+				Ontology foundByAlias = ontologyDAO.loadByAlias(importedUri);
+				if (foundByAlias != null && !foundByAlias.equals(mainOntology)) {
+					ontology = foundByAlias;
+					existingOntologies.add(ontology);
 				} else {
-					ontology = new Ontology(importedName, context.getCurator(), context.getVersion());
-					ontology.setStatus(VersionedEntity.Status.APPROVED);
-					ontology.setApprovedVersion(context.getVersion());
-					ontology.setInternal(false);
+					ontology = createOntology(context, getImportedName(owlOntology));
 				}
 			}
-			try {
-				ontologyDAO.save(ontology);
-				ontology = ontologyDAO.loadByName(ontology.getName());
-				ontologyMap.put(importedName, ontology);
-			} catch (InvalidEntityException e) {
-				throw new RuntimeException("Ontology saving exception");
+			if (ontology.getId() == 0) {
+				// mainOntology is merged later
+				ontology = entityManager.merge(ontology);
 			}
-
-
-			context.setOntology(ontology);
-			OWLOntologyWalker owlObjectWalker = new MyOWLOntologyWalker(importedOwlOntology);
-			ParsingStructureWalker parsingStructureWalker = new ParsingStructureWalker(owlObjectWalker, context);
-			parsingStructureWalker.visit(importedOwlOntology);
+			ontologyMap.put(importedUri, ontology);
 		}
 
-		for (OWLOntology importedOwlOntology : reversed) {
-			Ontology ontology = ontologyMap.get(getImportedName(importedOwlOntology));
-			Set<OWLOntology> directImports = importedOwlOntology.getDirectImports();
-			Set<Ontology> imported = directImports.stream().map(o -> ontologyMap.get(getImportedName(o))).collect(Collectors.toSet());
+		for (Ontology existing : existingOntologies) {
+			context.addTerms(termDAO.loadAll(existing));
+		}
+
+		for (OWLOntology owlOntology : mainImportClosure) {
+			Ontology ontology = ontologyMap.get(getImportedUri(owlOntology));
+			Set<OWLOntology> directImports = owlOntology.getDirectImports();
+			Set<Ontology> imported = directImports.stream().map(o -> ontologyMap.get(getImportedUri(o))).collect(Collectors.toSet());
 			ontology.setImportedOntologies(imported);
-			entityManager.merge(ontology);
 		}
-		OWLDocumentFormat ontologyFormat = owlOntologyManager.getOntologyFormat(owlOntology);
-		context.getOntology().setSourceFormat(ontologyFormat.getClass().getSimpleName());
+
+		for (OWLOntology owlOntology : mainImportClosure) {
+			Ontology ontology = ontologyMap.get(getImportedUri(owlOntology));
+			context.setOntology(ontology);
+			OWLOntologyWalker owlObjectWalker = new MyOWLOntologyWalker(owlOntology);
+			ParsingStructureWalker parsingStructureWalker = new ParsingStructureWalker(owlObjectWalker, context);
+			parsingStructureWalker.visit(owlOntology);
+		}
+
+		context.setOntology(mainOntology);
+
 		Boolean validated = validateDuplicates(context);
 		if (!validated) {
-			throw new RuntimeException("Ontology saving exception");
+			throw new ParsingException("Ontology saving exception");
 		}
 		Map<String, Term> terms2 = context.getTerms();
 		logger.log(Level.INFO, () -> "Terms count:" + terms2.values().size());
@@ -119,10 +154,61 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 				context.getAnnotationTypes());
 	}
 
+	private Map<IRI, Ontology> createIgnoredConfig(final Collection<Ontology> ontologies) {
+		Map<IRI, Ontology> ignoredIRIs = new HashMap<>();
+		for (Ontology ontology : ontologies) {
+			String sourceUri = ontology.getSourceUri();
+			if (!Strings.isNullOrEmpty(sourceUri)) {
+				ignoredIRIs.put(IRI.create(sourceUri), ontology);
+			}
+			String sourceRelease = ontology.getSourceRelease();
+			if (!Strings.isNullOrEmpty(sourceRelease)) {
+				ignoredIRIs.put(IRI.create(sourceRelease), ontology);
+			}
+			for (OntologyAlias alias : ontology.getAliases()) {
+				ignoredIRIs.put(IRI.create(alias.getAliasUrl()), ontology);
+			}
+		}
+		return ignoredIRIs;
+	}
+
+	private OWLOntologyManager createInterceptedOntologyManager(final Map<IRI, Ontology> ignoredConfig) {
+		Injector injector = Guice.createInjector(new OWLAPIImplModule(Concurrency.NON_CONCURRENT),
+				new OWLAPIParsersModule(), new OWLAPIServiceLoaderModule(), new OwlapiInterceptorModule());
+		OWLOntologyManager owlOntologyManager = injector.getInstance(OWLOntologyManager.class);
+		injector.injectMembers(owlOntologyManager);
+
+		OwlapiLoaderInterceptor interceptor = injector.getInstance(OwlapiLoaderInterceptor.class);
+		interceptor.setIgnored(ignoredConfig);
+
+		owlOntologyManager.addMissingImportListener(
+				(MissingImportListener) event -> logger.log(INFO, "Missing import: " + event.getImportedOntologyURI()));
+		return owlOntologyManager;
+	}
+
+	private List<OWLOntologyID> listToString(final List<OWLOntology> sortedImportsClosure) {
+		return sortedImportsClosure.stream().map(OWLOntology::getOntologyID).collect(Collectors.toList());
+	}
+
+	private Ontology createOntology(final OWLParserContext context, final String importedName) {
+		final Ontology ontology;
+		ontology = new Ontology(importedName, context.getCurator(), context.getVersion());
+		ontology.setStatus(VersionedEntity.Status.APPROVED);
+		ontology.setApprovedVersion(context.getVersion());
+		ontology.setInternal(false);
+		ontology.setIntermediate(true);
+		return ontology;
+	}
+
 	private String getImportedName(final OWLOntology importedOwlOntology) {
 		Optional<IRI> documentIRI = importedOwlOntology.getOntologyID().getDefaultDocumentIRI();
 		return documentIRI.isPresent() ? documentIRI.get().getRemainder().get()
 				: importedOwlOntology.getOntologyID().toString();
+	}
+
+	private String getImportedUri(final OWLOntology importedOwlOntology) {
+		Optional<IRI> documentIRI = importedOwlOntology.getOntologyID().getDefaultDocumentIRI();
+		return documentIRI.isPresent() ? documentIRI.get().toString() : importedOwlOntology.getOntologyID().toString();
 	}
 
 	private Boolean validateDuplicates(OWLParserContext context) {
@@ -142,13 +228,12 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		terms.forEach((termName, term) -> {
 			Map<String, Set<String>> relationshipsIndex = new HashMap<>();
 			for (Relationship aRelationship : term.getRelationships()) {
-				Set<String> types = relationshipsIndex
-						.computeIfAbsent(aRelationship.getRelatedTerm().getReferenceId(),
-								id -> new HashSet<>());
+				Set<String> types = relationshipsIndex.computeIfAbsent(aRelationship.getRelatedTerm().getReferenceId(),
+						id -> new HashSet<>());
 				String relationshipTypeId = aRelationship.getType().getRelationship();
 				if (types.contains(relationshipTypeId)) {
-					logger.log(INFO, "Duplicated relationship {0} {1} {2}", new String[]{term.getName(),
-							aRelationship.getRelatedTerm().getName(), aRelationship.getType().getRelationship()});
+					logger.log(INFO, "Duplicated relationship {0} {1} {2}", new String[] { term.getName(),
+							aRelationship.getRelatedTerm().getName(), aRelationship.getType().getRelationship() });
 				} else {
 					types.add(relationshipTypeId);
 				}

@@ -18,12 +18,13 @@ limitations under the License.
 package com.novartis.pcs.ontology.service.importer;
 
 import java.io.InputStream;
+import java.util.List;
 
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.DuplicateEntityException;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
 
 public interface OntologyImportService {
-	void importOntology(String ontologyName, InputStream is, Curator curator)
+	void importOntology(String ontologyName, InputStream is, Curator curator, final List<String> aliases, final boolean fastImport)
 			throws DuplicateEntityException, InvalidEntityException;
 }

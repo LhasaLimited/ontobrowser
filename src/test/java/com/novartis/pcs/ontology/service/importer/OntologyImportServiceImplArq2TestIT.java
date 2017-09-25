@@ -8,6 +8,7 @@ import static org.obolibrary.oboformat.parser.OBOFormatConstants.OboFormatTag.TA
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -90,7 +91,7 @@ public class OntologyImportServiceImplArq2TestIT {
 	@Before
 	public void loadOntology() throws DuplicateEntityException, InvalidEntityException {
 		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/test-reference/test-reference.owl");
-		importService.importOntology("OntobrowserTest", ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
+		importService.importOntology("OntobrowserTest", ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"), Collections.emptyList(), true);
 
 		ontology = ontologyDAOLocal.loadByName("OntobrowserTest");
 		assertThat(ontology, notNullValue());
@@ -124,7 +125,7 @@ public class OntologyImportServiceImplArq2TestIT {
 
 		Datasource datasource = crossReference.getDatasource();
 		assertThat(datasource, notNullValue());
-		assertThat(datasource.getAcronym(), is("DICT"));
+		assertThat(datasource.getAcronym(), is("SEND"));
 
 		assertThat(crossReference.getReferenceId(), is("D0001"));
 	}
@@ -155,9 +156,8 @@ public class OntologyImportServiceImplArq2TestIT {
 	@Test
 	public void shouldImportAnnotation() {
 		Term term = termDAO.loadByName("assay kit", ontology, true);
-		Optional<Annotation> first = term.getAnnotations().stream().filter(
-				a -> a.getAnnotationType().getPrefixedXmlType().equals("seeAlso"))
-				.findFirst();
+		Optional<Annotation> first = term.getAnnotations().stream()
+				.filter(a -> a.getAnnotationType().getPrefixedXmlType().equals("seeAlso")).findFirst();
 		Annotation annotation = first.orElseThrow(AssertionFailedError::new);
 		assertThat(annotation.getAnnotation(), is("See the wikipedia"));
 	}
@@ -165,9 +165,8 @@ public class OntologyImportServiceImplArq2TestIT {
 	@Test
 	public void shouldMapAnnotationLabel() {
 		Term term = termDAO.loadByName("assay kit", ontology, true);
-		Optional<Annotation> first = term.getAnnotations().stream().filter(
-				a -> a.getAnnotationType().getPrefixedXmlType().equals("IAO_0000114"))
-				.findFirst();
+		Optional<Annotation> first = term.getAnnotations().stream()
+				.filter(a -> a.getAnnotationType().getPrefixedXmlType().equals("IAO_0000114")).findFirst();
 		Annotation annotation = first.orElseThrow(AssertionFailedError::new);
 		assertThat(annotation.getAnnotation(), is("http://purl.obolibrary.org/obo/IAO_0000122"));
 		assertThat(annotation.getAnnotationType().getAnnotationType(), is("has curation status"));

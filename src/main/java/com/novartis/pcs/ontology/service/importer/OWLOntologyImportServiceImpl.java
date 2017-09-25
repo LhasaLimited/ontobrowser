@@ -27,7 +27,6 @@ import javax.ejb.Local;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
 
-import com.novartis.pcs.ontology.service.parser.owl.OWLParserContext;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 
 import com.novartis.pcs.ontology.dao.AnnotationTypeDAOLocal;
@@ -40,6 +39,9 @@ import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.service.parser.ParseContext;
+import com.novartis.pcs.ontology.service.parser.owl.DAOParserContext;
+import com.novartis.pcs.ontology.service.parser.owl.MapParserContext;
+import com.novartis.pcs.ontology.service.parser.owl.OWLParserContext;
 import com.novartis.pcs.ontology.service.parser.owl.OWLParsingServiceLocal;
 
 /**
@@ -63,24 +65,30 @@ public class OWLOntologyImportServiceImpl extends OntologyImportServiceBase {
     public OWLOntologyImportServiceImpl() {
     }
 
-    public ParseContext parse(InputStream is, Curator curator, Version version, Ontology ontology,
-            Collection<Term> terms) {
+	public ParseContext parse(InputStream is, Curator curator, Version version, Ontology ontology,
+							  Collection<Term> terms, final boolean fastImport) {
 
-        ParseContext context = null;
-        try {
-            Collection<RelationshipType> relationshipTypes = relationshipTypeDAO.loadAll();
-            Collection<Datasource> datasources = datasourceDAO.loadAll();
-            Collection<AnnotationType> annotationTypes = annotationTypeDAO.loadAll();
+		ParseContext context = null;
+		try {
+			Collection<RelationshipType> relationshipTypes = relationshipTypeDAO.loadAll();
+			Collection<Datasource> datasources = datasourceDAO.loadAll();
+			Collection<AnnotationType> annotationTypes = annotationTypeDAO.loadAll();
 
-			OWLParserContext parserContext = new OWLParserContext(curator, version, datasources, ontology,
-					relationshipTypes, annotationTypes, terms);
+			OWLParserContext parserContext;
+			if (fastImport) {
+				parserContext = new MapParserContext(curator, version, datasources, ontology, relationshipTypes,
+						annotationTypes, terms);
+			} else {
+				parserContext = new DAOParserContext(curator, ontology, version, termDAO, relationshipTypeDAO,
+						datasourceDAO, annotationTypeDAO);
+			}
 			context = owlParsingService.parseOWLontology(is, ontology, parserContext);
 
-        } catch (OWLOntologyCreationException e) {
-            logger.log(Level.WARNING, "IO exception: ", e);
-        }
-        return context;
-    }
+		} catch (OWLOntologyCreationException e) {
+			logger.log(Level.WARNING, "IO exception: ", e);
+		}
+		return context;
+	}
 
     @Override
     protected void findRefId(Ontology ontology, Collection<Term> terms) throws InvalidEntityException {

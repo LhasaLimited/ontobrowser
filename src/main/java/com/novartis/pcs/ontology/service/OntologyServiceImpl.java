@@ -50,6 +50,12 @@ public class OntologyServiceImpl extends OntologyService implements OntologyServ
 	public List<Ontology> loadAll() {
 		return ontologyDAO.loadAll();
 	}
+
+	@Override
+	public List<Ontology> loadNonIntermediate() {
+		List<Ontology> ontologies = ontologyDAO.loadNonIntermediate();
+		return ontologies;
+	}
 }
 /* ---------------------------------------------------------------------*
  * This software is the confidential and proprietary

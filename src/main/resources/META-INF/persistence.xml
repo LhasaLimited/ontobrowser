@@ -9,6 +9,7 @@
 		<properties>
 			<property name="hibernate.show_sql" value="false"/>
 			<property name="hibernate.format_sql" value="true"/>
+			<property name="hibernate.id.new_generator_mappings" value="true"/>
 			<property name="hibernate.max_fetch_depth" value="0"/>
 			<property name="hibernate.default_batch_fetch_size" value="100"/>
 			<property name="hibernate.jdbc.fetch_size" value="1000"/>

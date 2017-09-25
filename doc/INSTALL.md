@@ -142,6 +142,17 @@ The example Hibernate secondary cache configuration below (from the `$JBOSS_HOME
 </cache-container>
 ```
 
+### Transaction timeout
+
+Increase transaction timeout for importing large ontologies as below:
+
+```xml
+<subsystem xmlns="urn:jboss:domain:transactions:2.0">
+...
+    <coordinator-environment default-timeout="600" />
+...
+</subsystem>
+```
 ## Apache Basic Authentication and Proxy Setup (optional)
 In a production environment it is recommended to perform the user authentication using a web server (e.g. Apache) located in a [DMZ](http://en.wikipedia.org/wiki/DMZ_(computing)).  Alternatively if installing OntoBrowser on a corporate intranet it is recommended to use a corporate single sign-on (SSO) system for user authentication.
 

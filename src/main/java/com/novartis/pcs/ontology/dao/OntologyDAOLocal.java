@@ -16,16 +16,24 @@ limitations under the License.
 
 */
 package com.novartis.pcs.ontology.dao;
+
+import java.util.Collection;
+import java.util.List;
+
 import javax.ejb.Local;
 
 import com.novartis.pcs.ontology.entity.Ontology;
 
-
 @Local
 public interface OntologyDAOLocal extends VersionedDAO<Ontology> {
-	
+
 	Ontology loadByName(String ontologyName);
-	
+
 	Ontology loadByName(String ontologyName, boolean lock);
 
+	Ontology loadByAlias(String alias);
+
+	Collection<Ontology> loadNonIntermediateWithAliases(final Ontology mainOntology);
+
+	List<Ontology> loadNonIntermediate();
 }

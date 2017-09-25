@@ -9,8 +9,7 @@ import com.novartis.pcs.ontology.service.parser.ParseContext;
 
 public interface OWLParsingService {
 
-    ParseContext parseOWLontology(InputStream inputStream,
-								  Ontology ontology, final OWLParserContext context)
+	ParseContext parseOWLontology(InputStream inputStream, Ontology ontology, final OWLParserContext context)
 			throws OWLOntologyCreationException;
 
 }

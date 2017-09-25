@@ -30,10 +30,12 @@ import javax.validation.Valid;
 		column = @Column(name = "ANNOTATION_TYPE_ID", unique = true, nullable = false))
 @AssociationOverride(name = "curatorActions", joinColumns = @JoinColumn(name = "ANNOTATION_TYPE_ID"))
 @NamedQueries({
-		@NamedQuery(name = AnnotationType.QUERY_BY_ONTOLOGY, query = "from AnnotationType at where at.ontology = :ontology") })
+		@NamedQuery(name = AnnotationType.QUERY_BY_ONTOLOGY, query = "from AnnotationType at where at.ontology = :ontology"),
+		@NamedQuery(name = AnnotationType.QUERY_BY_ANNOTATION, query = "from AnnotationType at where at.prefixedXmlType = :annotation") })
 public class AnnotationType extends VersionedEntity implements ReplaceableEntity<AnnotationType> {
 
 	public static final String QUERY_BY_ONTOLOGY = "AnnotationType.queryByOntology";
+	public static final String QUERY_BY_ANNOTATION = "AnnotationType.queryByAnnotation";
 
 	public AnnotationType(final String prefixedXmlType, final Curator creator, final Version version) {
 		super(creator, version);
@@ -130,7 +132,7 @@ public class AnnotationType extends VersionedEntity implements ReplaceableEntity
 		? getPrefixedXmlType()
 		: getAnnotationType()) + ":";
 	}
-	
+
 }
 /* ---------------------------------------------------------------------*
  * This software is the confidential and proprietary
@@ -142,4 +144,3 @@ public class AnnotationType extends VersionedEntity implements ReplaceableEntity
  * written license agreement entered into by holder of the information
  * with LHASA Ltd.
  * ---------------------------------------------------------------------*/
- 

@@ -13,6 +13,7 @@ import static org.junit.Assert.assertThat;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collections;
 
 import javax.ejb.EJB;
 
@@ -76,7 +77,7 @@ public class OntologyExportOBOArqTestIT {
 	@Before
 	public void loadOBOOntology() throws DuplicateEntityException, InvalidEntityException {
 		InputStream bfoOwl = this.getClass().getResourceAsStream("/bfo.obo");
-		importService.importOntology(BFO_TEST, bfoOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
+		importService.importOntology(BFO_TEST, bfoOwl, curatorDAOLocal.loadByUsername("SYSTEM"), Collections.emptyList(), true);
 		ontology = ontologyDAOLocal.loadByName(BFO_TEST);
 		assertThat(ontology, notNullValue());
 	}

@@ -22,6 +22,8 @@ public interface OntologyServiceLocal {
 	void createOntology(Ontology ontology, final String username) throws InvalidEntityException;
 
 	List<Ontology> loadAll();
+
+	List<Ontology> loadNonIntermediate();
 }
 /* ---------------------------------------------------------------------*
  * This software is the confidential and proprietary

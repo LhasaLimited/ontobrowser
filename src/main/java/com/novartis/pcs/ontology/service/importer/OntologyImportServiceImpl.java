@@ -58,7 +58,7 @@ public class OntologyImportServiceImpl extends OntologyImportServiceBase
     }
 
 	public ParseContext parse(InputStream is, Curator curator, Version version, Ontology ontology,
-							  Collection<Term> terms)
+							  Collection<Term> terms, final boolean fastImport)
 	{
 
 		OBOParseContext context = null;

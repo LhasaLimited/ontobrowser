@@ -6,9 +6,11 @@
  */
 package com.novartis.pcs.ontology.service.parser.owl.handlers;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.novartis.pcs.ontology.entity.Synonym;
 import com.novartis.pcs.ontology.entity.Term;
+import com.novartis.pcs.ontology.service.parser.owl.ApiHelper;
 import com.novartis.pcs.ontology.service.parser.owl.OWLParserContext;
 import com.novartis.pcs.ontology.service.parser.owl.OWLVisitorHandler;
 import com.novartis.pcs.ontology.service.parser.owl.ParserState;
@@ -43,12 +45,12 @@ public class TermSynonymHandler implements OWLVisitorHandler{
 	public void handleAnnotation(final OWLParserContext context, final OWLAnnotation owlAnnotation) {
 		Term term = context.termPeek();
 		Synonym.Type type = synonymMap.get(owlAnnotation.getProperty().getIRI());
-		if (owlAnnotation.getValue() instanceof OWLLiteral) {
-			OWLLiteral literal = (OWLLiteral) owlAnnotation.getValue();
-			Synonym synonym = new Synonym(term, literal.getLiteral(), type, context.getCurator(), context.getVersion());
+		String value = ApiHelper.getString(owlAnnotation);
+		if (!Strings.isNullOrEmpty(value)) {
+			Synonym synonym = new Synonym(term, value, type, context.getCurator(), context.getVersion());
 			context.approve(synonym);
-		} else if (owlAnnotation.getValue() instanceof IRI) {
-			logger.warning("IRI not supported for Synonyms");
+		} else  {
+			logger.warning("Synonym value is empty:" + owlAnnotation.toString());
 		}
 	}
 }

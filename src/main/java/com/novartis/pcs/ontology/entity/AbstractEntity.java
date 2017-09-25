@@ -17,11 +17,11 @@ limitations under the License.
 */
 package com.novartis.pcs.ontology.entity;
 
-import static javax.persistence.GenerationType.SEQUENCE;
-
 import java.io.Serializable;
+import java.util.Objects;
 
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.SequenceGenerator;
@@ -38,8 +38,10 @@ public abstract class AbstractEntity implements Serializable {
 	
 	@Id
 	// Oracle sequence implementation
-	@SequenceGenerator(name="ONTOLOGY_ENTITY_ID_SEQ", sequenceName="PRIMARY_KEY_SEQ", allocationSize=1)
-	@GeneratedValue(strategy=SEQUENCE, generator="ONTOLOGY_ENTITY_ID_SEQ")
+    // setting allocation size to 1 implies select next id before each insert
+    // allocation size must match INCREMENT BY in SEQUENCE
+	@SequenceGenerator(name = "ONTOLOGY_ENTITY_ID_SEQ", sequenceName = "PRIMARY_KEY_SEQ", allocationSize = 20)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ONTOLOGY_ENTITY_ID_SEQ")
 	// Non-Oracle (e.g. MySQL, PostgreSQL) auto increment implementation
 	// @GeneratedValue(strategy=IDENTITY)
 	private long id;
@@ -54,10 +56,10 @@ public abstract class AbstractEntity implements Serializable {
     public long getId() {
         return id;
     }
-    	
+
     @Override
     public int hashCode() {
-        return id > 0L ? (int)id : super.hashCode();
+        return Objects.hash(id);
     }
 
     @Override

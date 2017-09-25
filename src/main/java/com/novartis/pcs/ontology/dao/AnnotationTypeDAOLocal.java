@@ -6,10 +6,10 @@
  */
 package com.novartis.pcs.ontology.dao;
 
+import java.util.Collection;
+
 import com.novartis.pcs.ontology.entity.AnnotationType;
 import com.novartis.pcs.ontology.entity.Ontology;
-
-import java.util.Collection;
 
 /**
  * @author Artur Polit
@@ -17,6 +17,8 @@ import java.util.Collection;
  */
 public interface AnnotationTypeDAOLocal extends VersionedDAO<AnnotationType> {
 	Collection<AnnotationType> loadByOntology(Ontology ontology);
+
+	AnnotationType loadByAnnotation(String propertyFragment);
 }
 /* ---------------------------------------------------------------------*
  * This software is the confidential and proprietary
@@ -28,4 +30,3 @@ public interface AnnotationTypeDAOLocal extends VersionedDAO<AnnotationType> {
  * written license agreement entered into by holder of the information
  * with LHASA Ltd.
  * ---------------------------------------------------------------------*/
- 

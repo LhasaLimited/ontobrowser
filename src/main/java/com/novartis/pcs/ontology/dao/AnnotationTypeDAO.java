@@ -26,12 +26,19 @@ public class AnnotationTypeDAO extends VersionedEntityDAO<AnnotationType> implem
 		super();
 	}
 
-
 	@Override
 	public Collection<AnnotationType> loadByOntology(final Ontology ontology) {
 		TypedQuery<AnnotationType> namedQuery = entityManager.createNamedQuery(AnnotationType.QUERY_BY_ONTOLOGY, AnnotationType.class);
 		namedQuery.setParameter("ontology", ontology);
 		return namedQuery.getResultList();
+	}
+
+	@Override
+	public AnnotationType loadByAnnotation(final String annotation) {
+		TypedQuery<AnnotationType> namedQuery = entityManager.createNamedQuery(AnnotationType.QUERY_BY_ANNOTATION,
+				AnnotationType.class);
+		namedQuery.setParameter("annotation", annotation);
+		return namedQuery.getResultList().isEmpty() ? null : namedQuery.getResultList().get(0);
 	}
 }
 /* ---------------------------------------------------------------------*
@@ -44,4 +51,3 @@ public class AnnotationTypeDAO extends VersionedEntityDAO<AnnotationType> implem
  * written license agreement entered into by holder of the information
  * with LHASA Ltd.
  * ---------------------------------------------------------------------*/
- 

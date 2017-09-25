@@ -4,7 +4,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,6 +15,7 @@ import javax.ejb.EJB;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import com.novartis.pcs.ontology.entity.OntologyAlias;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.novartis.pcs.ontology.dao.AnnotationTypeDAOLocal;
@@ -48,33 +52,46 @@ public abstract class OntologyImportServiceBase extends OntologyService
         super();
     }
 
-    @Override
-    public void importOntology(String ontologyName, InputStream is, Curator curator)
-            throws DuplicateEntityException, InvalidEntityException {
-        // Lock ontology while we are importing/updating
-        // also need to lock ontology because we potentially
-        // update the current term reference id value
-        Ontology ontology = ontologyDAO.loadByName(ontologyName, true);
+	@Override
+	public void importOntology(String ontologyName, InputStream is, Curator curator, final List<String> aliases, final boolean fastImport)
+			throws DuplicateEntityException, InvalidEntityException {
+		// Lock ontology while we are importing/updating
+		// also need to lock ontology because we potentially
+		// update the current term reference id value
+		Ontology ontology = ontologyDAO.loadByName(ontologyName, true);
 		Collection<Term> terms = new ArrayList<>();
-        Version version = lastUnpublishedVersion(curator);
+		Version version = lastUnpublishedVersion(curator);
 
-        if (ontology == null) {
-            ontology = new Ontology(ontologyName, curator, version);
-            ontology.setStatus(Status.APPROVED);
-            ontology.setApprovedVersion(version);
+		if (ontology == null) {
+			ontology = new Ontology(ontologyName, curator, version);
+			ontology.setStatus(Status.APPROVED);
+			ontology.setApprovedVersion(version);
 			ontology.setInternal(false);
-        } else {
-            terms = termDAO.loadAll(ontology);
-        }
+			ontology.setIntermediate(false);
+			ontology.setAliases(toOntologyAliases(aliases, ontology));
+			ontologyDAO.save(ontology);
+			ontology = ontologyDAO.loadByName(ontologyName);
+		} else {
+			terms = termDAO.loadAll(ontology);
+		}
 
 		terms.add(termDAO.loadByReferenceId("Thing", ontologyName));
         // According to spec OBO files are UTF-8 encoded
-        ParseContext context = parse(is, curator, version, ontology, terms);
+        ParseContext context = parse(is, curator, version, ontology, terms, fastImport);
         saveParsed(ontology, version, context);
     }
 
-    protected abstract ParseContext parse(InputStream is, Curator curator, Version version, Ontology ontology,
-            Collection<Term> terms);
+	private Set<OntologyAlias> toOntologyAliases(final List<String> aliases, final Ontology ontology) {
+		Set<OntologyAlias> set = new HashSet<>();
+		for (String alias : aliases) {
+			OntologyAlias ontologyAlias = new OntologyAlias(ontology, alias);
+			set.add(ontologyAlias);
+		}
+		return set;
+	}
+
+	protected abstract ParseContext parse(InputStream is, Curator curator, Version version, Ontology ontology,
+										  Collection<Term> terms, final boolean fastImport);
 
     private void saveParsed(Ontology ontology, Version version, ParseContext context)
             throws InvalidEntityException, DuplicateEntityException {

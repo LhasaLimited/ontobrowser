@@ -367,7 +367,7 @@ public class OntoBrowserServiceImpl extends RemoteServiceServlet implements
 
 	@Override
 	public List<Ontology> loadOntologies(){
-		return ontologyService.loadAll();
+		return ontologyService.loadNonIntermediate();
 	}
 
 	private <T> List<T> asList(Collection<T> collection) {

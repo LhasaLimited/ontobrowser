@@ -1,12 +1,15 @@
+/**
+ * Copyright © 2017 Lhasa Limited
+ * File created: 15/09/2017 by Artur Polit
+ * Creator : Artur Polit
+ * Version : $$Id$$
+ */
 package com.novartis.pcs.ontology.service.parser.owl;
-
-import static java.util.function.UnaryOperator.identity;
 
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
@@ -18,65 +21,56 @@ import org.semanticweb.owlapi.model.IRI;
 import com.novartis.pcs.ontology.entity.AnnotationType;
 import com.novartis.pcs.ontology.entity.Curator;
 import com.novartis.pcs.ontology.entity.Datasource;
+import com.novartis.pcs.ontology.entity.InvalidEntityException;
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.entity.RelationshipType;
 import com.novartis.pcs.ontology.entity.Term;
 import com.novartis.pcs.ontology.entity.Version;
 import com.novartis.pcs.ontology.entity.VersionedEntity;
 
-
-public class OWLParserContext {
+/**
+ * @author Artur Polit
+ * @since 15/09/2017
+ */
+public abstract class OWLParserContext {
+	private final Map<String, Map<String, Set<String>>> relationshipMap = new HashMap<>();
+	// system
+	protected Ontology ontology;
+	protected Curator curator;
+	protected Version version;
 	private Deque<ParserState> state = new LinkedList<>();
 	private Deque<Term> termStack = new LinkedList<>();
 	private RelationshipType relationshipType;
 	private IRI iri;
 	private AnnotationType annotationType;
 
-	// system
-	private Ontology ontology;
-	private Curator curator;
-	private Version version;
-
-	private Map<String, Datasource> datasources;
-	private Map<String, RelationshipType> relationshipTypes;
-	private Map<String, AnnotationType> annotationTypes;
-	private Map<String, Term> terms;
-
-	private final Map<String, Map<String, Set<String>>> relationshipMap = new HashMap<>();
-
-	public OWLParserContext(final Curator curator, final Version version, final Collection<Datasource> datasources, final Ontology ontology,
-							Collection<RelationshipType> relationshipTypes, final Collection<AnnotationType> annotationTypes, final Collection<Term> terms) {
+	public OWLParserContext(final Curator curator, final Ontology ontology, final Version version) {
 		this.curator = curator;
-		this.version = version;
 		this.ontology = ontology;
-		this.datasources = new LinkedHashMap<>(datasources.stream().collect(Collectors.toMap(Datasource::getAcronym, identity())));
-		this.relationshipTypes = new LinkedHashMap<>(relationshipTypes.stream().collect(Collectors.toMap(RelationshipType::getRelationship, identity())));
-		this.annotationTypes = new LinkedHashMap<>(annotationTypes.stream().collect(Collectors.toMap(AnnotationType::getPrefixedXmlType, Function.identity())));
-		this.terms = new LinkedHashMap<>(terms.stream().collect(Collectors.toMap(Term::getReferenceId, Function.identity())));
-
+		this.version = version;
 	}
 
-	public ParserState statePop(){
+	public ParserState statePop() {
 		return state.pop();
 	}
 
-	public ParserState statePeek(){
+	public ParserState statePeek() {
 		return state.peek();
 	}
 
-	public void statePush(ParserState parserState){
+	public void statePush(ParserState parserState) {
 		state.push(parserState);
 	}
 
-	public void termPush(Term term){
+	public void termPush(Term term) {
 		termStack.push(term);
 	}
 
-	public Term termPeek(){
+	public Term termPeek() {
 		return termStack.peek();
 	}
 
-	public Term termPop(){
+	public Term termPop() {
 		return termStack.pop();
 	}
 
@@ -104,9 +98,7 @@ public class OWLParserContext {
 		this.annotationType = annotationType;
 	}
 
-	public void setDatasources(final Map<String, Datasource> datasources) {
-		this.datasources = datasources;
-	}
+	public abstract void setDatasources(Map<String, Datasource> datasources);
 
 	public void setCurator(final Curator curator) {
 		this.curator = curator;
@@ -124,13 +116,9 @@ public class OWLParserContext {
 		this.version = version;
 	}
 
-	public Datasource getDatasource(String acronym) {
-		return datasources.computeIfAbsent(acronym.toUpperCase(), k -> new Datasource(acronym, acronym, getCurator()));
-	}
+	public abstract Datasource getDatasource(String acronym);
 
-	public Collection<Datasource> getDatasources() {
-		return datasources.values();
-	}
+	public abstract Collection<Datasource> getDatasources();
 
 	public Ontology getOntology() {
 		return ontology;
@@ -140,65 +128,41 @@ public class OWLParserContext {
 		this.ontology = ontology;
 	}
 
-	public boolean hasRelationshipType(String relationshipType){
-		return relationshipTypes.containsKey(relationshipType);
-	}
+	public abstract boolean hasRelationshipType(String relationshipType);
 
-	public void addRelationshipType(RelationshipType relationshipType) {
-		relationshipTypes.put(relationshipType.getRelationship(),relationshipType );
-	}
+	public abstract void addRelationshipType(RelationshipType relationshipType) throws InvalidEntityException;
 
-	public RelationshipType getRelationshipType(String relationshipType){
-		return relationshipTypes.get(relationshipType);
-	}
+	public abstract RelationshipType getRelationshipType(String relationshipType);
 
-	public Collection<RelationshipType> getRelationshipTypes() {
-		return relationshipTypes.values();
-	}
+	public abstract Collection<RelationshipType> getRelationshipTypes();
 
+	public abstract AnnotationType getAnnotationType(String propertyFragment);
 
-	public AnnotationType getAnnotationType(final String propertyFragment) {
-		return annotationTypes.get(propertyFragment);
-	}
+	public abstract boolean hasAnnotationType(String propertyFragment);
 
-	public boolean hasAnnotationType(final String propertyFragment) {
-		return annotationTypes.containsKey(propertyFragment);
-	}
+	public abstract Collection<AnnotationType> getAnnotationTypes();
 
+	public abstract Map<String, Term> getTerms();
 
-	public Collection<AnnotationType> getAnnotationTypes() {
-		return annotationTypes.values();
-	}
+	public abstract Term getTerm(String referenceId);
 
-	public Map<String, Term> getTerms() {
-		return terms;
-	}
+	public abstract void putTerm(String referenceId, Term term) throws InvalidEntityException;
 
-	public Term getTerm(String referenceId) {
-		return terms.get(referenceId);
-	}
-
-	public void putTerm(final String referenceId, final Term term) {
-		terms.put(referenceId, term);
-	}
 	public void approve(VersionedEntity versionedEntity) {
 		versionedEntity.setStatus(VersionedEntity.Status.APPROVED);
 		versionedEntity.setApprovedVersion(getVersion());
 	}
 
-	public boolean hasTerm(final String referenceId) {
-		return terms.containsKey(referenceId);
-	}
+	public abstract boolean hasTerm(String referenceId);
 
-	void visitPropertyRelationship(String propertyFragment, final Function<String,RelationshipType> relationshipTypeFunction) {
-		RelationshipType relationshipType = relationshipTypes.computeIfAbsent(propertyFragment, relationshipTypeFunction);
-		setRelationshipType(relationshipType);
-	}
+	public abstract void addTerms(Collection<Term> existingTerms);
 
+	abstract void visitPropertyRelationship(String propertyFragment,
+			Function<String, RelationshipType> relationshipTypeFunction) throws InvalidEntityException;
 
-	public void putAnnotationType(final String annotationTypeFragment, final AnnotationType annotationType) {
-		annotationTypes.put(annotationTypeFragment, annotationType);
-	}
+	public abstract void putAnnotationType(String annotationTypeFragment, AnnotationType annotationType)
+			throws InvalidEntityException;
+
 	void setStateWithEntity(final String referenceId) {
 		if (hasTerm(referenceId)) {
 			// if annotation is related to already existing class
@@ -215,12 +179,13 @@ public class OWLParserContext {
 		}
 	}
 
-
 	public Set<String> getRelationshipTypes(final Term relatedTerm, final Term term) {
 		Map<String, Set<String>> relatedTerms = relationshipMap.computeIfAbsent(term.getReferenceId(),
-				k -> new HashMap<>());
-		return relatedTerms.computeIfAbsent(relatedTerm.getReferenceId(),
-				id -> new HashSet<>());
+				// group existing relations by the related term referenceId,
+				// then create a set of relationship types
+				refId -> term.getRelationships().stream()
+						.collect(Collectors.groupingBy(r -> r.getRelatedTerm().getReferenceId(),
+								Collectors.mapping(r -> r.getType().getRelationship(), Collectors.toSet()))));
+		return relatedTerms.computeIfAbsent(relatedTerm.getReferenceId(), r -> new HashSet<>());
 	}
-
 }

@@ -7,6 +7,7 @@ import static org.junit.Assert.assertThat;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -59,8 +60,6 @@ public class OntologyImportServiceImplArq3TestIT {
 	@EJB
 	private RelationshipDAOLocal relationshipDAO;
 
-	private Ontology ontology;
-
 	@Deployment(name = "ontobrowser")
 	public static WebArchive create() {
 		File[] testDeps = Maven.resolver().loadPomFromFile("pom.xml").importRuntimeDependencies()
@@ -76,9 +75,9 @@ public class OntologyImportServiceImplArq3TestIT {
 	@Before
 	public void loadOntology() throws DuplicateEntityException, InvalidEntityException {
 		InputStream ontobrowserOwl = this.getClass().getResourceAsStream("/bao_complete.owl");
-		importService.importOntology(ONTOLOGY_NAME, ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"));
+		importService.importOntology(ONTOLOGY_NAME, ontobrowserOwl, curatorDAOLocal.loadByUsername("SYSTEM"), Collections.emptyList(), true);
 
-		ontology = ontologyDAOLocal.loadByName(ONTOLOGY_NAME);
+		Ontology ontology = ontologyDAOLocal.loadByName(ONTOLOGY_NAME);
 		assertThat(ontology, notNullValue());
 	}
 

@@ -19,7 +19,10 @@ public final class ReferenceIdProvider {
 	}
 
 	public static String getRefId(OWLNamedObject owlNamedObject) {
-		IRI iri = owlNamedObject.getIRI();
+		return getRefId(owlNamedObject.getIRI());
+	}
+
+	public static String getRefId(final IRI iri) {
 		if (iri.getScheme().startsWith("http")) {
 			if (iri.getRemainder().isPresent()) {
 				return iri.getRemainder().get();

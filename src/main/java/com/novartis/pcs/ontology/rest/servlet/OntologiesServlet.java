@@ -25,6 +25,7 @@ import static com.novartis.pcs.ontology.service.export.OntologyFormat.Turtle;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,10 +34,10 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -48,6 +49,9 @@ import org.apache.commons.lang.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Splitter;
+import com.google.common.base.Stopwatch;
+import com.google.common.base.Strings;
 import com.novartis.pcs.ontology.dao.OntologyDAOLocal;
 import com.novartis.pcs.ontology.dao.TermDAOLocal;
 import com.novartis.pcs.ontology.entity.CrossReference;
@@ -81,7 +85,7 @@ import com.novartis.pcs.ontology.service.parser.InvalidFormatException;
  * 
  * Note: Could use JAX-RS (e.g. RESTEasy or Jersey) but this RESTful
  * service is so trivial that it does not warrant a framework.
- * 
+ *
  * @author Carlo Ravagli
  *
  */
@@ -108,7 +112,7 @@ public class OntologiesServlet extends HttpServlet {
         mediaTypes.put(MEDIA_TYPE_OBO, OBO);
         mediaTypes.put(MEDIA_TYPE_JSON, null);
     }
-			
+
 	@EJB
 	private OntologyExportServiceLocal exportService;
 
@@ -120,21 +124,21 @@ public class OntologiesServlet extends HttpServlet {
 
 	@EJB
 	private OntologyCuratorServiceLocal curatorService;
-	
+
 	@EJB
 	protected OntologyDAOLocal ontologyDAO;
-	
+
 	@EJB
 	protected TermDAOLocal termDAO;
-	
+
 	private final Map<OntologyFormat, OntologyImportServiceLocal> importServices = new EnumMap<>(OntologyFormat.class);
 
 	private final ObjectMapper mapper = new ObjectMapper();
-	
+
 	@Override
 	public void init() throws ServletException {
     	mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-    	mapper.addMixInAnnotations(Datasource.class, DatasourceMixInAnnotations.class);    	
+    	mapper.addMixInAnnotations(Datasource.class, DatasourceMixInAnnotations.class);
     	mapper.addMixInAnnotations(RelationshipType.class, RelationshipTypeMixInAnnotations.class);
     	mapper.addMixInAnnotations(Ontology.class, OntologyMixInAnnotations.class);
     	mapper.addMixInAnnotations(Term.class, TermMixInAnnotations.class);
@@ -160,7 +164,7 @@ public class OntologiesServlet extends HttpServlet {
 		if(mediaType == null) {
 			response.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
 			response.setContentLength(0);
-		} else if(pathInfo != null && pathInfo.length() > 1) {	
+		} else if(pathInfo != null && pathInfo.length() > 1) {
 			String ontologyName = pathInfo.substring(1);
 			if(mediaType.equals(MEDIA_TYPE_JSON)) {
 				serialize(ontologyName, response);
@@ -168,7 +172,7 @@ public class OntologiesServlet extends HttpServlet {
 				export(ontologyName, includeNonPublicXrefs, mediaType, response);
 			}
 		} else {
-			mediaType = getExpectedMediaType(request, 
+			mediaType = getExpectedMediaType(request,
 					Collections.singletonList(MEDIA_TYPE_JSON));
 			if (MEDIA_TYPE_JSON.equals(mediaType))
 			{
@@ -179,7 +183,7 @@ public class OntologiesServlet extends HttpServlet {
 			}
 		}
 	}
-	
+
 	@Override
 	protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
@@ -200,12 +204,12 @@ public class OntologiesServlet extends HttpServlet {
 		String encoding = StringUtils.trimToNull(request.getCharacterEncoding());
 		String pathInfo = StringUtils.trimToNull(request.getPathInfo());
 		Curator curator = loadCurator(request);
-		
+
 		String mediaType = parseMediaType(request.getContentType());
-		
+
 		if (!(StringUtils.equalsIgnoreCase(mediaType, MEDIA_TYPE_OBO) || StringUtils.equalsIgnoreCase(mediaType, MEDIA_TYPE_OWL_XML))
 				|| !StringUtils.equalsIgnoreCase(encoding,"utf-8")) {
-			log("Failed to import ontology: invalid media type or encoding " 
+			log("Failed to import ontology: invalid media type or encoding "
 					+ mediaType + ";charset=" + encoding);
 			response.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
 		} else if(pathInfo == null || pathInfo.length() <= 1) {
@@ -217,9 +221,12 @@ public class OntologiesServlet extends HttpServlet {
 		} else {
 			try {
 				String ontologyName = pathInfo.substring(1);
-
+				Stopwatch stopwatch = Stopwatch.createStarted();
+				List<String> aliases = parseAliases(request);
+				boolean fastImport = parseFastImport(request);
 				OntologyImportServiceLocal ontologyImportService = importServices.get(mediaTypes.get(mediaType));
-				ontologyImportService.importOntology(ontologyName, request.getInputStream(), curator);
+				ontologyImportService.importOntology(ontologyName, request.getInputStream(), curator, aliases, fastImport);
+				log(MessageFormat.format("Ontology imported in {0}s", stopwatch.elapsed(TimeUnit.SECONDS)));
 				setCommonResponseHeaders(response);
 			} catch(DuplicateEntityException e) {
 				log("Failed to import ontology: duplicate term", e);
@@ -238,11 +245,25 @@ public class OntologiesServlet extends HttpServlet {
 		response.setContentLength(0);
 	}
 
+	private boolean parseFastImport(final HttpServletRequest request) {
+		String fastImportRaw = request.getHeader("X-Ontobrowser-Fast-Import");
+		return Strings.isNullOrEmpty(fastImportRaw) || Boolean.parseBoolean(fastImportRaw);
+	}
+
+	private List<String> parseAliases(final HttpServletRequest request) {
+		String aliasesHeader = request.getHeader("X-Ontobrowser-Aliases");
+		List<String> aliases = Collections.emptyList();
+		if (!Strings.isNullOrEmpty(aliasesHeader)) {
+			aliases = Splitter.on(';').omitEmptyStrings().trimResults().splitToList(aliasesHeader);
+		}
+		return aliases;
+	}
+
 	@Override
 	protected void doOptions(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		String mediaType = getExpectedMediaType(request);
-		
+
 		OntologyFormat format = mediaTypes.get(mediaType);
 		if(format != null) {
 			// Preflight CORS support
@@ -262,27 +283,27 @@ public class OntologiesServlet extends HttpServlet {
 	protected long getLastModified(HttpServletRequest req) {
 		return System.currentTimeMillis();
 	}
-	
+
 	private String getExpectedMediaType(HttpServletRequest request) {
 		return getExpectedMediaType(request, mediaTypes.keySet());
 	}
-	
-	private String getExpectedMediaType(HttpServletRequest request, 
+
+	private String getExpectedMediaType(HttpServletRequest request,
 			Collection<String> acceptedMediaTypes) {
 		String mediaType = null;
 		String acceptHeader = request.getHeader("Accept");
 		if(acceptHeader != null) {
 			mediaType = StringUtils.trimToNull(MIMEParse.bestMatch(acceptedMediaTypes, acceptHeader));
 		}
-		
+
 		return mediaType;
 	}
-	
+
 	private void serializeAll(HttpServletResponse response) {
 		try {
 			List<Ontology> all = ontologyDAO.loadByStatus(EnumSet.of(Status.APPROVED));
 			List<Ontology> ontologies = new ArrayList<>();
-			
+
 			for(Ontology ontology : all) {
 				if(!ontology.isCodelist()) {
 					ontologies.add(ontology);
@@ -294,7 +315,7 @@ public class OntologiesServlet extends HttpServlet {
 
 			// As per jackson javadocs - Encoding will be UTF-8
 			mapper.writeValue(response.getOutputStream(), ontologies);
-			
+
 		} catch (Exception e) {
 			log("Failed to serialize ontologies to JSON", e);
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -331,7 +352,7 @@ public class OntologiesServlet extends HttpServlet {
 			response.setContentLength(0);
 		}
 	}
-		
+
 	private void export(String ontologyName, boolean includeNonPublicXrefs, String mediaType,
 			HttpServletResponse response) {
 		OntologyFormat format = mediaTypes.get(mediaType);
@@ -371,26 +392,26 @@ public class OntologiesServlet extends HttpServlet {
 
     private String getUsername(HttpServletRequest request) {
         String username = request.getRemoteUser();
-        
+
         if(username == null) {
                Principal principal = request.getUserPrincipal();
                if(principal != null) {
                      username = principal.getName();
                }
         }
-        
+
         // Temp workaround to the apache --> wildfly bridge
         if (username == null) {
                username = request.getHeader("REMOTE_USER");
         }
-        
+
         return username;
     }
 
 	public Curator loadCurator(HttpServletRequest request) {
 		Curator curator = null;
 		String username = getUsername(request);
-		username = "SYSTEM";				
+		username = "SYSTEM";
 		if(username != null) {
 			curator = curatorService.loadByUsername(username);
 		}
@@ -411,10 +432,10 @@ public class OntologiesServlet extends HttpServlet {
 		else{
 			log("CurrSessionUser =  null");
 		}
-		
+
 		}
-				
+
 		return curator;
 	}
-	
+
 }
