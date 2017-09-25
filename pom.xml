@@ -161,12 +161,6 @@
           <scope>test</scope>
       </dependency>
       <dependency>
-          <groupId>org.codejargon</groupId>
-          <artifactId>fluentjdbc</artifactId>
-          <version>1.6</version>
-          <scope>test</scope>
-      </dependency>
-      <dependency>
           <groupId>org.jboss.arquillian.extension</groupId>
           <artifactId>arquillian-persistence-dbunit</artifactId>
           <version>1.0.0.Alpha7</version>
@@ -187,6 +181,7 @@
       <dependency>
           <groupId>org.jboss.shrinkwrap.resolver</groupId>
           <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+          <scope>test</scope>
       </dependency>
       <dependency>
       	<groupId>org.apache.commons</groupId>
@@ -237,32 +232,54 @@
             <incremental>false</incremental>
         </configuration>
       </plugin>
-        <plugin>
-            <groupId>org.wildfly.plugins</groupId>
-            <artifactId>wildfly-maven-plugin</artifactId>
-            <version>1.2.0.Alpha6</version>
-            <configuration>
-                <jboss-home>C:\software\wildfly\wildfly-8.2.1.Final</jboss-home>
-                <java-opts>
-                    <java-opt>-agentpath:C:\software\jrebel\lib\jrebel64.dll</java-opt>
-                  <java-opt>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8787</java-opt>
-                </java-opts>
-            </configuration>
-        </plugin>
-        <plugin>
-            <groupId>org.zeroturnaround</groupId>
-            <artifactId>jrebel-maven-plugin</artifactId>
-            <version>1.1.7</version>
-            <executions>
-                <execution>
-                    <id>generate-rebel-xml</id>
-                    <phase>process-resources</phase>
-                    <goals>
-                        <goal>generate</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
     </plugins>
   </build>
+    <profiles>
+        <profile>
+            <id>development</id>
+            <!-- enables monitoring endpoint - append monitoring/ at the end of the path -->
+            <dependencies>
+                <dependency>
+                    <groupId>net.bull.javamelody</groupId>
+                    <artifactId>javamelody-core</artifactId>
+                    <version>1.69.0</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.wildfly.plugins</groupId>
+                        <artifactId>wildfly-maven-plugin</artifactId>
+                        <version>1.2.0.Alpha6</version>
+                        <configuration>
+                            <jboss-home>C:\software\wildfly\wildfly-8.2.1.Final</jboss-home>
+                            <java-opts>
+                                <java-opt>-Djavamelody.datasources=java:jboss/datasources/ontobrowser</java-opt>
+                                <java-opt>-Djavamelody.disabled=false</java-opt>
+                                <java-opt>-Djavamelody.connections-stack-traces-disabled=false</java-opt>
+                                <java-opt>-agentpath:C:\software\jrebel\lib\jrebel64.dll</java-opt>
+                                <java-opt>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8787</java-opt>
+                                <java-opt>-Xmx2048M</java-opt>
+                                <java-opt>-XX:+UseG1GC</java-opt>
+                            </java-opts>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.zeroturnaround</groupId>
+                        <artifactId>jrebel-maven-plugin</artifactId>
+                        <version>1.1.7</version>
+                        <executions>
+                            <execution>
+                                <id>generate-rebel-xml</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
