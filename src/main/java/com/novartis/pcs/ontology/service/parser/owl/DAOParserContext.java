@@ -9,7 +9,6 @@ package com.novartis.pcs.ontology.service.parser.owl;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.function.Function;
 
 import com.novartis.pcs.ontology.dao.AnnotationTypeDAOLocal;
 import com.novartis.pcs.ontology.dao.DatasourceDAOLocal;
@@ -118,12 +117,6 @@ public class DAOParserContext extends OWLParserContext {
 	@Override
 	public void addTerms(final Collection<Term> existingTerms) {
 
-	}
-
-	@Override
-	void visitPropertyRelationship(final String propertyFragment,
-			final Function<String, RelationshipType> relationshipTypeFunction) throws InvalidEntityException {
-		relationshipTypeDAO.save(relationshipTypeFunction.apply(propertyFragment));
 	}
 
 	@Override

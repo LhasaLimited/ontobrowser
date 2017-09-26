@@ -7,6 +7,7 @@
 package com.novartis.pcs.ontology.service.export;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
@@ -14,9 +15,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.Map;
 
 import javax.ejb.EJB;
 
+import com.google.common.collect.ImmutableMap;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.transaction.api.annotation.TransactionMode;
@@ -35,6 +38,7 @@ import com.novartis.pcs.ontology.entity.DuplicateEntityException;
 import com.novartis.pcs.ontology.entity.InvalidEntityException;
 import com.novartis.pcs.ontology.entity.Ontology;
 import com.novartis.pcs.ontology.service.importer.OntologyImportServiceLocal;
+import org.xmlunit.matchers.EvaluateXPathMatcher;
 
 /**
  * @author Artur Polit
@@ -45,6 +49,12 @@ import com.novartis.pcs.ontology.service.importer.OntologyImportServiceLocal;
 public class OntologyExportOWLArqTestIT {
 
 	private static final String ONTOBROWSER_TEST = "OntobrowserTest";
+
+	private static final Map<String, String> PREFIXES = ImmutableMap.of(
+			"ob", "http://www.lhasalimited.org/ontobrowser.owl#" ,
+			"owl", "http://www.w3.org/2002/07/owl#",
+			"rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+			"rdfs", "http://www.w3.org/2000/01/rdf-schema#");
 
 	@EJB(beanName = "owlImportService")
 	private OntologyImportServiceLocal importService;
@@ -99,6 +109,33 @@ public class OntologyExportOWLArqTestIT {
 		exportService.exportOntology(ONTOBROWSER_TEST, baos, OntologyFormat.RDFXML);
 		String rdfXML = baos.toString();
 		assertThat(rdfXML, containsString("<obo:IAO_0000114 rdf:resource=\"http://purl.obolibrary.org/obo/IAO_0000122\"/>"));
+	}
+
+	@Test
+	public void shouldExportClassObjectProperty() throws OntologyNotFoundException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		exportService.exportOntology(ONTOBROWSER_TEST, baos, OntologyFormat.RDFXML);
+		String rdfXML = baos.toString();
+		assertThat(rdfXML,
+				EvaluateXPathMatcher.hasXPath(
+						"//owl:Class[@rdf:about=\"http://www.lhasalimited.org/ontobrowser.owl#classB\"]"
+								+ "/rdfs:subClassOf/owl:Restriction/owl:onProperty/@rdf:resource",
+						is("http://www.lhasalimited.org/ontobrowser.owl#objectPropertyA")).withNamespaceContext(PREFIXES));
+		assertThat(rdfXML, EvaluateXPathMatcher
+				.hasXPath("//owl:Class[@rdf:about=\"http://www.lhasalimited.org/ontobrowser.owl#classB\"]"
+						+ "/rdfs:subClassOf/owl:Restriction/owl:someValuesFrom/@rdf:resource", is("http://www.lhasalimited.org/ontobrowser.owl#classA"))
+				.withNamespaceContext(PREFIXES));
+			}
+
+	@Test
+	public void shouldExportIndividualObjectProperty() throws OntologyNotFoundException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		exportService.exportOntology(ONTOBROWSER_TEST, baos, OntologyFormat.RDFXML);
+		String rdfXML = baos.toString();
+		assertThat(rdfXML,
+				EvaluateXPathMatcher.hasXPath("//owl:NamedIndividual[@rdf:about=\"http://www.lhasalimited.org/ontobrowser.owl#TopClassIndividual\"]" +
+								"/ob:someObjectProperty/@rdf:resource",
+						is("http://www.lhasalimited.org/ontobrowser.owl#assayIndividual")).withNamespaceContext(PREFIXES));
 	}
 
 }

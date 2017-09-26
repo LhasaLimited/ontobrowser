@@ -37,6 +37,9 @@
         <Class IRI="#OB_00002"/>
     </Declaration>
     <Declaration>
+        <ObjectProperty IRI="#objectPropertyA"/>
+    </Declaration>
+    <Declaration>
         <Class IRI="#OB_00001"/>
     </Declaration>
     <Declaration>
@@ -52,7 +55,13 @@
         <AnnotationProperty abbreviatedIRI="obo:IAO_0000114"/>
     </Declaration>
     <Declaration>
+        <Class IRI="#classA"/>
+    </Declaration>
+    <Declaration>
         <Class IRI="#OB_00016"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#classB"/>
     </Declaration>
     <Declaration>
         <ObjectProperty IRI="#someObjectProperty"/>
@@ -103,6 +112,13 @@
     <SubClassOf>
         <Class IRI="#OB_00016"/>
         <Class IRI="#OB_00001"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#classB"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#objectPropertyA"/>
+            <Class IRI="#classA"/>
+        </ObjectSomeValuesFrom>
     </SubClassOf>
     <ClassAssertion>
         <Class IRI="#OB_00010"/>

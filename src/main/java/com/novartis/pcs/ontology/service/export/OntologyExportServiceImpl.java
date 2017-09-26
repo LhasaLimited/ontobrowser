@@ -22,7 +22,7 @@ import static com.novartis.pcs.ontology.entity.VersionedEntity.Status.OBSOLETE;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.createIRI;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.escapeOBO;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.escapeQuote;
-import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.getRelationshipIRI;
+import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.getRelationshipIRISafe;
 import static com.novartis.pcs.ontology.service.export.OntologyExportUtil.isBuiltIn;
 import static java.util.Arrays.asList;
 import static org.obolibrary.oboformat.parser.OBOFormatConstants.OboFormatTag.TAG_IS_A;
@@ -558,7 +558,6 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 				Term relatedTerm = relationship.getRelatedTerm();
 				IRI relatedTermIRI = iriProvider.getIRI(relatedTerm);
 				OWLClass relatedTermClass = factory.getOWLClass(relatedTermIRI);
-				exportContext.addRelationshipType(type);
 				if (relationship.isIntersection()) {
 					OWLClassExpression intersect = relatedTermClass;
 					if (!type.getRelationship().equals(TAG_IS_A.getTag())) {
@@ -574,7 +573,7 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 				} else if (type.getRelationship().equals("disjoint_from")) {
 					OWLAxiom axiom = factory.getOWLDisjointClassesAxiom(termClass, relatedTermClass);
 					exportContext.addAxiom(axiom);
-				} else {
+				} else if (term.getType().equals(TermType.CLASS) && relatedTerm.getType().equals(TermType.CLASS)) {
 					OWLObjectProperty objectProp = getOwlObjectProperty(factory, type);
 					OWLObjectSomeValuesFrom someValuesFrom = factory.getOWLObjectSomeValuesFrom(objectProp,
 							relatedTermClass);
@@ -614,12 +613,15 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 	private void exportRelationshipTypes(final OWLDataFactory factory, final ExportContext exportContext) {
 		for (RelationshipType type : exportContext.getRelationshipTypes()) {
 			if (!isBuiltIn(type) && type.getStatus().equals(Status.APPROVED)) {
-				IRI relationshipIRI = getRelationshipIRI(type.getRelationship());
-				OWLObjectProperty objectProp = factory.getOWLObjectProperty(relationshipIRI);
+				OWLObjectProperty objectProp = getOwlObjectProperty(factory, type);
 
 				exportContext.addAxiom(factory.getOWLDeclarationAxiom(objectProp));
-				exportContext.addAxiom(factory.getOWLAnnotationAssertionAxiom(factory.getRDFSLabel(), relationshipIRI,
-						factory.getOWLLiteral(type.getRelationship().replace('_', ' '))));
+				OWLAnnotationAssertionAxiom label = factory.getOWLAnnotationAssertionAxiom(factory.getRDFSLabel(), objectProp.getIRI(),
+						factory.getOWLLiteral(type.getName()));
+				exportContext.addAxiom(label);
+				OWLAnnotationAssertionAxiom comment = factory.getOWLAnnotationAssertionAxiom(factory.getRDFSComment(), objectProp.getIRI(),
+						factory.getOWLLiteral(type.getDefintion()));
+				exportContext.addAxiom(comment);
 
 				exportRelationshipTypeFeatures(factory, exportContext, type, objectProp);
 			}
@@ -665,8 +667,12 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 		}
 	}
 
-	private OWLObjectProperty getOwlObjectProperty(final OWLDataFactory factory, final RelationshipType inverse) {
-		IRI inverseIRI = getRelationshipIRI(inverse.getRelationship());
-		return factory.getOWLObjectProperty(inverseIRI);
+	private OWLObjectProperty getOwlObjectProperty(final OWLDataFactory factory, final RelationshipType relationshipType) {
+
+		IRI relationshipIRI = getRelationshipIRISafe(relationshipType.getRelationship());
+		if (relationshipIRI == null) {
+			relationshipIRI = IRI.create(relationshipType.getUrl());
+		}
+		return factory.getOWLObjectProperty(relationshipIRI);
 	}
 }

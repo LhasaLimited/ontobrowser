@@ -26,6 +26,7 @@ import org.jboss.arquillian.transaction.api.annotation.Transactional;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -203,4 +204,21 @@ public class OntologyImportServiceImplArq2TestIT {
 		return relationships.stream().filter(r -> r.getTerm().getReferenceId().equals(referenceId)).findFirst();
 	}
 
+	@Test
+	public void shouldImportSubClassExpressionWithObjectProperty() {
+		Term classB = termDAO.loadByReferenceId("classB", ontology.getName(), true);
+		Relationship relationship = classB.getRelationships().stream()
+				.filter(r -> r.getType().getRelationship().equals("objectPropertyA")).findAny()
+				.orElseThrow(AssertionError::new);
+		Assert.assertThat(relationship.getRelatedTerm().getReferenceId(), is("classA"));
+	}
+
+	@Test
+	public void shouldImportObjectPropertyForIndividual() {
+		Term topClassIndividual = termDAO.loadByReferenceId("TopClassIndividual", ontology.getName(), true);
+		Relationship relationship = topClassIndividual.getRelationships().stream()
+				.filter(r -> r.getType().getRelationship().equals("someObjectProperty")).findAny()
+				.orElseThrow(AssertionError::new);
+		Assert.assertThat(relationship.getRelatedTerm().getReferenceId(), is("assayIndividual"));
+	}
 }

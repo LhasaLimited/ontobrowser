@@ -79,6 +79,9 @@ public class RelationshipType extends VersionedEntity implements ReplaceableEnti
 	@JoinColumn(name = "ONTOLOGY_ID")
 	private Ontology ontology;
 
+	@Column(name = "DEFINITION_URL")
+	private String url;
+
 	@Valid
 	@ManyToOne
 	@JoinColumn(name = "INVERSE_OF")
@@ -196,7 +199,15 @@ public class RelationshipType extends VersionedEntity implements ReplaceableEnti
 	public void setReplacedBy(RelationshipType replacedBy) {
 		this.replacedBy = replacedBy;
 	}
-	
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(final String url) {
+		this.url = url;
+	}
+
 	@Override
 	public String toString() {
 		return getRelationship();

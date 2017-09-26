@@ -253,12 +253,8 @@ class OntologyExportUtil {
 					+ path + "#" + fragment);
 		}
 	}
-	
-	static IRI getRelationshipIRI(String relationship) {
-		IRI iri = relationshipIRIs.get(relationship);
-		if(iri == null) {
-			throw new IllegalArgumentException("Invalid/Unsupported OBO relationship: " + relationship);
-		}
-		return iri;
+
+	static IRI getRelationshipIRISafe(String relationship) {
+		return relationshipIRIs.get(relationship);
 	}
 }

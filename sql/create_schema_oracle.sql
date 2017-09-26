@@ -754,3 +754,5 @@ ALTER TABLE ONTOLOGY ADD IS_INTERMEDIATE  NUMBER(1)       DEFAULT 0 NOT NULL
                                         CHECK(IS_INTERMEDIATE IN (0,1));
 
 ALTER SEQUENCE primary_key_seq INCREMENT BY 20;
+
+ALTER TABLE relationship_type ADD definition_url VARCHAR2(1024) NULL;

@@ -55,6 +55,7 @@ import org.semanticweb.owlapi.model.OWLDisjointClassesAxiom;
 import org.semanticweb.owlapi.model.OWLDisjointDataPropertiesAxiom;
 import org.semanticweb.owlapi.model.OWLDisjointObjectPropertiesAxiom;
 import org.semanticweb.owlapi.model.OWLDisjointUnionAxiom;
+import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLEquivalentDataPropertiesAxiom;
 import org.semanticweb.owlapi.model.OWLEquivalentObjectPropertiesAxiom;
@@ -185,12 +186,18 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 			Set<OWLObjectProperty> objectProperties = owlOntology.getObjectPropertiesInSignature();
 			for (OWLObjectProperty objectProperty : objectProperties) {
-				context.visitPropertyRelationship(getRefId(objectProperty), this::createRelationshipType);
+				String relationshipTypeFragment = getRefId(objectProperty);
+				if (!context.hasRelationshipType(relationshipTypeFragment)) {
+					context.addRelationshipType(createRelationshipType(objectProperty));
+				}
 			}
 
 			Set<OWLDataProperty> dataProperties = owlOntology.getDataPropertiesInSignature();
 			for (OWLDataProperty owlDataProperty : dataProperties) {
-				context.visitPropertyRelationship(getRefId(owlDataProperty), this::createRelationshipType);
+				String relationshipTypeFragment = getRefId(owlDataProperty);
+				if (!context.hasRelationshipType(relationshipTypeFragment)) {
+					context.addRelationshipType(createRelationshipType(owlDataProperty));
+				}
 			}
 		} catch (InvalidEntityException e) {
 			throw new ParsingException("Error during visiting signature objects", e);
@@ -243,10 +250,12 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		return anAnnotationType;
 	}
 
-	private RelationshipType createRelationshipType(String propertyFragment) {
-		RelationshipType relationshipType = new RelationshipType(propertyFragment, propertyFragment, propertyFragment,
+	private RelationshipType createRelationshipType(final OWLEntity owlEntity) {
+		String refId = getRefId(owlEntity);
+		RelationshipType relationshipType = new RelationshipType(refId, refId, refId,
 				context.getCurator(), context.getVersion());
 		relationshipType.setOntology(context.getOntology());
+		relationshipType.setUrl(owlEntity.getIRI().toString());
 		context.approve(relationshipType);
 		return relationshipType;
 	}
@@ -285,17 +294,23 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	@Override
 	public void visit(OWLSubClassOfAxiom subClassAxiom) {
 		logger.log(FINE, "OWLSubClassOfAxiom:{0}", subClassAxiom.toString());
-		if (!subClassAxiom.getSuperClass().getClassExpressionType().equals(ClassExpressionType.OWL_CLASS)) {
-			logger.log(INFO, "Only OWLClass is supported [classExpression={0}]",
-					subClassAxiom.getSuperClass().toString());
-			return;
-		}
-		super.visit(subClassAxiom);
-		Term relatedTerm = context.termPop(); // do not inline, keep in
-		// order!
-		Term term = context.termPop();
+		ClassExpressionType classExpressionType = subClassAxiom.getSuperClass().getClassExpressionType();
+		if (ClassExpressionType.OWL_CLASS.equals(classExpressionType)) {
+			super.visit(subClassAxiom);
+			// do not inline, keep in order!
+			Term relatedTerm = context.termPop();
+			Term term = context.termPop();
 
-		createIsARelationship(relatedTerm, term);
+			createIsARelationship(relatedTerm, term);
+		} else if (ClassExpressionType.OBJECT_SOME_VALUES_FROM.equals(classExpressionType)) {
+			super.visit(subClassAxiom);
+			// do not inline, keep in order!
+			Term relatedTerm = context.termPop();
+			Term term = context.termPop();
+			createRelationship(relatedTerm, term, context.getRelationshipType(), context.getOntology());
+		} else {
+			logger.log(INFO, "Only OWLClass is supported [classExpression={0}]", subClassAxiom.getSuperClass().toString());
+		}
 	}
 
 	private void createIsARelationship(final Term relatedTerm, final Term term) {
@@ -316,6 +331,13 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 	private Relationship createRelationship(final Term relatedTerm, final Term term, final RelationshipType relationshipType, final Ontology ontology) {
 		// added to term in constructor
+		Set<String> relationshipTypesSet = context.getRelationshipTypes(relatedTerm, term);
+		if (relationshipTypesSet.contains(relationshipType.getRelationship())) {
+			logger.log(INFO, "Duplicated relationship {0} {1} {2}",
+					new String[] { term.getReferenceId(), relatedTerm.getReferenceId(), relationshipType.getRelationship() });
+			return null;
+		}
+		relationshipTypesSet.add(relationshipType.getRelationship());
 		Relationship relationship = new Relationship(term, relatedTerm, relationshipType, context.getCurator(), context.getVersion());
 		relationship.setOntology(ontology);
 		context.approve(relationship);
@@ -325,9 +347,8 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	@Override
 	public void visit(OWLObjectProperty property) {
 		logger.log(FINE, "OWLObjectProperty:{0}", property.toString());
-		context.statePush(ParserState.OBJECT_PROPERTY);
+		context.setRelationshipType(context.getRelationshipType(getRefId(property.getIRI())));
 		super.visit(property);
-		context.statePop();
 	}
 
 	@Override
@@ -353,6 +374,9 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	public void visit(OWLObjectPropertyAssertionAxiom objectPropertyAxiom) {
 		logger.log(FINE, "OWLObjectPropertyAssertionAxiom:{0}", objectPropertyAxiom.toString());
 		super.visit(objectPropertyAxiom);
+		Term relatedTerm = context.termPop();
+		Term term = context.termPop();
+		createRelationship(relatedTerm, term, context.getRelationshipType(), context.getOntology());
 	}
 
 	@Override

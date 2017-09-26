@@ -116,14 +116,6 @@ public class MapParserContext extends OWLParserContext {
 	}
 
 	@Override
-	void visitPropertyRelationship(String propertyFragment,
-			final Function<String, RelationshipType> relationshipTypeFunction) {
-		RelationshipType relationshipType = relationshipTypes.computeIfAbsent(propertyFragment,
-				relationshipTypeFunction);
-		setRelationshipType(relationshipType);
-	}
-
-	@Override
 	public void putAnnotationType(final String annotationTypeFragment, final AnnotationType annotationType) {
 		annotationTypes.put(annotationTypeFragment, annotationType);
 	}

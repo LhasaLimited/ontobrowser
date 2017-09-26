@@ -157,9 +157,6 @@ public abstract class OWLParserContext {
 
 	public abstract void addTerms(Collection<Term> existingTerms);
 
-	abstract void visitPropertyRelationship(String propertyFragment,
-			Function<String, RelationshipType> relationshipTypeFunction) throws InvalidEntityException;
-
 	public abstract void putAnnotationType(String annotationTypeFragment, AnnotationType annotationType)
 			throws InvalidEntityException;
 
