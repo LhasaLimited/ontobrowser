@@ -38,9 +38,8 @@ public class OwlapiLoaderInterceptor implements MethodInterceptor {
 			logger.info("Loading:" + importIRI.toString());
 			if (ignored.containsKey(importIRI)) {
 				logger.info("Ignoring:" + importIRI.toString());
-				IRI existingIRI = IRI.create(ignored.get(importIRI).getSourceUri());
 				OWLOntologyImpl owlOntology = new OWLOntologyImpl((OWLOntologyManager) invocation.getThis(),
-						new OWLOntologyID(Optional.of(existingIRI), Optional.absent()));
+						new OWLOntologyID(Optional.of(importIRI), Optional.absent()));
 				OWLOntologyFactory.OWLOntologyCreationHandler owlOntologyManager = (OWLOntologyFactory.OWLOntologyCreationHandler) invocation
 						.getThis();
 				owlOntologyManager.ontologyCreated(owlOntology);

@@ -127,9 +127,11 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 
 		for (OWLOntology owlOntology : mainImportClosure) {
 			Ontology ontology = ontologyMap.get(getImportedUri(owlOntology));
-			Set<OWLOntology> directImports = owlOntology.getDirectImports();
-			Set<Ontology> imported = directImports.stream().map(o -> ontologyMap.get(getImportedUri(o))).collect(Collectors.toSet());
-			ontology.setImportedOntologies(imported);
+			if (ontology.equals(mainOntology) || ontology.isIntermediate()) { // not already imported
+				Set<OWLOntology> directImports = owlOntology.getDirectImports();
+				Set<Ontology> imported = directImports.stream().map(o -> ontologyMap.get(getImportedUri(o))).collect(Collectors.toSet());
+				ontology.setImportedOntologies(imported);
+			}
 		}
 
 		for (OWLOntology owlOntology : mainImportClosure) {
@@ -191,8 +193,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 	}
 
 	private Ontology createOntology(final OWLParserContext context, final String importedName) {
-		final Ontology ontology;
-		ontology = new Ontology(importedName, context.getCurator(), context.getVersion());
+		final Ontology ontology = new Ontology(importedName, context.getCurator(), context.getVersion());
 		ontology.setStatus(VersionedEntity.Status.APPROVED);
 		ontology.setApprovedVersion(context.getVersion());
 		ontology.setInternal(false);
