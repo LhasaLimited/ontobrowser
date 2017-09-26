@@ -23,7 +23,7 @@ public interface OntologyServiceLocal {
 
 	List<Ontology> loadAll();
 
-	List<Ontology> loadNonIntermediate();
+	List<Ontology> loadRecursive();
 }
 /* ---------------------------------------------------------------------*
  * This software is the confidential and proprietary

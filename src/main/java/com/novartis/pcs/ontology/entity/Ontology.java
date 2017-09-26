@@ -61,7 +61,7 @@ import org.hibernate.annotations.QueryHints;
 		@NamedQuery(name = Ontology.QUERY_BY_NAME, query = "select o from Ontology as o where o.name = :name", hints = {
 				@QueryHint(name = "org.hibernate.cacheable", value = "true") }),
 		@NamedQuery(name = Ontology.LOAD_ALL_NON_INTERMEDIATE,
-				query = "select distinct o from Ontology o where o.intermediate = false",
+				query = "select distinct o from Ontology o",
 				hints	= {
 				@QueryHint(name = QueryHints.FETCHGRAPH, value = Ontology.GRAPH_ONTOLOGY_ALL),
 				}),

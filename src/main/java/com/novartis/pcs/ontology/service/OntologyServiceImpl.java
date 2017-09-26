@@ -52,9 +52,8 @@ public class OntologyServiceImpl extends OntologyService implements OntologyServ
 	}
 
 	@Override
-	public List<Ontology> loadNonIntermediate() {
-		List<Ontology> ontologies = ontologyDAO.loadNonIntermediate();
-		return ontologies;
+	public List<Ontology> loadRecursive() {
+		return ontologyDAO.loadRecursive();
 	}
 }
 /* ---------------------------------------------------------------------*

@@ -85,7 +85,7 @@ public class OntologyDAO extends VersionedEntityDAO<Ontology>
 	}
 
 	@Override
-	public List<Ontology> loadNonIntermediate() {
+	public List<Ontology> loadRecursive() {
 		TypedQuery<Ontology> query = entityManager.createNamedQuery(Ontology.LOAD_ALL_NON_INTERMEDIATE, Ontology.class);
 		query.setHint(QueryHints.FETCHGRAPH,entityManager.createEntityGraph(Ontology.GRAPH_ONTOLOGY_ALL));
 		List<Ontology> resultList = query.getResultList();

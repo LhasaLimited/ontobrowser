@@ -35,5 +35,5 @@ public interface OntologyDAOLocal extends VersionedDAO<Ontology> {
 
 	Collection<Ontology> loadNonIntermediateWithAliases(final Ontology mainOntology);
 
-	List<Ontology> loadNonIntermediate();
+	List<Ontology> loadRecursive();
 }
