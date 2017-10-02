@@ -125,24 +125,9 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			context.addTerms(termDAO.loadAll(existing));
 		}
 
-		for (OWLOntology owlOntology : mainImportClosure) {
-			Ontology ontology = ontologyMap.get(getImportedUri(owlOntology));
-			if (ontology.equals(mainOntology) || ontology.isIntermediate()) { // not already imported
-				Set<OWLOntology> directImports = owlOntology.getDirectImports();
-				Set<Ontology> imported = directImports.stream().map(o -> ontologyMap.get(getImportedUri(o))).collect(Collectors.toSet());
-				logger.log(INFO, "Setting imports [ontology={0},imported={1}]", new String[] { ontology.toString(), imported.toString() });
-				ontology.setImportedOntologies(imported);
-			}
-		}
+		mapImportTree(mainOntology, mainImportClosure, ontologyMap);
 		removeBackReferences(mainOntology, new HashSet<>());
-
-		for (OWLOntology owlOntology : mainImportClosure) {
-			Ontology ontology = ontologyMap.get(getImportedUri(owlOntology));
-			context.setOntology(ontology);
-			OWLOntologyWalker owlObjectWalker = new MyOWLOntologyWalker(owlOntology);
-			ParsingStructureWalker parsingStructureWalker = new ParsingStructureWalker(owlObjectWalker, context);
-			parsingStructureWalker.visit(owlOntology);
-		}
+		visitWithWalker(context, mainImportClosure, ontologyMap);
 
 		context.setOntology(mainOntology);
 
@@ -156,12 +141,6 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		logger.log(Level.INFO, "The End!");
 		return new ParseContextImpl(terms2.values(), context.getDatasources(), context.getRelationshipTypes(),
 				context.getAnnotationTypes());
-	}
-
-	private void removeBackReferences(final Ontology parentOntology, final Set<Ontology> visited) {
-		visited.add(parentOntology);
-		parentOntology.getImportedOntologies().removeIf(visited::contains);
-		parentOntology.getImportedOntologies().forEach(ontology ->  removeBackReferences(ontology, visited));
 	}
 
 	private Map<IRI, Ontology> createIgnoredConfig(final Collection<Ontology> ontologies) {
@@ -218,6 +197,34 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 	private String getImportedUri(final OWLOntology importedOwlOntology) {
 		Optional<IRI> documentIRI = importedOwlOntology.getOntologyID().getDefaultDocumentIRI();
 		return documentIRI.isPresent() ? documentIRI.get().toString() : importedOwlOntology.getOntologyID().toString();
+	}
+
+	private void mapImportTree(final Ontology mainOntology, final List<OWLOntology> mainImportClosure, final Map<String, Ontology> ontologyMap) {
+		for (OWLOntology owlOntology : mainImportClosure) {
+			Ontology ontology = ontologyMap.get(getImportedUri(owlOntology));
+			if (ontology.equals(mainOntology) || ontology.isIntermediate()) { // not already imported
+				Set<OWLOntology> directImports = owlOntology.getDirectImports();
+				Set<Ontology> imported = directImports.stream().map(o -> ontologyMap.get(getImportedUri(o))).collect(Collectors.toSet());
+				logger.log(INFO, "Setting imports [ontology={0},imported={1}]", new String[] { ontology.toString(), imported.toString() });
+				ontology.setImportedOntologies(imported);
+			}
+		}
+	}
+
+	private void removeBackReferences(final Ontology parentOntology, final Set<Ontology> visited) {
+		visited.add(parentOntology);
+		parentOntology.getImportedOntologies().removeIf(visited::contains);
+		parentOntology.getImportedOntologies().forEach(ontology ->  removeBackReferences(ontology, visited));
+	}
+
+	private void visitWithWalker(final OWLParserContext context, final List<OWLOntology> mainImportClosure, final Map<String, Ontology> ontologyMap) {
+		for (OWLOntology owlOntology : mainImportClosure) {
+			Ontology ontology = ontologyMap.get(getImportedUri(owlOntology));
+			context.setOntology(ontology);
+			OWLOntologyWalker owlObjectWalker = new MyOWLOntologyWalker(owlOntology);
+			ParsingStructureWalker parsingStructureWalker = new ParsingStructureWalker(owlObjectWalker, context);
+			parsingStructureWalker.visit(owlOntology);
+		}
 	}
 
 	private Boolean validateDuplicates(OWLParserContext context) {
