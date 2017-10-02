@@ -315,16 +315,9 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 	private void createIsARelationship(final Term relatedTerm, final Term term) {
 		RelationshipType isARelationship = context.getRelationshipType(TAG_IS_A.getTag());
-		Set<String> relationshipTypesSet = context.getRelationshipTypes(relatedTerm, term);
-
-		if (relationshipTypesSet.contains(isARelationship.getRelationship())) {
-			logger.log(INFO, "Duplicated relationship {0} {1} {2}", new String[] { term.getReferenceId(),
-					relatedTerm.getReferenceId(), isARelationship.getRelationship() });
-		} else if (relatedTerm.getReferenceId().equalsIgnoreCase(OWL_THING.getShortForm())) {
-			logger.log(INFO, "Subclass to Thing dropped for {0} to {1}",
-					new String[] { term.getReferenceId(), relatedTerm.getReferenceId() });
+		if (relatedTerm.getReferenceId().equalsIgnoreCase(OWL_THING.getShortForm())) {
+			logger.log(INFO, "Subclass to Thing dropped for {0} to {1}", new String[] { term.getReferenceId(), relatedTerm.getReferenceId() });
 		} else {
-			relationshipTypesSet.add(isARelationship.getRelationship());
 			createRelationship(relatedTerm, term, isARelationship, context.getOntology());
 		}
 	}
