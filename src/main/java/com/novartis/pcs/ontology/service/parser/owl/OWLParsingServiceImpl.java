@@ -104,7 +104,7 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			String importedUri = getImportedUri(owlOntology);
 			Ontology ontology;
 			if (mainImportClosure.indexOf(owlOntology) == mainImportClosure.size() - 1) {
-				ontology = mainOntology;
+				ontology = mainOntology; // last one is a main imported
 			} else {
 				Ontology foundByAlias = ontologyDAO.loadByAlias(importedUri);
 				if (foundByAlias != null && !foundByAlias.equals(mainOntology)) {
@@ -130,9 +130,11 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 			if (ontology.equals(mainOntology) || ontology.isIntermediate()) { // not already imported
 				Set<OWLOntology> directImports = owlOntology.getDirectImports();
 				Set<Ontology> imported = directImports.stream().map(o -> ontologyMap.get(getImportedUri(o))).collect(Collectors.toSet());
+				logger.log(INFO, "Setting imports [ontology={0},imported={1}]", new String[] { ontology.toString(), imported.toString() });
 				ontology.setImportedOntologies(imported);
 			}
 		}
+		removeBackReferences(mainOntology, new HashSet<>());
 
 		for (OWLOntology owlOntology : mainImportClosure) {
 			Ontology ontology = ontologyMap.get(getImportedUri(owlOntology));
@@ -154,6 +156,12 @@ public class OWLParsingServiceImpl implements OWLParsingServiceLocal {
 		logger.log(Level.INFO, "The End!");
 		return new ParseContextImpl(terms2.values(), context.getDatasources(), context.getRelationshipTypes(),
 				context.getAnnotationTypes());
+	}
+
+	private void removeBackReferences(final Ontology parentOntology, final Set<Ontology> visited) {
+		visited.add(parentOntology);
+		parentOntology.getImportedOntologies().removeIf(visited::contains);
+		parentOntology.getImportedOntologies().forEach(ontology ->  removeBackReferences(ontology, visited));
 	}
 
 	private Map<IRI, Ontology> createIgnoredConfig(final Collection<Ontology> ontologies) {
