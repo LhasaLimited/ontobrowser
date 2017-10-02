@@ -35,7 +35,6 @@ public class OwlapiLoaderInterceptor implements MethodInterceptor {
 	public Object invoke(final MethodInvocation invocation) throws Throwable {
 		IRI importIRI = (IRI) invocation.getArguments()[0];
 		if (invocation.getArguments()[1] instanceof IRIDocumentSource) {
-			logger.info("Loading:" + importIRI.toString());
 			if (ignored.containsKey(importIRI)) {
 				logger.info("Ignoring:" + importIRI.toString());
 				OWLOntologyImpl owlOntology = new OWLOntologyImpl((OWLOntologyManager) invocation.getThis(),
@@ -45,6 +44,7 @@ public class OwlapiLoaderInterceptor implements MethodInterceptor {
 				owlOntologyManager.ontologyCreated(owlOntology);
 				return owlOntology;
 			}
+			logger.info("Loading:" + importIRI.toString());
 			return invocation.proceed();
 		}
 		logger.info("Loading without any check");
