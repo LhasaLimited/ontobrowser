@@ -264,7 +264,7 @@
                                 <java-opt>-Djavamelody.connections-stack-traces-disabled=false</java-opt>
                                 <java-opt>-agentpath:C:\software\jrebel\lib\jrebel64.dll</java-opt>
                                 <java-opt>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8787</java-opt>
-                                <java-opt>-Xmx2048M</java-opt>
+                                <java-opt>-Xmx3072M</java-opt>
                                 <java-opt>-XX:+UseG1GC</java-opt>
                             </java-opts>
                         </configuration>
