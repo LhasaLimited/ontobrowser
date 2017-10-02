@@ -189,7 +189,7 @@ public class OntologyImportServiceImplArq2TestIT {
 	@Test
 	public void shouldImportIndividual() {
 		Collection<Term> terms = termDAO.loadAll(ontology);
-		assertThat(terms.size(), is(8 + 2));
+		assertThat(terms.size(), is(10 + 2));
 		Term topClassIndividual = termDAO.loadByReferenceId("TopClassIndividual", ontology.getName(), true);
 		Term topClass = termDAO.loadByReferenceId("OB_00010", ontology.getName(), true);
 		assertThat(topClassIndividual, CoreMatchers.notNullValue());
