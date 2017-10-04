@@ -43,7 +43,6 @@ public class OntologyImportServiceImplArq3TestIT {
 	private static final String ROOT_NAME = "assay bioassay component";
 	private static final String ROOT_IRI = "OB_00001";
 	public static final String ONTOLOGY_NAME = "bao_complete.owl";
-	Logger logger = Logger.getLogger(getClass().getName());
 
 	@EJB(beanName = "owlImportService")
 	private OntologyImportServiceLocal importService;
@@ -86,7 +85,7 @@ public class OntologyImportServiceImplArq3TestIT {
 	 * The behaviour is different here than in the Protege, bao_metadata.owl comes from OWL API
 	 */
 	public void shouldImportDirectOntology() throws DuplicateEntityException, InvalidEntityException {
-		Ontology baoVocabularyAssay = ontologyDAOLocal.loadByName("bao_vocabulary_assay.owl");
+		Ontology baoVocabularyAssay = ontologyDAOLocal.loadByName("bao_vocabulary_properties.owl");
 		Set<Ontology> importedOntologies = baoVocabularyAssay.getImportedOntologies();
 		assertThat(importedOntologies.size(), is(1));
 		assertThat(importedOntologies.iterator().next().getName(), is("bao_metadata.owl"));
