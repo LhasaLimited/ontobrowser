@@ -145,12 +145,12 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		handlers.add(new TermDefinitionHandler());
 		handlers.add(new TermReplacedByHandler());
 		handlers.add(new TermSynonymHandler());
-		handlers.add(new TermAnnotationHandler());
 		handlers.add(new TermDeprecatedHandler());
 		handlers.add(new RelationshipTypeNameHandler());
 		handlers.add(new AnnotationTypeNameHandler());
-
 		handlers.add(new OntologyDescriptionHandler());
+		// the default one as the last
+		handlers.add(new TermAnnotationHandler());
 	}
 
 	@Override
