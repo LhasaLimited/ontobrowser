@@ -63,13 +63,14 @@ import javax.validation.constraints.NotNull;
 		columns={@ColumnResult(name="CONNECT_BY_ISLEAF")})
 @NamedNativeQueries({
 		@NamedNativeQuery(name=Relationship.QUERY_HIERARCHY,
-				query= Relationship.QUERY_IMPORTED_HIERARCHY +
+				query= Relationship.SUBQUERY_IMPORTED_HIERARCHY + Relationship.SUBQUERY_RELATIONSHIP_TYPE +
 						" SELECT DISTINCT * FROM (SELECT r.*, CONNECT_BY_ISLEAF"
 					+ " FROM term_relationship r"
 					+ " WHERE r.status IN ('PENDING','APPROVED')"
 					+ " AND r.ontology_id in (select * from imported_hierarchy)"
 					+ " START WITH r.term_id = :termId"
 					+ " AND r.status IN ('PENDING','APPROVED')"
+					+ " AND r.relationship_type_id = (SELECT is_a_id FROM rel_type)"
 					+ " CONNECT BY NOCYCLE r.term_id = PRIOR r.related_term_id"
 					+ " AND r.status IN ('PENDING','APPROVED')"
 					+ " UNION ALL"
@@ -82,10 +83,11 @@ import javax.validation.constraints.NotNull;
 					+ " AND r.status IN ('PENDING','APPROVED')"
 					+ " CONNECT BY NOCYCLE PRIOR r.term_id = r.related_term_id"
 					+ " AND r.status IN ('PENDING','APPROVED')"
+					+ " AND r.relationship_type_id = (SELECT is_a_id FROM rel_type)"
 					+ " AND ( LEVEL <= 2 OR 1 = :deep))",
 				resultSetMapping="RelationshipHierarchy"),
 		@NamedNativeQuery(name=Relationship.QUERY_HIERARCHY_ONTOLOGY,
-				query= Relationship.QUERY_IMPORTED_HIERARCHY +
+				query= Relationship.SUBQUERY_IMPORTED_HIERARCHY +  Relationship.SUBQUERY_RELATIONSHIP_TYPE +
 						// @formatter:off
 						" SELECT DISTINCT *" +
 						" FROM" +
@@ -101,6 +103,7 @@ import javax.validation.constraints.NotNull;
 						"      (SELECT *" +
 						"      FROM term_relationship tr" +
 						"      WHERE tr.status    IN ('PENDING','APPROVED')" +
+						"	   AND tr.relationship_type_id = (SELECT is_a_id FROM rel_type)" +
 						"      AND tr.ontology_id IN" +
 						"        ( SELECT * FROM imported_hierarchy" +
 						"        )" +
@@ -118,6 +121,7 @@ import javax.validation.constraints.NotNull;
 						"    (SELECT * FROM imported_hierarchy" +
 						"    )" +
 						"  AND r.status IN ('PENDING','APPROVED')" +
+						"  AND r.relationship_type_id = (SELECT is_a_id FROM rel_type)" +
 						"  AND ( LEVEL <= 0 OR 1 = :deep)" +
 						"  )" ,
 						// @formatter:on
@@ -131,12 +135,14 @@ public class Relationship extends VersionedEntity implements ReplaceableEntity<R
 	public static final String QUERY_HIERARCHY = "Realationship.loadHierarchy";
 
 	public static final String QUERY_HIERARCHY_ONTOLOGY = "Relationship.loadTermByOntologyName";
-	public static final String QUERY_IMPORTED_HIERARCHY = "WITH imported_hierarchy AS" +
+	public static final String SUBQUERY_IMPORTED_HIERARCHY = "WITH imported_hierarchy AS" +
 			" ( select distinct oi.Imported_Ontology_Id from ontology o join ontology_imported oi on o.ontology_id = oi.ontology_id" +
 			" start with o.ontology_name = :ontology_name" +
 			" connect by prior Oi.Imported_Ontology_Id = O.Ontology_Id"
 			+
 			" UNION select ontology_id from ontology where ontology_name = :ontology_name)";
+	public static final String SUBQUERY_RELATIONSHIP_TYPE =
+			", rel_type AS (SELECT relationship_type_id AS is_a_id FROM relationship_type WHERE relationship_type = 'is_a') ";
 
 	@NotNull
 	@Valid

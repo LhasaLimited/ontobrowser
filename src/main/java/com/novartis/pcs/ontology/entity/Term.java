@@ -79,16 +79,21 @@ import com.novartis.pcs.ontology.entity.util.UrlParser;
 					+ " CONNECT BY NOCYCLE PRIOR term_id = related_term_id"
 					+ " AND status IN (:status))",
 				resultClass = Term.class),
-		@NamedNativeQuery(name = Term.QUERY_BY_REF_ID, query = Relationship.QUERY_IMPORTED_HIERARCHY
+		@NamedNativeQuery(name = Term.QUERY_BY_REF_ID, query = Relationship.SUBQUERY_IMPORTED_HIERARCHY
 				+ "select * from TERM t where upper(t.reference_id) = :referenceId and t.ontology_id in "
 				+ "(select * from imported_hierarchy)", hints = {
 						@QueryHint(name = "org.hibernate.cacheable", value = "true") }, resultClass = Term.class),
-		@NamedNativeQuery(name = Term.QUERY_NOT_RELATED, query = Relationship.QUERY_IMPORTED_HIERARCHY
-				+ " select * from term t" + "    where" + "    t.ontology_id in (select * from imported_hierarchy) "
-				+ "    and not exists " + "    (select Tr.term_relationship_id from term_relationship tr "
-				+ "    where tr.term_id = t.term_id or tr.related_term_id = t.term_id"
-				+ "	  and tr.ontology_id in (select * from imported_hierarchy))"
-				+ " and t.reference_id != 'Thing'", resultClass = Term.class) })
+		@NamedNativeQuery(name = Term.QUERY_NOT_RELATED, query = Relationship.SUBQUERY_IMPORTED_HIERARCHY + Relationship.SUBQUERY_RELATIONSHIP_TYPE
+				+ " select * from term t"
+				+ "    where"
+				+ "    t.ontology_id in (select * from imported_hierarchy) "
+				+ "    AND not exists "
+				+ "    	( select Tr.term_relationship_id from term_relationship tr "
+				+ "    	 WHERE tr.term_id = t.term_id or tr.related_term_id = t.term_id"
+				+ "	   AND tr.relationship_type_id = (select is_a_id from rel_type)"
+				+ "	  AND tr.ontology_id in (select * from imported_hierarchy))"
+				+ " and t.reference_id != 'Thing'"
+				+ " AND t.status IN ('APPROVED','PENDING')", resultClass = Term.class) })
 public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 	private static final long serialVersionUID = 1L;
 	
