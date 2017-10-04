@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,6 +33,7 @@ import javax.ejb.Remote;
 import javax.ejb.Stateless;
 import javax.persistence.EntityNotFoundException;
 
+import com.google.common.base.Stopwatch;
 import com.novartis.pcs.ontology.dao.RelationshipDAOLocal;
 import com.novartis.pcs.ontology.dao.RelationshipTypeDAOLocal;
 import com.novartis.pcs.ontology.dao.TermDAOLocal;
@@ -96,7 +98,10 @@ public class OntologyGraphServiceImpl implements OntologyGraphServiceRemote, Ont
 	
 	private String createDOT(Term term, final String ontologyName, GraphOrientation orientation, final boolean deep) throws IOException {
 		StringBuilder dot = new StringBuilder(2048);
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		logger.log(Level.INFO, "Fetching relationships");
 		Collection<Relationship> hierarchy = ontologyTermService.getRelationships(term, ontologyName, deep);
+		logger.log(Level.INFO, "Relationships fetched [time={0}]", stopwatch.elapsed(TimeUnit.SECONDS));
 		Collection<Term> terms = collectTerms(term, hierarchy);
 
 		dot.append("digraph \"").append(escape(term.getName())).append("\" {").append(EOL);
