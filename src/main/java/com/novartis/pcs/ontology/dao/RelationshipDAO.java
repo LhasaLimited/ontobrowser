@@ -17,6 +17,7 @@ limitations under the License.
 */
 package com.novartis.pcs.ontology.dao;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -132,8 +133,18 @@ public class RelationshipDAO extends VersionedEntityDAO<Relationship>
 
 	private Collection<Relationship> mapRelationships(final List<Object[]> rows) {
 		List<Relationship> relationships = new ArrayList<>(rows.size());
+		long relIds[] = new long[rows.size()];
+		for (int i = 0; i < rows.size(); i++) {
+			relIds[i] = ((BigDecimal) rows.get(i)[0]).longValue();
+		}
+		List<Relationship> loaded = load(relIds);
+		Map<Long, Relationship> relationshipMap = new HashMap<>();
+		for (Relationship relationship : loaded) {
+			relationshipMap.put(relationship.getId(), relationship);
+		}
+
 		for(Object[] row : rows) {
-			Relationship relationship = (Relationship)row[0];
+			Relationship relationship = relationshipMap.get(((BigDecimal) row[0]).longValue());
 			Number leaf = (Number)row[1];
 			relationship.setLeaf(leaf.intValue() != 0);
 			relationships.add(relationship);

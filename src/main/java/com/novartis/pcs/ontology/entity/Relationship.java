@@ -64,7 +64,7 @@ import javax.validation.constraints.NotNull;
 @NamedNativeQueries({
 		@NamedNativeQuery(name=Relationship.QUERY_HIERARCHY,
 				query= Relationship.SUBQUERY_IMPORTED_HIERARCHY + Relationship.SUBQUERY_RELATIONSHIP_TYPE +
-						" SELECT DISTINCT * FROM (SELECT r.*, CONNECT_BY_ISLEAF"
+						" SELECT DISTINCT * FROM (SELECT r.term_relationship_id, CONNECT_BY_ISLEAF"
 					+ " FROM term_relationship r"
 					+ " WHERE r.status IN ('PENDING','APPROVED')"
 					+ " AND r.ontology_id in (select * from imported_hierarchy)"
@@ -74,7 +74,7 @@ import javax.validation.constraints.NotNull;
 					+ " CONNECT BY NOCYCLE r.term_id = PRIOR r.related_term_id"
 					+ " AND r.status IN ('PENDING','APPROVED')"
 					+ " UNION ALL"
-					+ " SELECT r.*, CONNECT_BY_ISLEAF" 
+					+ " SELECT r.term_relationship_id, CONNECT_BY_ISLEAF"
 					+ " FROM term_relationship r"
 					+ " WHERE (LEVEL = 1 OR 1 = :deep)"
 					+ " AND r.ontology_id in (select * from imported_hierarchy)"
@@ -84,14 +84,14 @@ import javax.validation.constraints.NotNull;
 					+ " CONNECT BY NOCYCLE PRIOR r.term_id = r.related_term_id"
 					+ " AND r.status IN ('PENDING','APPROVED')"
 					+ " AND r.relationship_type_id = (SELECT is_a_id FROM rel_type)"
-					+ " AND ( LEVEL <= 2 OR 1 = :deep))",
-				resultSetMapping="RelationshipHierarchy"),
+					+ " AND ( LEVEL <= 2 OR 1 = :deep))"/*,
+				resultSetMapping="RelationshipHierarchy"*/),
 		@NamedNativeQuery(name=Relationship.QUERY_HIERARCHY_ONTOLOGY,
 				query= Relationship.SUBQUERY_IMPORTED_HIERARCHY +  Relationship.SUBQUERY_RELATIONSHIP_TYPE +
 						// @formatter:off
 						" SELECT DISTINCT *" +
 						" FROM" +
-						"  (SELECT r.*," +
+						"  (SELECT r.term_relationship_id," +
 						"    CONNECT_BY_ISLEAF" +
 						"  FROM term_relationship r" +
 						"  WHERE " +
@@ -123,9 +123,9 @@ import javax.validation.constraints.NotNull;
 						"  AND r.status IN ('PENDING','APPROVED')" +
 						"  AND r.relationship_type_id = (SELECT is_a_id FROM rel_type)" +
 						"  AND ( LEVEL <= 0 OR 1 = :deep)" +
-						"  )" ,
+						"  )"
 						// @formatter:on
-				resultSetMapping="RelationshipHierarchy")
+				/*, resultSetMapping="RelationshipHierarchy"*/)
 })
 public class Relationship extends VersionedEntity implements ReplaceableEntity<Relationship> {
 	private static final long serialVersionUID = 1L;
