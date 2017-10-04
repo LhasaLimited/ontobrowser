@@ -153,6 +153,15 @@ Increase transaction timeout for importing large ontologies as below:
 ...
 </subsystem>
 ```
+
+### Uploaded file size limit
+
+Increase the allowed file size as below:
+
+```xml
+    <http-listener name="default" socket-binding="http" [...] max-post-size="974247881"/>
+```
+
 ## Apache Basic Authentication and Proxy Setup (optional)
 In a production environment it is recommended to perform the user authentication using a web server (e.g. Apache) located in a [DMZ](http://en.wikipedia.org/wiki/DMZ_(computing)).  Alternatively if installing OntoBrowser on a corporate intranet it is recommended to use a corporate single sign-on (SSO) system for user authentication.
 
