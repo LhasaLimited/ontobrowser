@@ -146,6 +146,9 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 			cascade={CascadeType.PERSIST, CascadeType.REMOVE})
 	@Cache(usage=CacheConcurrencyStrategy.TRANSACTIONAL)
 	private Set<Relationship> relationships = new HashSet<Relationship>(0);
+
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "relatedTerm")
+	private Set<Relationship> inverseRelationships = new HashSet<Relationship>(0);
 	
 	@Valid
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "term",
@@ -267,7 +270,15 @@ public class Term extends VersionedEntity implements ReplaceableEntity<Term> {
 	public void setRelationships(Set<Relationship> relationships) {
 		this.relationships = relationships;
 	}
-	
+
+	public Set<Relationship> getInverseRelationships() {
+		return inverseRelationships;
+	}
+
+	public void setInverseRelationships(final Set<Relationship> inverseRelationships) {
+		this.inverseRelationships = inverseRelationships;
+	}
+
 	public Set<Synonym> getSynonyms() {
 		return this.synonyms;
 	}

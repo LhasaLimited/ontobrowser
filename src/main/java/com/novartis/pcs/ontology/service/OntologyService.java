@@ -126,7 +126,7 @@ public class OntologyService {
 			}
 		}
 
-		Collection<Relationship> descendents = relationshipDAO.loadByRelatedTermId(term.getId());
+		Collection<Relationship> descendents = term.getInverseRelationships();
 		for (Relationship relationship : descendents) {
 			switch(relationship.getStatus()) {
 			case PENDING:
