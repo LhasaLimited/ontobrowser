@@ -12,6 +12,7 @@ import javax.persistence.AssociationOverride;
 import javax.persistence.AttributeOverride;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -41,6 +42,7 @@ public class AnnotationType extends VersionedEntity implements ReplaceableEntity
 		super(creator, version);
 		this.prefixedXmlType = prefixedXmlType;
 		this.annotationType = prefixedXmlType;
+		this.type = PropertyType.ANNOTATION;
 	}
 
 	protected AnnotationType() {
@@ -63,6 +65,10 @@ public class AnnotationType extends VersionedEntity implements ReplaceableEntity
 	@ManyToOne
 	@JoinColumn(name = "ONTOLOGY_ID")
 	private Ontology ontology;
+
+	@Column(name = "PROPERTY_TYPE")
+	@Convert(converter = PropertyTypeConverter.class)
+	private PropertyType type;
 
 	public String getAnnotationType() {
 		return annotationType;
@@ -94,6 +100,14 @@ public class AnnotationType extends VersionedEntity implements ReplaceableEntity
 
 	public void setDefinitionUrl(final String definitionUrl) {
 		this.definitionUrl = definitionUrl;
+	}
+
+	public PropertyType getType() {
+		return type;
+	}
+
+	public void setType(final PropertyType type) {
+		this.type = type;
 	}
 
 	@Override

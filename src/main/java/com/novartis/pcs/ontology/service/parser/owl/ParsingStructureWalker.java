@@ -21,6 +21,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.base.Strings;
+import com.novartis.pcs.ontology.entity.Annotation;
+import com.novartis.pcs.ontology.entity.PropertyType;
 import org.semanticweb.owlapi.model.ClassExpressionType;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
@@ -43,6 +46,7 @@ import org.semanticweb.owlapi.model.OWLDataOneOf;
 import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLDataPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLDataPropertyDomainAxiom;
+import org.semanticweb.owlapi.model.OWLDataPropertyExpression;
 import org.semanticweb.owlapi.model.OWLDataPropertyRangeAxiom;
 import org.semanticweb.owlapi.model.OWLDataSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLDataUnionOf;
@@ -194,9 +198,11 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 
 			Set<OWLDataProperty> dataProperties = owlOntology.getDataPropertiesInSignature();
 			for (OWLDataProperty owlDataProperty : dataProperties) {
-				String relationshipTypeFragment = getRefId(owlDataProperty);
-				if (!context.hasRelationshipType(relationshipTypeFragment)) {
-					context.addRelationshipType(createRelationshipType(owlDataProperty));
+				String annotationTypeFragment = getRefId(owlDataProperty);
+				if (!context.hasAnnotationType(annotationTypeFragment)) {
+					AnnotationType annotationType = createAnnotationType(owlDataProperty);
+					annotationType.setType(PropertyType.DATA_PROPERTY);
+					context.putAnnotationType(annotationTypeFragment, annotationType);
 				}
 			}
 		} catch (InvalidEntityException e) {
@@ -241,7 +247,7 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 		return current;
 	}
 
-	private AnnotationType createAnnotationType(OWLAnnotationProperty annotationProp) {
+	private AnnotationType createAnnotationType(OWLEntity annotationProp) {
 		AnnotationType anAnnotationType = new AnnotationType(getRefId(annotationProp), context.getCurator(),
 				context.getVersion());
 		anAnnotationType.setOntology(context.getOntology());
@@ -492,6 +498,22 @@ class ParsingStructureWalker extends StructureWalker<OWLOntology> {
 	public void visit(OWLDataPropertyAssertionAxiom axiom) {
 		logger.log(FINE, "OWLDataPropertyAssertionAxiom:{0}", axiom.toString());
 		super.visit(axiom);
+		Term term = context.termPeek();
+		OWLDataPropertyExpression dataPropertyExpression = axiom.getProperty();
+		if (dataPropertyExpression.isAnonymous()) {
+			return;
+		}
+		AnnotationType annotationType = context.getAnnotationType(dataPropertyExpression.asOWLDataProperty().getIRI().getRemainder().get());
+		String value = ApiHelper.getString(axiom);
+		if (!Strings.isNullOrEmpty(value)) {
+			Annotation annotation = new Annotation(value, annotationType, term, context.getCurator(), context.getVersion());
+			annotation.setOntology(context.getOntology());
+			context.approve(annotation);
+			term.getAnnotations().add(annotation);
+		} else {
+			logger.log(Level.WARNING, "Annotation omitted, value is null [termReferenceId={0}, annotationType={1}]",
+					new String[] { term.getReferenceId(), annotationType.getAnnotationType() });
+		}
 	}
 
 	@Override

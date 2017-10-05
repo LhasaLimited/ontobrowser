@@ -8,6 +8,7 @@ package com.novartis.pcs.ontology.service.parser.owl;
 
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
+import org.semanticweb.owlapi.model.OWLDataPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLLiteral;
 
 /**
@@ -28,6 +29,11 @@ public final class ApiHelper {
 			result = owlAnnotation.getValue().toString();
 		}
 		return result;
+	}
+
+	public static String getString(OWLDataPropertyAssertionAxiom owlAnnotation) {
+		OWLLiteral owlLiteral = owlAnnotation.getObject();
+		return owlLiteral.getLiteral();
 	}
 
 }

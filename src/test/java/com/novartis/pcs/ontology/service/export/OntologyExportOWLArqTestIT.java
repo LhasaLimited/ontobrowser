@@ -138,6 +138,16 @@ public class OntologyExportOWLArqTestIT {
 						is("http://www.lhasalimited.org/ontobrowser.owl#assayIndividual")).withNamespaceContext(PREFIXES));
 	}
 
+	@Test
+	public void shouldExportDataPropertyValue() throws OntologyNotFoundException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		exportService.exportOntology(ONTOBROWSER_TEST, baos, OntologyFormat.RDFXML);
+		String rdfXML = baos.toString();
+		assertThat(rdfXML,
+				EvaluateXPathMatcher.hasXPath("//owl:NamedIndividual[@rdf:about=\"http://www.lhasalimited.org/ontobrowser.owl#TopClassIndividual\"]" +
+								"/ob:someDataProperty",
+						is("Data property value")).withNamespaceContext(PREFIXES));
+	}
 }
 /*
  * ---------------------------------------------------------------------* This

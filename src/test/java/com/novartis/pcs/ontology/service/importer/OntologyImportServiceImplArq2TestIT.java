@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import javax.ejb.EJB;
 
+import com.novartis.pcs.ontology.entity.PropertyType;
 import org.coode.owlapi.obo12.parser.OBOVocabulary;
 import org.hamcrest.CoreMatchers;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -171,6 +172,7 @@ public class OntologyImportServiceImplArq2TestIT {
 		Annotation annotation = first.orElseThrow(AssertionFailedError::new);
 		assertThat(annotation.getAnnotation(), is("http://purl.obolibrary.org/obo/IAO_0000122"));
 		assertThat(annotation.getAnnotationType().getAnnotationType(), is("has curation status"));
+		assertThat(annotation.getAnnotationType().getType(), is(PropertyType.ANNOTATION));
 		assertThat(annotation.getAnnotationType().getDefinitionUrl(), is("http://purl.obolibrary.org/obo/IAO_0000114"));
 	}
 
@@ -220,5 +222,16 @@ public class OntologyImportServiceImplArq2TestIT {
 				.filter(r -> r.getType().getRelationship().equals("someObjectProperty")).findAny()
 				.orElseThrow(AssertionError::new);
 		Assert.assertThat(relationship.getRelatedTerm().getReferenceId(), is("assayIndividual"));
+	}
+
+	@Test
+	public void shouldImportDataPropertyValue() {
+		Term topClassIndividual = termDAO.loadByReferenceId("TopClassIndividual", ontology.getName(), true);
+		Optional<Annotation> first = topClassIndividual.getAnnotations().stream()
+				.filter(a -> a.getAnnotationType().getPrefixedXmlType().equals("someDataProperty")).findFirst();
+		Annotation annotation = first.orElseThrow(AssertionFailedError::new);
+		assertThat(annotation.getAnnotation(), is("Data property value"));
+		assertThat(annotation.getAnnotationType().getAnnotationType(), is("someDataProperty"));
+		assertThat(annotation.getAnnotationType().getType(), is(PropertyType.DATA_PROPERTY));
 	}
 }

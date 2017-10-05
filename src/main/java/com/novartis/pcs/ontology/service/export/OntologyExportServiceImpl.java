@@ -52,6 +52,7 @@ import javax.ejb.Local;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
 
+import com.novartis.pcs.ontology.entity.PropertyType;
 import org.coode.owlapi.manchesterowlsyntax.ManchesterOWLSyntaxOntologyFormat;
 import org.coode.owlapi.turtle.TurtleOntologyFormat;
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -67,6 +68,8 @@ import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLDataProperty;
+import org.semanticweb.owlapi.model.OWLDataPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLIndividual;
 import org.semanticweb.owlapi.model.OWLLiteral;
@@ -463,7 +466,8 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 
 				exportRelationships(iriProvider, factory, exportContext, term, termClass, intersectClasses,
 						unionClasses);
-				exportAnnotations(factory, exportContext, term, termIRI);
+				term.getAnnotations().stream().filter(this::isOWLAnnotation)
+						.forEach(annotation -> exportOWLAnnotation(factory, exportContext, termIRI, annotation));
 
 				if (!intersectClasses.isEmpty()) {
 					OWLObjectIntersectionOf intersection = factory.getOWLObjectIntersectionOf(intersectClasses);
@@ -516,35 +520,48 @@ public class OntologyExportServiceImpl implements OntologyExportServiceRemote, O
 
 				exportRelationshipsIndividuals(iriProvider, factory, exportContext, term, individual, sameIndividuals,
 						differentIndividuals);
-				exportAnnotations(factory, exportContext, term, termIRI);
-
+				term.getAnnotations().stream().filter(this::isOWLAnnotation)
+						.forEach(annotation -> exportOWLAnnotation(factory, exportContext, termIRI, annotation));
+				for (Annotation a : term.getAnnotations()) {
+					if (PropertyType.DATA_PROPERTY.equals(a.getAnnotationType().getType())) {
+						exportDataPropertyAxiom(factory, exportContext, termIRI, a);
+					}
+				}
 			}
 		}
 	}
 
-	private void exportAnnotations(final OWLDataFactory factory, final ExportContext exportContext, final Term term,
-			final IRI termIRI) {
-		for (Annotation annotation : term.getAnnotations()) {
-			if (annotation == null) continue;
-			String annotationValue = Strings.nullToEmpty(annotation.getAnnotation());
-			String definitionUrl = annotation.getAnnotationType().getDefinitionUrl();
-			OWLAnnotationValue owlAnnotationValue;
-			if (UrlValidator.validate(annotationValue)) {
-				owlAnnotationValue = IRI.create(annotationValue);
-			} else if (CharMatcher.INVISIBLE.matchesAnyOf(annotationValue)) {
-				owlAnnotationValue = factory.getOWLLiteral(annotationValue, "en");
-			} else {
-				owlAnnotationValue = factory.getOWLLiteral(annotationValue, OWL2Datatype.RDF_PLAIN_LITERAL);
-			}
-			if (!Strings.isNullOrEmpty(annotationValue)) {
-				OWLAnnotationProperty property = factory.getOWLAnnotationProperty(IRI.create(definitionUrl));
-				OWLAnnotationAssertionAxiom axiom = factory.getOWLAnnotationAssertionAxiom(property, termIRI,
-						owlAnnotationValue);
-				exportContext.addAxiom(axiom);
-			} else {
-				logger.log(Level.SEVERE, "Annotation is null or empty {0}, {1}",
-						new String[] { termIRI.toString(), definitionUrl });
-			}
+	private void exportDataPropertyAxiom(final OWLDataFactory factory, final ExportContext exportContext, final IRI termIRI, final Annotation annotation)
+			throws URISyntaxException {
+		IRIProvider iriProvider = exportContext.getIriProvider();
+		OWLDataProperty owlDataProperty = factory.getOWLDataProperty(iriProvider.getIRI(annotation.getAnnotationType()));
+		OWLNamedIndividual owlNamedIndividual = factory.getOWLNamedIndividual(termIRI);
+		OWLLiteral owlLiteral = factory.getOWLLiteral(annotation.getAnnotation());
+		OWLDataPropertyAssertionAxiom owlDataPropertyAssertionAxiom = factory.getOWLDataPropertyAssertionAxiom(owlDataProperty, owlNamedIndividual, owlLiteral);
+		exportContext.addAxiom(owlDataPropertyAssertionAxiom);
+	}
+
+	private boolean isOWLAnnotation(final Annotation annotation) {
+		return annotation.getAnnotationType().getType().equals(PropertyType.ANNOTATION);
+	}
+
+	private void exportOWLAnnotation(final OWLDataFactory factory, final ExportContext exportContext, final IRI termIRI, final Annotation annotation) {
+		String annotationValue = Strings.nullToEmpty(annotation.getAnnotation());
+		String definitionUrl = annotation.getAnnotationType().getDefinitionUrl();
+		OWLAnnotationValue owlAnnotationValue;
+		if (UrlValidator.validate(annotationValue)) {
+			owlAnnotationValue = IRI.create(annotationValue);
+		} else if (CharMatcher.INVISIBLE.matchesAnyOf(annotationValue)) {
+			owlAnnotationValue = factory.getOWLLiteral(annotationValue, "en");
+		} else {
+			owlAnnotationValue = factory.getOWLLiteral(annotationValue, OWL2Datatype.RDF_PLAIN_LITERAL);
+		}
+		if (!Strings.isNullOrEmpty(annotationValue)) {
+			OWLAnnotationProperty property = factory.getOWLAnnotationProperty(IRI.create(definitionUrl));
+			OWLAnnotationAssertionAxiom axiom = factory.getOWLAnnotationAssertionAxiom(property, termIRI, owlAnnotationValue);
+			exportContext.addAxiom(axiom);
+		} else {
+			logger.log(Level.SEVERE, "Annotation is null or empty {0}, {1}", new String[] { termIRI.toString(), definitionUrl });
 		}
 	}
 
