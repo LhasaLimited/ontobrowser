@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ejb.EJB;
@@ -563,14 +564,15 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 	@Override
 	public Collection<Relationship> getRelationships(final Term term, final String ontologyName, final boolean deep) {
 		Collection<Relationship> hierarchy;
+		List<Ontology> importClosure = ontologyDAO.loadClosure(ontologyName);
 		if (term.getReferenceId().equals("Thing")) {
-			hierarchy = addVirtual(relationshipDAO.loadHierarchy(ontologyName, deep), deep);
+			hierarchy = addVirtual(relationshipDAO.loadHierarchy(ontologyName, deep), importClosure, deep);
 			List<Term> independentTerms = termDAO.loadIndependentTerms(ontologyName);
 			hierarchy.addAll(createRelationshipsToThing(independentTerms, true));
 		} else {
 			Collection<Relationship> relationships = relationshipDAO.loadHierarchy(term.getId(), ontologyName, deep);
 			hierarchy = relationships.isEmpty() ? createRelationshipsToThing(Collections.singletonList(term), false)
-					: addVirtual(relationships, true);
+					: addVirtual(relationships, importClosure, true);
 		}
 		return hierarchy;
 	}
@@ -578,10 +580,10 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 	/**
 	 * Adds virtual relationships from Term without Relationships to the Thing term
 	 */
-	private Collection<Relationship> addVirtual(final Collection<Relationship> relationships, final boolean deep) {
+	private Collection<Relationship> addVirtual(final Collection<Relationship> relationships, final List<Ontology> importClosure, final boolean deep) {
 		List<Term> rootTerms = relationships.stream()
 				.map(Relationship::getRelatedTerm).distinct()
-				.filter(t -> t.getRelationships().isEmpty()).collect(Collectors.toList());
+				.filter(hasNoRelationshipInHierarchy(importClosure)).collect(Collectors.toList());
 		// as those terms comes from relationships, they are not leafs
 		List<Relationship> virtualRelationships = createRelationshipsToThing(rootTerms, false);
 		if (deep) {
@@ -590,6 +592,10 @@ public class OntologyTermServiceImpl extends OntologyService implements Ontology
 		} else {
 			return virtualRelationships;
 		}
+	}
+
+	private Predicate<Term> hasNoRelationshipInHierarchy(final List<Ontology> importClosure) {
+		return t -> t.getRelationships().stream().noneMatch(r -> importClosure.contains(r.getOntology()));
 	}
 
 	private List<Relationship> createRelationshipsToThing(final List<Term> rootTerms, final boolean leaf) {

@@ -32,6 +32,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedEntityGraphs;
+import javax.persistence.NamedNativeQueries;
+import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -74,6 +76,8 @@ import org.hibernate.annotations.QueryHints;
 				+ " o.intermediate = false AND o != :current", hints = {
 						@QueryHint(name = "org.hibernate.cacheable", value = "true"),
 						@QueryHint(name = QueryHints.LOADGRAPH, value = Ontology.GRAPH_ONTOLOGY_ALL) }) })
+@NamedNativeQueries({ @NamedNativeQuery(name = Ontology.QUERY_IMPORT_CLOSURE, query = Relationship.SUBQUERY_IMPORTED_HIERARCHY
+		+ "SELECT on FROM ontology on WHERE on.ontology_id in (select * from imported_hierarchy", resultClass = Ontology.class) })
 public class Ontology extends VersionedEntity implements ReplaceableEntity<Ontology> {
 	private static final long serialVersionUID = 1L;
 
@@ -82,6 +86,7 @@ public class Ontology extends VersionedEntity implements ReplaceableEntity<Ontol
 	public static final String QUERY_NON_INTERMEDIATE = "Ontology.queryAliased";
 	public static final String GRAPH_ONTOLOGY_ALL = "Ontology.graphAll";
 	public static final String LOAD_ALL_NON_INTERMEDIATE = "Ontology.loadAllNonIntermediate";
+	public static final String QUERY_IMPORT_CLOSURE = "Ontology.queryImportClosure";
 
 	@NotNull
 	@Column(name = "ONTOLOGY_NAME", unique = true, nullable = false)
