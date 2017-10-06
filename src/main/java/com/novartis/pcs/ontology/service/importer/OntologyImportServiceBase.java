@@ -100,7 +100,7 @@ public abstract class OntologyImportServiceBase extends OntologyService
         Collection<Term> terms = context.getTerms();
 
         findRefId(ontology, terms);
-        handleDuplicates(terms);
+//        handleDuplicates(terms);
         markRoot(terms);
 
         datasources = context.getDatasources();
