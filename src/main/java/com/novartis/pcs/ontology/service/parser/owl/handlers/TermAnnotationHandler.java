@@ -9,6 +9,7 @@ package com.novartis.pcs.ontology.service.parser.owl.handlers;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.novartis.pcs.ontology.service.export.ReferenceIdProvider;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 
 import com.google.common.base.Strings;
@@ -35,7 +36,7 @@ public class TermAnnotationHandler implements OWLVisitorHandler {
 	@Override
 	public void handleAnnotation(final OWLParserContext context, final OWLAnnotation owlAnnotation) {
 		Term term = context.termPeek();
-		AnnotationType annotationType = context.getAnnotationType(owlAnnotation.getProperty().getIRI().getRemainder().get());
+		AnnotationType annotationType = context.getAnnotationType(ReferenceIdProvider.getRefId(owlAnnotation.getProperty()));
 		String value = ApiHelper.getString(owlAnnotation);
 		if (!Strings.isNullOrEmpty(value)) {
 			Annotation annotation = new Annotation(value, annotationType, term, context.getCurator(),
