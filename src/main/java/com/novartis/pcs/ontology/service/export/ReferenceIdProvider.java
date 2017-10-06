@@ -23,21 +23,26 @@ public final class ReferenceIdProvider {
 	}
 
 	public static String getRefId(final IRI iri) {
+		String refId = null;
 		if (iri.getScheme().startsWith("http")) {
 			if (iri.getRemainder().isPresent()) {
-				return iri.getRemainder().get();
+				refId = iri.getRemainder().get();
 			} else {
 				String iriString = iri.toString();
 				if (iriString.endsWith("/")) {
 					iriString = iriString.substring(0, iriString.lastIndexOf('/'));
 				}
-				return iriString.substring(iriString.lastIndexOf('/') + 1);
+				refId = iriString.substring(iriString.lastIndexOf('/') + 1);
 			}
 
 		} else if (iri.getScheme().equalsIgnoreCase("mailto")) {
-			return iri.toString();
+			refId = iri.toString();
 		}
-		throw new IllegalArgumentException("Cannot find reference id:" + iri.toString());
+
+		if (refId == null) {
+			throw new IllegalArgumentException("Cannot find reference id:" + iri.toString());
+		}
+		return refId.toUpperCase();
 	}
 }
 /*
