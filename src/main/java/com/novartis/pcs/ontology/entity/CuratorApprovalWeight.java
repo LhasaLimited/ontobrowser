@@ -57,7 +57,9 @@ public class CuratorApprovalWeight extends ModifiableEntity {
         RELATIONSHIP_TYPE,
         TERM,
         TERM_RELATIONSHIP,
-        TERM_SYNONYM;
+        TERM_SYNONYM,
+		ANNOTATION,
+		ANNOTATION_TYPE;
         
         
         public static Entity valueOf(VersionedEntity entity) {
@@ -80,7 +82,15 @@ public class CuratorApprovalWeight extends ModifiableEntity {
         	if(entity instanceof Ontology) {
         		return ONTOLOGY;
         	}
-        	
+
+        	if(entity instanceof Annotation) {
+        		return ANNOTATION;
+        	}
+
+        	if(entity instanceof AnnotationType) {
+        		return ANNOTATION_TYPE;
+        	}
+
         	throw new IllegalArgumentException("Invalid entity: " + entity.getClass().getName());
         }
     }
