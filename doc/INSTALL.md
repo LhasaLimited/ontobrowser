@@ -233,6 +233,14 @@ $ curl -s -S -H "Content-Type: application/obo;charset=utf-8" -X PUT --data-bina
 
 Note: Proxy parameters or environment variables maybe be require when downloading behind a corporate firewall.
 
+#### Setting aliases for the uploaded ontology
+Additional header need to be provided for aliasing ontologies urls. For instance one might provide _chebi_lite.owl_ ontology as a replacement for shrinked 
+versions of _chebi_ provided in ontologies which will be imported in a next step: 
+```bash
+-H "X-Ontobrowser-Aliases: http://bioassayontology.org/bao/external/BAO_CHEBI_import.owl;http://purl.obolibrary.org/obo/upheno/imports/chebi_import.owl"
+```
+This feature don't alias already existing ontologies.
+
 ## Setup a Controlled Vocabulary
 An example SQL script to setup a *controlled vocabulary* is provided in the [sql](../sql) directory of the project: [insert_crtld_vocab_example.sql](../sql/insert_crtld_vocab_example.sql). The example defines the [SEND Specimen](http://evs.nci.nih.gov/ftp1/CDISC/SEND/SEND%20Terminology.html#CL.C77529.SPEC) code list in the database as a *controlled vocabulary* so the terms from the code list can be subsequently loaded (and then mapped to the *Mouse adult gross anatomy* ontology loaded previously).
 
