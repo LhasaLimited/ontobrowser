@@ -256,7 +256,7 @@
                                 <java-opt>-Djavamelody.datasources=java:jboss/datasources/ontobrowser</java-opt>
                                 <java-opt>-Djavamelody.disabled=false</java-opt>
                                 <java-opt>-Djavamelody.connections-stack-traces-disabled=false</java-opt>
-                                <java-opt>-agentpath:C:\software\jrebel\lib\jrebel64.dll</java-opt>
+                                <!--<java-opt>-agentpath:C:\software\jrebel\lib\jrebel64.dll</java-opt>-->
                                 <!--<java-opt>"-agentpath:C:\Program Files\Dynatrace\Dynatrace 7.0\agent\lib64\dtagent.dll=name=Wildfly_Monitoring,server=lpolpc08.lhasalimited.org:9998"</java-opt>-->
                                 <java-opt>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8787</java-opt>
                                 <java-opt>-Xmx3072M</java-opt>
