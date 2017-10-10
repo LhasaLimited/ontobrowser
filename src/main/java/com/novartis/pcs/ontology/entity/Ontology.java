@@ -28,6 +28,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
@@ -77,7 +78,7 @@ import org.hibernate.annotations.QueryHints;
 						@QueryHint(name = "org.hibernate.cacheable", value = "true"),
 						@QueryHint(name = QueryHints.LOADGRAPH, value = Ontology.GRAPH_ONTOLOGY_ALL) }) })
 @NamedNativeQueries({ @NamedNativeQuery(name = Ontology.QUERY_IMPORT_CLOSURE, query = Relationship.SUBQUERY_IMPORTED_HIERARCHY
-		+ "SELECT on FROM ontology on WHERE on.ontology_id in (select * from imported_hierarchy", resultClass = Ontology.class) })
+		+ " SELECT ont.* FROM ontology ont WHERE ont.ontology_id IN ( select * from imported_hierarchy )", resultClass = Ontology.class) })
 public class Ontology extends VersionedEntity implements ReplaceableEntity<Ontology> {
 	private static final long serialVersionUID = 1L;
 
@@ -131,17 +132,18 @@ public class Ontology extends VersionedEntity implements ReplaceableEntity<Ontol
 	@JoinColumn(name = "REPLACED_BY")
 	private Ontology replacedBy;
 
-	@OneToMany(cascade = { CascadeType.ALL })
+	@ManyToMany(cascade = { CascadeType.ALL })
 	@JoinTable(name = "ONTOLOGY_IMPORTED",
 			joinColumns = @JoinColumn(name = "ONTOLOGY_ID"),
 			inverseJoinColumns = @JoinColumn(name = "IMPORTED_ONTOLOGY_ID"))
 	@Fetch(FetchMode.SELECT)
 	private Set<Ontology> importedOntologies;
 
-	@OneToMany
-	@Fetch(FetchMode.SELECT)
-	@JoinTable(name = "ONTOLOGY_IMPORTED", joinColumns = @JoinColumn(name = "IMPORTED_ONTOLOGY_ID"), inverseJoinColumns = @JoinColumn(name = "ONTOLOGY_ID"))
-	private Set<Ontology> importedBy = new HashSet<>();
+	@ManyToMany
+	@JoinTable(name = "ONTOLOGY_IMPORTED",
+			joinColumns = @JoinColumn(name = "IMPORTED_ONTOLOGY_ID", insertable = false, updatable = false),
+			inverseJoinColumns = @JoinColumn(name = "ONTOLOGY_ID", insertable = false, updatable = false))
+	private Set<Ontology> importedBy;
 
 	@OneToMany(mappedBy = "ontology", cascade = { CascadeType.ALL })
 	private Set<OntologyAlias> aliases = new HashSet<>();

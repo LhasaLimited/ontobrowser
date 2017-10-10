@@ -1,5 +1,6 @@
 package com.novartis.pcs.ontology.service.importer;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -8,11 +9,13 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ejb.EJB;
 
+import org.hamcrest.CoreMatchers;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.transaction.api.annotation.TransactionMode;
@@ -84,10 +87,10 @@ public class OwlHierarchyImportArqTestIT {
 	 * The behaviour is different here than in the Protege, bao_metadata.owl comes from OWL API
 	 */
 	public void shouldImportDirectOntology() throws DuplicateEntityException, InvalidEntityException {
-		Ontology baoVocabularyAssay = ontologyDAOLocal.loadByName("bao_vocabulary_properties.owl");
-		Set<Ontology> importedOntologies = baoVocabularyAssay.getImportedOntologies();
-		assertThat(importedOntologies.size(), is(1));
-		assertThat(importedOntologies.iterator().next().getName(), is("bao_metadata.owl"));
+		Ontology baoMetadata = ontologyDAOLocal.loadByName("bao_metadata.owl");
+		List<Ontology> baoVocabularyAssayClosure = ontologyDAOLocal.loadClosure("bao_vocabulary_properties.owl");
+		assertThat(baoVocabularyAssayClosure.size(), is(2));
+		assertThat(baoVocabularyAssayClosure, hasItem(baoMetadata));
 	}
 
 	@Test

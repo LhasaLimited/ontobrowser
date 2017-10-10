@@ -95,8 +95,8 @@ public class OntologyDAO extends VersionedEntityDAO<Ontology>
 
 	@Override
 	public List<Ontology> loadClosure(final String name){
-		TypedQuery<Ontology> query = entityManager.createNamedQuery(Ontology.QUERY_BY_NAME, Ontology.class);
-		query.setParameter("name", name);
+		TypedQuery<Ontology> query = entityManager.createNamedQuery(Ontology.QUERY_IMPORT_CLOSURE, Ontology.class);
+		query.setParameter("ontology_name", name);
 		return query.getResultList();
 	}
 
