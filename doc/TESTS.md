@@ -15,7 +15,7 @@ The test data source is called `ontobrowserTest` and it is configured in `persis
 #### Widlfly
 Arqullian enriches deployment `WAR` file with compiled tests and run those test on WildFly remotely.
 WildFly __must not have Ontobrowser deployed__ when running tests.
-Path to WildFly is configured in `wildfly-maven-plugin` configuration as `jboss-home` property.
+Path to WildFly is configured in `src/test/resources/arquillian.xml` as `jbossHome` property.
 
 #### Debugging
 As test are run remotely, also the debug need to be configured as remote.
