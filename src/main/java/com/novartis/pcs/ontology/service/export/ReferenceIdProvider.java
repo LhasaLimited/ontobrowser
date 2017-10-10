@@ -42,7 +42,7 @@ public final class ReferenceIdProvider {
 		if (refId == null) {
 			throw new IllegalArgumentException("Cannot find reference id:" + iri.toString());
 		}
-		return refId.toUpperCase();
+		return refId;
 	}
 }
 /*
