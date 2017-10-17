@@ -1,0 +1,1 @@
+curl -S -H "Content-Type: application/obo;charset=utf-8" -X PUT --data-binary "@bao.obo" -u SYSTEM "http://127.0.0.1:8080/ontobrowser/ontologies/bioassay%20ontology"

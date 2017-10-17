@@ -1,0 +1,1 @@
+curl -k -s -S -H "Content-Type: application/owl+xml;charset=utf-8" -H "X-Ontobrowser-Aliases:http://www.bioassayontology.org/bao/bao_core.owl" -X PUT --data-binary "@bao_complete.owl" -u monkey "https://researchdb/ontobrowser/ontologies/bao_complete.owl"
