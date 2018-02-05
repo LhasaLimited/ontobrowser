@@ -1,18 +1,30 @@
-/**
- * Copyright © 2017 Lhasa Limited
- * File created: 11/07/2017 by Artur Polit
- * Creator : Artur Polit
- * Version : $$Id$$
- */
+/*
+
+Copyright 2017 Lhasa Limited
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
 package com.novartis.pcs.ontology.dao;
 
-import com.novartis.pcs.ontology.entity.AnnotationType;
-import com.novartis.pcs.ontology.entity.Ontology;
+import java.util.Collection;
 
 import javax.ejb.Local;
 import javax.ejb.Stateless;
 import javax.persistence.TypedQuery;
-import java.util.Collection;
+
+import com.novartis.pcs.ontology.entity.AnnotationType;
+import com.novartis.pcs.ontology.entity.Ontology;
 
 /**
  * @author Artur Polit
@@ -41,13 +53,4 @@ public class AnnotationTypeDAO extends VersionedEntityDAO<AnnotationType> implem
 		return namedQuery.getResultList().isEmpty() ? null : namedQuery.getResultList().get(0);
 	}
 }
-/* ---------------------------------------------------------------------*
- * This software is the confidential and proprietary
- * information of Lhasa Limited
- * Granary Wharf House, 2 Canal Wharf, Leeds, LS11 5PY
- * ---
- * No part of this confidential information shall be disclosed
- * and it shall be used only in accordance with the terms of a
- * written license agreement entered into by holder of the information
- * with LHASA Ltd.
- * ---------------------------------------------------------------------*/
+
